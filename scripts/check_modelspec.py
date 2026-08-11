@@ -50,24 +50,31 @@ EPISTEMIC_CLASSES = frozenset(
 
 MODEL_SPEC_BULLET_COUNT = 7
 
-# Each pattern flags a work-done-BY sign convention or a "dU = dQ - ..." spelling; the
-# project convention is dU = delta Q + delta W_on everywhere except one marked block.
+# Each pattern flags the engineering phase convention (time factor e^{+i omega t} / j as
+# the imaginary unit) or the complex-index sign it forces; the project convention is
+# psi(x,t) = Re[A e^{i(kx - omega t)}] with time factor e^{-i omega t} and n + i*kappa.
+# An inverse Fourier transform legitimately displays e^{+i omega t}: those blocks carry
+# the exception marker (the conventions page itself is allowlisted).
 SIGN_CONVENTION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (
-        re.compile(r"W_\{by\}"),
-        "uses W_{by} (work-done-BY convention) — project convention is delta W_on",
+        re.compile(r"(?:\\ii|(?<![A-Za-z\\])i)\s*\(\s*\\omega\s*t\s*-\s*k"),
+        "uses the engineering phase i(omega t - kx) — project convention is "
+        "e^{i(kx - omega t)}",
     ),
     (
-        re.compile(r"(?<![A-Za-z0-9_])W_by(?![A-Za-z0-9_])"),
-        "uses W_by (work-done-BY convention) — project convention is delta W_on",
+        re.compile(r"e\^\{\s*[-+]?\s*j\s*[\\(]"),
+        "uses j as the imaginary unit in a phase — project convention writes "
+        "e^{i(kx - omega t)}",
     ),
     (
-        re.compile(r"\\delta\s*W_\\text\{by\}"),
-        r"uses \delta W_\text{by} (work-done-BY convention) — project convention is delta W_on",
+        re.compile(r"e\^\{\s*\+?\s*(?:\\ii|(?<![A-Za-z\\])i)\s*\\omega\s*t\s*\}"),
+        "time factor e^{+i omega t} — project phasors carry e^{-i omega t}; an inverse "
+        "Fourier transform display needs the exception marker",
     ),
     (
-        re.compile(r"dU\s*=\s*\\delta\s*Q\s*-\s*"),
-        "uses dU = delta Q - ... — project convention is dU = delta Q + delta W_on",
+        re.compile(r"n\s*-\s*(?:\\ii|(?<![A-Za-z\\])i|(?<![A-Za-z\\])j)\s*\\kappa"),
+        "complex index n - i*kappa — with the e^{-i omega t} time factor an absorbing "
+        "medium is n + i*kappa",
     ),
 )
 

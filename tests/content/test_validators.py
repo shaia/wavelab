@@ -144,25 +144,65 @@ class TestCheckModelspec:
         findings = check_modelspec.check(tmp_path)
         assert has_error(findings, "model-spec block has 6 top-level bullets, expected exactly 7")
 
-    def test_fails_on_sign_convention_violation(self, tmp_path):
-        text = good_module_page("04-demo", extra_body="The engine does $W_{by}$ work.\n")
+    def test_fails_on_engineering_phase_convention(self, tmp_path):
+        text = good_module_page(
+            "04-demo", extra_body="The wave is $e^{i(\\omega t - kx)}$ here.\n"
+        )
         write(tmp_path / "content" / "en" / "04-demo.md", text)
         findings = check_modelspec.check(tmp_path)
-        assert has_error(findings, "W_{by}")
+        assert has_error(findings, "engineering phase")
+
+    def test_fails_on_j_as_imaginary_unit(self, tmp_path):
+        text = good_module_page(
+            "04-demo", extra_body="Engineers write $e^{j(\\omega t - kx)}$ instead.\n"
+        )
+        write(tmp_path / "content" / "en" / "04-demo.md", text)
+        findings = check_modelspec.check(tmp_path)
+        assert has_error(findings, "j as the imaginary unit")
+
+    def test_fails_on_positive_time_factor(self, tmp_path):
+        text = good_module_page(
+            "04-demo", extra_body="The field oscillates as $e^{+\\ii\\omega t}$ in time.\n"
+        )
+        write(tmp_path / "content" / "en" / "04-demo.md", text)
+        findings = check_modelspec.check(tmp_path)
+        assert has_error(findings, "time factor e^{+i omega t}")
+
+    def test_fails_on_wrong_complex_index_sign(self, tmp_path):
+        text = good_module_page(
+            "04-demo", extra_body="An absorbing medium has $\\tilde{n} = n - i\\kappa$.\n"
+        )
+        write(tmp_path / "content" / "en" / "04-demo.md", text)
+        findings = check_modelspec.check(tmp_path)
+        assert has_error(findings, "n - i*kappa")
+
+    def test_sign_convention_allows_course_phase(self, tmp_path):
+        text = good_module_page(
+            "04-demo",
+            extra_body="The wave is $e^{\\ii(kx - \\omega t)}$ with factor "
+            "$e^{-\\ii\\omega t}$ and index $n + \\ii\\kappa$.\n",
+        )
+        write(tmp_path / "content" / "en" / "04-demo.md", text)
+        findings = check_modelspec.check(tmp_path)
+        assert not has_error(findings, "convention")
 
     def test_sign_convention_exempt_with_marker_comment(self, tmp_path):
         text = good_module_page(
             "04-demo",
-            extra_body="<!-- sign-convention-exception -->\nThe engine does $W_{by}$ work.\n",
+            extra_body="<!-- sign-convention-exception -->\n"
+            "The inverse transform carries $e^{+\\ii\\omega t}$ here.\n",
         )
         write(tmp_path / "content" / "en" / "04-demo.md", text)
         findings = check_modelspec.check(tmp_path)
-        assert not has_error(findings, "W_{by}")
+        assert not has_error(findings, "time factor")
 
     def test_sign_convention_exempt_in_conventions_file(self, tmp_path):
-        write(tmp_path / "content" / "en" / "conventions.md", "The engine does $W_{by}$ work.\n")
+        write(
+            tmp_path / "content" / "en" / "conventions.md",
+            "The other choice is $e^{j(\\omega t - kx)}$ with $n - i\\kappa$.\n",
+        )
         findings = check_modelspec.check(tmp_path)
-        assert not has_error(findings, "W_{by}")
+        assert not has_error(findings, "convention")
 
     def test_warns_when_no_epistemic_admonition(self, tmp_path):
         text = good_module_page("04-demo", include_epistemic=False)
