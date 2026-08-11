@@ -241,3 +241,40 @@ terms:
   - key: isochronism
     en: isochronism
     he: איזוכרוניות
+  # Waves in media, and optics.
+  - key: standing-wave
+    en: standing wave
+    he: גל עומד
+  - key: wave-packet
+    en: wave packet
+    he: חבילת גלים
+  - key: normal-mode
+    en: normal mode
+    he: אופן נורמלי
+  - key: medium
+    en: medium
+    he: תווך
+  - key: refractive-index
+    en: refractive index
+    he: מקדם שבירה
+  - key: absorption
+    en: absorption
+    he: בליעה
+  - key: fourier-transform
+    en: Fourier transform
+    he: התמרת פורייה
+  - key: dispersion
+    en: dispersion
+    he: נפיצה
+  - key: diffraction
+    en: diffraction
+    he: עקיפה
+  - key: polarization
+    en: polarization
+    he: קיטוב
+  - key: total-internal-reflection
+    en: total internal reflection
+    he: החזרה פנימית מלאה
+  - key: critical-angle
+    en: critical angle
+    he: זווית קריטית
