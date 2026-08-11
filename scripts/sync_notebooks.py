@@ -6,7 +6,7 @@ once. Code cells are copied byte-for-byte from the English notebook — code is 
 overwritten. New Hebrew notebooks start as a copy with the markdown still in English, ready
 to be translated cell by cell.
 
-The `en_source_hash` stamped into `metadata.thermolab` is what `check_parity.py` compares
+The `en_source_hash` stamped into `metadata.wavelab` is what `check_parity.py` compares
 against, so running this after an English edit is what clears a staleness failure.
 
 Run:  uv run python scripts/sync_notebooks.py [--check]
@@ -48,8 +48,8 @@ def sync_one(en_path: Path, he_path: Path, check_only: bool) -> list[str]:
         if check_only:
             return [f"{he_path.relative_to(ROOT)}: missing (would be created from English)"]
         hebrew = english
-        hebrew.setdefault("metadata", {}).setdefault("thermolab", {})["language"] = "he"
-        hebrew["metadata"]["thermolab"]["en_source_hash"] = source_hash(en_path)
+        hebrew.setdefault("metadata", {}).setdefault("wavelab", {})["language"] = "he"
+        hebrew["metadata"]["wavelab"]["en_source_hash"] = source_hash(en_path)
         dump(he_path, hebrew)
         return [f"{he_path.relative_to(ROOT)}: created — markdown still needs translating"]
 
@@ -69,14 +69,14 @@ def sync_one(en_path: Path, he_path: Path, check_only: bool) -> list[str]:
             if not check_only:
                 he_cell["source"] = en_cell["source"]
 
-    stamped = ((hebrew.get("metadata") or {}).get("thermolab") or {}).get("en_source_hash")
+    stamped = ((hebrew.get("metadata") or {}).get("wavelab") or {}).get("en_source_hash")
     current = source_hash(en_path)
     if stamped != current:
         changes.append(f"{he_path.relative_to(ROOT)}: en_source_hash stale")
         if not check_only:
-            thermolab = hebrew.setdefault("metadata", {}).setdefault("thermolab", {})
-            thermolab["en_source_hash"] = current
-            thermolab["language"] = "he"
+            wavelab = hebrew.setdefault("metadata", {}).setdefault("wavelab", {})
+            wavelab["en_source_hash"] = current
+            wavelab["language"] = "he"
 
     if changes and not check_only:
         dump(he_path, hebrew)

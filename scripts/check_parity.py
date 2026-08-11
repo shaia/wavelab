@@ -257,7 +257,7 @@ def check_notebook_pair(root: Path, tail: str, pending_tail: bool) -> list[Findi
                     )
                 )
 
-    stored = ((he_nb.get("metadata") or {}).get("thermolab") or {}).get("en_source_hash")
+    stored = ((he_nb.get("metadata") or {}).get("wavelab") or {}).get("en_source_hash")
     findings.extend(check_hash(he_path, stored, en_path, pending=pending_tail))
     return findings
 

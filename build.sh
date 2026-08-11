@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the whole ThermoLab site — both language copies plus the JupyterLite labs.
+# Build the whole WaveLab site — both language copies plus the JupyterLite labs.
 #
 # A thin wrapper over scripts/build_site.py that resolves the two tools which are not on PATH
 # in a fresh shell: uv (installed under ~/.local/bin) and mystmd (node_modules/.bin, installed
@@ -23,13 +23,13 @@ Options:
   -s, --serve        Serve _site/ over HTTP after a successful build.
   -p, --port PORT    Port for --serve (default 8000).
       --media        Always re-render the animations. By default they are rendered only when
-                     missing, or older than the render scripts / thermolab sources.
+                     missing, or older than the render scripts / wavelab sources.
       --no-media     Never render animations.
       --no-lite      Skip the JupyterLite bundle (module pages' /lite/ links will 404).
       --no-clean     Reuse content/<lang>/_build instead of rebuilding it. Faster, but MyST
                      reuses cached page ASTs and never evicts superseded content-hashed
                      images, so the site may ship stale or duplicated media.
-      --base-path P  Path prefix the site will be served under, e.g. /thermolab for a GitHub
+      --base-path P  Path prefix the site will be served under, e.g. /wavelab for a GitHub
                      Pages project site. Defaults to the domain root, which is what a local
                      build wants; the published site sets it from the workflow.
   -h, --help         Show this help.
@@ -37,7 +37,7 @@ Options:
 Examples:
   ./build.sh --serve
   ./build.sh --media --serve --port 8080
-  ./build.sh --base-path /thermolab
+  ./build.sh --base-path /wavelab
 EOF
 }
 

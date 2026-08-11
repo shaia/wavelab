@@ -1,19 +1,19 @@
 """Lab-notebook lint: the JupyterLite bootstrap cell no other check can see.
 
-Every notebook under `notebooks/<lang>/labs/` runs in two places. On this machine `thermolab`
+Every notebook under `notebooks/<lang>/labs/` runs in two places. On this machine `wavelab`
 and its dependencies are already importable, so the bootstrap cell does nothing and nbmake is
 green whatever it contains. In the browser that cell is the only thing that puts the course
 package and the pure-Python libraries into the Pyodide kernel — and if it is wrong, the
 laboratory is dead for every student while the whole local pipeline still passes.
 
 That asymmetry is why this file exists. It has already caught the real thing: a notebook whose
-bootstrap was typed from memory rather than copied installed `thermolab` *with* its dependency
+bootstrap was typed from memory rather than copied installed `wavelab` *with* its dependency
 graph, which sends micropip to PyPI for NumPy and matplotlib, neither of which has a
 WebAssembly wheel.
 
-The check is on *requirements*, not on bytes. Comparing against `04-pressure.ipynb` verbatim
+The check is on *requirements*, not on bytes. Comparing against `00-phasors.ipynb` verbatim
 would fail on a reformat and would have to be rewritten every time a dependency is added; what
-actually matters is that the pure-Python libraries are installed and that `thermolab` is
+actually matters is that the pure-Python libraries are installed and that `wavelab` is
 installed without its dependency graph.
 
 Run standalone (`python scripts/check_notebooks.py`) or import `check()`.
@@ -32,10 +32,10 @@ from _findings import Finding, report  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Pure-Python packages Pyodide does not ship. `thermolab` itself is handled separately,
+# Pure-Python packages Pyodide does not ship. `wavelab` itself is handled separately,
 # because the thing that matters about it is the absence of its dependency graph.
 REQUIRED_PURE_PYTHON = ("pint", "ipywidgets", "jupyterquiz")
-PACKAGE = "thermolab"
+PACKAGE = "wavelab"
 
 
 def iter_lab_notebooks(root: Path) -> list[Path]:
@@ -69,7 +69,7 @@ def check_bootstrap(path: Path, source: str | None) -> list[Finding]:
                 None,
                 "error",
                 "first code cell is not the JupyterLite bootstrap — copy it from "
-                "notebooks/en/labs/04-pressure.ipynb (cell id 'piplite-bootstrap'); "
+                "notebooks/en/labs/00-phasors.ipynb (cell id 'piplite-bootstrap'); "
                 "nbmake cannot see this, but the browser can",
             )
         ]

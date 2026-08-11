@@ -1,6 +1,6 @@
 """Shared output plumbing for the demonstration renderers.
 
-Every `render_<module>.py` builds a `FuncAnimation` from `thermolab` and hands it to `save()`
+Every `render_<module>.py` builds a `FuncAnimation` from `wavelab` and hands it to `save()`
 here. Before this module existed the same twenty lines were copy-pasted into all four scripts;
 the MP4 writer needs enough setup that a fifth copy was not worth having.
 
@@ -18,7 +18,7 @@ WHY MP4 AND NOT GIF
 WHY FFMPEG IS A DEV DEPENDENCY
     `imageio-ffmpeg` ships a static ffmpeg binary, so nothing has to be installed system-wide.
     It belongs in the `dev` group and must stay there: rendering happens at authoring time on
-    this machine, never in the browser. Nothing under `src/thermolab/` or in any notebook
+    this machine, never in the browser. Nothing under `src/wavelab/` or in any notebook
     imports `matplotlib.animation`, so Pyodide/JupyterLite never needs ffmpeg. Do not "fix"
     this by promoting the dependency.
 """

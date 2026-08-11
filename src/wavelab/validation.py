@@ -1,6 +1,6 @@
 """Reusable checks behind the course's scientific-accuracy framework.
 
-Every simulation in ThermoLab has to answer the same questions: does it conserve what it
+Every simulation in WaveLab has to answer the same questions: does it conserve what it
 should, does it reproduce the analytic result in the regime where one exists, does the answer
 survive refining the numerics, and is it independent of the random seed within statistical
 error? These helpers implement those questions once so each module's tests state the physics

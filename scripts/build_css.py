@@ -3,7 +3,7 @@
 mystmd's `site.options.style` takes ONE local CSS file per project, so we compose them:
     en -> theme/_shared.css
     he -> theme/_shared.css + theme/_rtl.css
-Output lands in content/<lang>/thermolab.css. The generated files are committed so that
+Output lands in content/<lang>/wavelab.css. The generated files are committed so that
 `myst start` (single-language live preview) works without running a build step first.
 """
 
@@ -22,7 +22,7 @@ def generate() -> list[Path]:
     for lang, names in SOURCES.items():
         parts = [BANNER.format(sources=", ".join(names))]
         parts += [(THEME / name).read_text(encoding="utf-8") for name in names]
-        target = ROOT / "content" / lang / "thermolab.css"
+        target = ROOT / "content" / lang / "wavelab.css"
         target.write_text("\n".join(parts), encoding="utf-8")
         written.append(target)
     return written

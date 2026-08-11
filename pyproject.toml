@@ -1,7 +1,7 @@
 [project]
-name = "thermolab"
+name = "wavelab"
 version = "0.1.0"
-description = "ThermoLab: interactive bilingual (EN/HE) university thermal & statistical physics course"
+description = "WaveLab: interactive bilingual (EN/HE) university thermal & statistical physics course"
 authors = [
     { name = "shaia", email = "shaia@outlook.com" }
 ]
@@ -47,7 +47,7 @@ select = ["E", "F", "W", "I", "NPY", "B"]
 # The render scripts and validators are run as scripts, not imported as packages, so their
 # sibling helpers (media/render/_common.py, scripts/_content.py) are local imports that ruff
 # would otherwise sort in with third-party ones.
-known-first-party = ["thermolab", "_common", "_content", "_findings"]
+known-first-party = ["wavelab", "_common", "_content", "_findings"]
 
 [dependency-groups]
 dev = [

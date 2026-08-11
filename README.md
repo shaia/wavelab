@@ -1,4 +1,4 @@
-# ThermoLab — Explore, Derive and Simulate Thermal Physics
+# WaveLab — Explore, Derive and Simulate Thermal Physics
 
 An interactive, bilingual (English / עברית) computational textbook and virtual laboratory for
 university-level thermal and statistical physics. Not a tutorial: a full learning environment
@@ -17,7 +17,7 @@ The guiding question, everywhere:
 | Course text (EN) | `content/en/` | MyST Markdown site — the source of truth |
 | Course text (HE) | `content/he/` | Full Hebrew mirror (RTL), kept in lockstep by tooling |
 | Laboratories | `notebooks/{en,he}/labs/` | Interactive Jupyter notebooks (ipywidgets) |
-| Physics engine | `src/thermolab/` | Plain, readable, vectorized NumPy — every model the course uses |
+| Physics engine | `src/wavelab/` | Plain, readable, vectorized NumPy — every model the course uses |
 | Assessment | `assessment/` | Quiz banks (YAML, bilingual), exam-style problems, misconception registry |
 | Animations | `media/render/` → `content/*/media/` | Simulation-rendered MP4 demonstrations, language-neutral, embedded in both site copies |
 | Validation | `tests/`, `scripts/` | The scientific-accuracy framework, mechanized (see below) |
@@ -66,7 +66,7 @@ becomes `/` and the build falls back to root-relative output.
 
 Two things make the browser laboratories work once published, and both are easy to break:
 
-- Pyodide has no access to this repository, so `scripts/build_site.py` builds the `thermolab`
+- Pyodide has no access to this repository, so `scripts/build_site.py` builds the `wavelab`
   wheel into `dist/` and JupyterLite's `PipliteAddon` indexes it into the bundle. The first
   cell of every laboratory notebook installs it — with `deps=False`, because Pyodide supplies
   its own older builds of NumPy, SciPy and matplotlib. The wheel's `requires-python` upper

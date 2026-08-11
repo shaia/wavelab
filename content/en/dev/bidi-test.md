@@ -35,7 +35,7 @@ $$
 
 ## Code span and block
 
-Inline code `thermolab.kinetics.simulate(n=100, rng=rng)` inside a sentence, then a block:
+Inline code `wavelab.kinetics.simulate(n=100, rng=rng)` inside a sentence, then a block:
 
 ```python
 import numpy as np

@@ -17,7 +17,7 @@ _build/
 content/en/_build/
 content/he/_build/
 .jupyterlite.doit.db
-# The thermolab wheel JupyterLite serves to Pyodide, rebuilt by scripts/build_site.py
+# The wavelab wheel JupyterLite serves to Pyodide, rebuilt by scripts/build_site.py
 dist/
 # JupyterLite's wheel-metadata cache, written next to the config it reads
 .cache/

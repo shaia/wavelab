@@ -1,4 +1,4 @@
-"""Build the complete ThermoLab site — both language copies and the JupyterLite app.
+"""Build the complete WaveLab site — both language copies and the JupyterLite app.
 
     _site/index.html  -> redirect to /en/
     _site/en/...      -> English site
@@ -14,7 +14,7 @@ projects yields a site with empty quiz includes and broken image links.
 
 Each language is an independent MyST project built with BASE_URL=<base>/<lang> so its internal
 links resolve under that prefix. `<base>` is empty for a site served from the root of a domain
-and `/thermolab` for a GitHub Pages project site; see `--base-path`. JupyterLite is built last,
+and `/wavelab` for a GitHub Pages project site; see `--base-path`. JupyterLite is built last,
 into the assembled tree, because `_site/` is the only place where /en/, /he/ and /lite/ share an
 origin — which is what makes the `/lite/lab/index.html?path=<lang>/labs/<module>.ipynb` links on
 the module pages resolve. Those links cannot work under `npx myst start`: that server serves one
@@ -25,9 +25,9 @@ page is emitted as `<base>/<lang>/lite/lab/index.html` — an address the single
 not occupy. `write_lab_redirects` puts a relative redirect there rather than duplicating the
 bundle per language; `verify_lite` then refuses to ship a lab link that does not resolve.
 
-The `thermolab` wheel is built into `dist/` and indexed into the bundle by JupyterLite's
+The `wavelab` wheel is built into `dist/` and indexed into the bundle by JupyterLite's
 PipliteAddon, because Pyodide has no access to this repository: without it every notebook dies
-on `from thermolab import ...`.
+on `from wavelab import ...`.
 
 Run:  uv run python scripts/build_site.py [--no-lite] [--no-clean]
                                           [--media|--no-media] [--serve [PORT]]
@@ -71,7 +71,7 @@ RENDER_DIR = ROOT / "media" / "render"
 LITE_DOIT_DB = ROOT / ".jupyterlite.doit.db"
 # Where `uv build` puts the wheel and where jupyter_lite_config.json looks for it.
 WHEEL_DIR = ROOT / "dist"
-PACKAGE = "thermolab"
+PACKAGE = "wavelab"
 # What media/render/*.py may emit into content/<lang>/media/, for the staleness check only.
 MEDIA_SUFFIXES = {".gif", ".mp4", ".webm", ".png"}
 # A root-absolute link into the JupyterLite bundle, as written in a content page.
@@ -81,7 +81,7 @@ ROOT_REDIRECT = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>ThermoLab</title>
+<title>WaveLab</title>
 <meta http-equiv="refresh" content="0; url=./en/">
 <script>location.replace("./en/");</script>
 </head>
@@ -135,8 +135,8 @@ def uv_executable() -> str:
 def normalise_base_path(value: str) -> str:
     """Canonicalise a deployment prefix to "" (domain root) or "/prefix".
 
-    `actions/configure-pages` reports "/" for a user site or custom domain and "/thermolab" for
-    a project site; a human is as likely to type "thermolab/". All three have to mean the same
+    `actions/configure-pages` reports "/" for a user site or custom domain and "/wavelab" for
+    a project site; a human is as likely to type "wavelab/". All three have to mean the same
     thing, because the prefix is concatenated with "/<lang>" to form BASE_URL.
     """
     trimmed = value.strip().strip("/")
@@ -174,7 +174,7 @@ def media_is_stale() -> tuple[bool, str]:
     """Decide whether the animations need re-rendering.
 
     Rendering is minutes of simulation, so it must not run on every build — but the outputs
-    are gitignored, and they are produced *from* `thermolab`, so a stale cache would show the
+    are gitignored, and they are produced *from* `wavelab`, so a stale cache would show the
     reader an animation of physics the code no longer implements. Compare the newest render
     script or physics source against the oldest existing animation.
 
@@ -195,7 +195,7 @@ def media_is_stale() -> tuple[bool, str]:
     # Every module here, not just render_*.py: the render scripts share helpers (_common.py),
     # and editing one of those changes the animations just as much as editing a script does.
     sources = list(RENDER_DIR.glob("*.py"))
-    sources += list((ROOT / "src" / "thermolab").rglob("*.py"))
+    sources += list((ROOT / "src" / "wavelab").rglob("*.py"))
     if not sources:
         return False, "no render scripts"
 
@@ -353,7 +353,7 @@ def write_lab_redirects() -> list[Path]:
                 '<html lang="en">\n'
                 "<head>\n"
                 '<meta charset="utf-8">\n'
-                "<title>ThermoLab laboratory</title>\n"
+                "<title>WaveLab laboratory</title>\n"
                 f'<script>location.replace("{destination}" + location.search + location.hash);'
                 "</script>\n"
                 "</head>\n"
@@ -436,7 +436,7 @@ def verify_lab_links() -> list[str]:
 def verify_wheel() -> list[str]:
     """Check that the course package reached the bundle's package index.
 
-    Without it `piplite.install("thermolab")` has nothing to install and every notebook fails
+    Without it `piplite.install("wavelab")` has nothing to install and every notebook fails
     on its first import — in the browser only, so no test on this machine would notice.
     """
     index = SITE / "lite" / "pypi" / "all.json"
@@ -467,7 +467,7 @@ def verify_lite() -> list[str]:
 
 
 def build_wheel() -> Stage:
-    """Build the thermolab wheel that JupyterLite serves to Pyodide.
+    """Build the wavelab wheel that JupyterLite serves to Pyodide.
 
     The browser kernel has no access to this repository, so the package has to travel with the
     bundle: `jupyter_lite_config.json` points PipliteAddon at `dist/`, which copies the wheel
@@ -500,7 +500,7 @@ def build_jupyterlite() -> Stage:
     """Bundle the notebooks into a browser-runnable JupyterLite app at _site/lite/.
 
     This is what lets a reader open a laboratory without installing anything: Pyodide runs
-    the same `thermolab` code in the browser.
+    the same `wavelab` code in the browser.
 
     The doit database is cleared first. It caches task state against outputs that we have
     just deleted along with `_site/`, and a stale entry makes the build report success while
@@ -574,7 +574,7 @@ def main(argv: list[str] | None = None) -> int:
         "--base-path",
         default=os.environ.get("SITE_BASE_PATH", ""),
         metavar="PREFIX",
-        help="path the site is served under, e.g. /thermolab for a GitHub Pages project site "
+        help="path the site is served under, e.g. /wavelab for a GitHub Pages project site "
         "(default: $SITE_BASE_PATH, else the domain root)",
     )
     args = parser.parse_args(argv)

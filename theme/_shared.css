@@ -1,5 +1,5 @@
-/* ThermoLab shared styles — included in BOTH language builds.
-   Generated into content/<lang>/thermolab.css by scripts/build_css.py; do not edit
+/* WaveLab shared styles — included in BOTH language builds.
+   Generated into content/<lang>/wavelab.css by scripts/build_css.py; do not edit
    the generated files. */
 
 /* Math and code are always LTR, and bidi-isolated so surrounding text cannot reorder them.
@@ -31,7 +31,7 @@ pre {
 }
 
 /* Numbers-with-units that must never be reordered by the bidi algorithm */
-.thermolab-qty {
+.wavelab-qty {
   direction: ltr;
   unicode-bidi: isolate;
 }

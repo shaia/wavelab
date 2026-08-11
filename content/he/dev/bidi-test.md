@@ -37,7 +37,7 @@ $$
 
 ## קוד בתוך שורה ובבלוק
 
-קוד בתוך שורה `thermolab.kinetics.simulate(n=100, rng=rng)` בתוך משפט, ואחריו בלוק:
+קוד בתוך שורה `wavelab.kinetics.simulate(n=100, rng=rng)` בתוך משפט, ואחריו בלוק:
 
 ```python
 import numpy as np

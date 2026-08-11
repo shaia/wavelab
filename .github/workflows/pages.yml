@@ -61,7 +61,7 @@ jobs:
           path: |
             content/en/media
             content/he/media
-          key: media-${{ hashFiles('media/render/**/*.py', 'src/thermolab/**/*.py') }}
+          key: media-${{ hashFiles('media/render/**/*.py', 'src/wavelab/**/*.py') }}
 
       - name: Build site
         env:

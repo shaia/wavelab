@@ -1,4 +1,4 @@
-# ThermoLab: Explore, Derive and Simulate Thermal Physics
+# WaveLab: Explore, Derive and Simulate Thermal Physics
 
 An interactive computational textbook and virtual laboratory for university-level thermal and
 statistical physics — built to take you from zero to exam-ready, at the depth of a good book,

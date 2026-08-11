@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Build the whole ThermoLab site — both language copies plus the JupyterLite labs.
+    Build the whole WaveLab site — both language copies plus the JupyterLite labs.
 
 .DESCRIPTION
     A thin wrapper over scripts/build_site.py that resolves the two tools which are not on
@@ -20,7 +20,7 @@
 
 .PARAMETER Media
     Always re-render the animation GIFs. By default they are rendered only when missing or
-    older than the render scripts / thermolab sources.
+    older than the render scripts / wavelab sources.
 
 .PARAMETER NoMedia
     Never render animations.
@@ -33,7 +33,7 @@
     superseded content-hashed images, so the site may ship dead copies of re-rendered GIFs.
 
 .PARAMETER BasePath
-    Path prefix the site will be served under, e.g. /thermolab for a GitHub Pages project site.
+    Path prefix the site will be served under, e.g. /wavelab for a GitHub Pages project site.
     Defaults to the domain root, which is what a local build wants. The published site sets this
     from the workflow, so use it only to reproduce the deployed layout locally.
 
@@ -44,7 +44,7 @@
     .\build.ps1 -Media -Serve -Port 8080
 
 .EXAMPLE
-    .\build.ps1 -BasePath /thermolab
+    .\build.ps1 -BasePath /wavelab
 #>
 [CmdletBinding()]
 param(

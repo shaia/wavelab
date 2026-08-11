@@ -1,4 +1,4 @@
-"""ThermoLab — the physics behind the course.
+"""WaveLab — the physics behind the course.
 
 Every model the notebooks and pages use lives here, in plain vectorized NumPy, so that a
 student can read the implementation of any claim the course makes. Notebooks orchestrate

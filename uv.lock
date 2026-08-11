@@ -2042,59 +2042,6 @@ wheels = [
 ]
 
 [[package]]
-name = "thermolab"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "ipywidgets" },
-    { name = "matplotlib" },
-    { name = "numpy" },
-    { name = "pint" },
-    { name = "scipy" },
-    { name = "sympy" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "hypothesis" },
-    { name = "imageio-ffmpeg" },
-    { name = "jupyterlab" },
-    { name = "jupyterlite-core" },
-    { name = "jupyterlite-pyodide-kernel" },
-    { name = "jupyterquiz" },
-    { name = "nbformat" },
-    { name = "nbmake" },
-    { name = "pytest" },
-    { name = "pyyaml" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "ipywidgets", specifier = ">=8.1.8" },
-    { name = "matplotlib", specifier = ">=3.11.1" },
-    { name = "numpy", specifier = ">=2.5.1" },
-    { name = "pint", specifier = ">=0.25.3" },
-    { name = "scipy", specifier = ">=1.18.0" },
-    { name = "sympy", specifier = ">=1.14.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "hypothesis", specifier = ">=6.165.2" },
-    { name = "imageio-ffmpeg", specifier = ">=0.6.0" },
-    { name = "jupyterlab", specifier = ">=4.6.2" },
-    { name = "jupyterlite-core", specifier = ">=0.8.1" },
-    { name = "jupyterlite-pyodide-kernel", specifier = ">=0.8.2" },
-    { name = "jupyterquiz", specifier = ">=2.9.6.4" },
-    { name = "nbformat", specifier = ">=5.11.0" },
-    { name = "nbmake", specifier = ">=1.5.5" },
-    { name = "pytest", specifier = ">=9.1.1" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "ruff", specifier = ">=0.16.2" },
-]
-
-[[package]]
 name = "tinycss2"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2166,6 +2113,59 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
+]
+
+[[package]]
+name = "wavelab"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "ipywidgets" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "pint" },
+    { name = "scipy" },
+    { name = "sympy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "hypothesis" },
+    { name = "imageio-ffmpeg" },
+    { name = "jupyterlab" },
+    { name = "jupyterlite-core" },
+    { name = "jupyterlite-pyodide-kernel" },
+    { name = "jupyterquiz" },
+    { name = "nbformat" },
+    { name = "nbmake" },
+    { name = "pytest" },
+    { name = "pyyaml" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ipywidgets", specifier = ">=8.1.8" },
+    { name = "matplotlib", specifier = ">=3.11.1" },
+    { name = "numpy", specifier = ">=2.5.1" },
+    { name = "pint", specifier = ">=0.25.3" },
+    { name = "scipy", specifier = ">=1.18.0" },
+    { name = "sympy", specifier = ">=1.14.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "hypothesis", specifier = ">=6.165.2" },
+    { name = "imageio-ffmpeg", specifier = ">=0.6.0" },
+    { name = "jupyterlab", specifier = ">=4.6.2" },
+    { name = "jupyterlite-core", specifier = ">=0.8.1" },
+    { name = "jupyterlite-pyodide-kernel", specifier = ">=0.8.2" },
+    { name = "jupyterquiz", specifier = ">=2.9.6.4" },
+    { name = "nbformat", specifier = ">=5.11.0" },
+    { name = "nbmake", specifier = ">=1.5.5" },
+    { name = "pytest", specifier = ">=9.1.1" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "ruff", specifier = ">=0.16.2" },
 ]
 
 [[package]]

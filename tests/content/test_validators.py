@@ -36,7 +36,7 @@ def write_notebook(path: Path, code_sources: list[str], en_source_hash: str | No
     for source in code_sources:
         nb.cells.append(nbformat.v4.new_code_cell(source))
     if en_source_hash is not None:
-        nb.metadata["thermolab"] = {"en_source_hash": en_source_hash}
+        nb.metadata["wavelab"] = {"en_source_hash": en_source_hash}
     nbformat.write(nb, path)
 
 
@@ -711,7 +711,7 @@ CANONICAL_BOOTSTRAP = (
     "    pass\n"
     "else:\n"
     '    await piplite.install(["pint", "ipywidgets", "jupyterquiz"])\n'
-    '    await piplite.install("thermolab", deps=False)\n'
+    '    await piplite.install("wavelab", deps=False)\n'
 )
 
 
@@ -733,13 +733,13 @@ class TestCheckNotebooks:
         findings = check_notebooks.check(tmp_path)
         assert has_error(findings, "first code cell is not the JupyterLite bootstrap")
 
-    def test_fails_when_thermolab_is_installed_with_its_dependency_graph(self, tmp_path):
+    def test_fails_when_wavelab_is_installed_with_its_dependency_graph(self, tmp_path):
         """The real defect: deps come from PyPI, which has no WebAssembly wheels."""
         write_notebook(
             tmp_path / "notebooks" / "en" / "labs" / "04-demo.ipynb",
             [
                 "try:\n    import piplite\nexcept ImportError:\n    pass\n"
-                'else:\n    await piplite.install("thermolab", keep_going=True)\n'
+                'else:\n    await piplite.install("wavelab", keep_going=True)\n'
             ],
         )
         findings = check_notebooks.check(tmp_path)
