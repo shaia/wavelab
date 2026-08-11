@@ -1,9 +1,9 @@
 """Unit registry for dimensional checks.
 
 The course's numerical code deliberately works in plain SI floats — students should read
-`P = N * K_B * T / V`, not a wrapper. Dimensional correctness is therefore established in the
-test suite instead: the same formulas are re-evaluated with `pint` quantities, so a wrong
-power of a variable fails loudly even when the number looks plausible.
+`omega0 = np.sqrt(stiffness / mass)`, not a wrapper. Dimensional correctness is therefore
+established in the test suite instead: the same formulas are re-evaluated with `pint`
+quantities, so a wrong power of a variable fails loudly even when the number looks plausible.
 """
 
 from __future__ import annotations
@@ -15,8 +15,10 @@ import pint
 ureg = pint.UnitRegistry()
 Quantity = ureg.Quantity
 
-#: Boltzmann constant as a dimensional quantity, for use in test-side formulas.
-K_B_Q = Quantity(1.380649e-23, "joule / kelvin")
+#: The electromagnetic constants as dimensional quantities, for use in test-side formulas.
+C_LIGHT_Q = Quantity(299_792_458.0, "meter / second")
+MU_0_Q = Quantity(1.25663706212e-6, "newton / ampere**2")
+EPS_0_Q = 1.0 / (MU_0_Q * C_LIGHT_Q**2)
 
 
 def dimensions_of(quantity: Quantity) -> str:

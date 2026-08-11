@@ -5,32 +5,27 @@ student can read the implementation of any claim the course makes. Notebooks orc
 lessons; they never re-implement physics.
 
 Modules:
-    constants     physical constants and the fixed sign convention
+    constants     physical constants and the fixed phase convention
     units         pint registry used by the dimensional tests
-    sampling      independent draws and sample averages; the N^(-1/2) law at its simplest
-    forms         differential forms in the plane; exact versus inexact, as pure mathematics
-    kinetics      free particles in a box; the microscopic origin of pressure
-    paths         quasistatic paths in the P-V plane; work as a path function
-    multiplicity  microstate counting, entropy, and why equilibrium wins
+    phasors       rotating complex amplitudes; superposition, beats, random-phase sums
+    oscillators   the harmonic oscillator — free, damped, driven — and its integrator
+    measurement   synthetic noise, cosine fitting, and uncertainty; simulation as experiment
     validation    the reusable accuracy checks (seeds, convergence, scaling)
 """
 
 from __future__ import annotations
 
-from . import forms, kinetics, multiplicity, paths, sampling, units, validation
-from .constants import AMU, K_B, N_A, R_GAS, SIGN_CONVENTION
+from . import measurement, oscillators, phasors, units, validation
+from .constants import C_LIGHT, EPS_0, MU_0, SIGN_CONVENTION
 
 __all__ = [
-    "AMU",
-    "K_B",
-    "N_A",
-    "R_GAS",
+    "C_LIGHT",
+    "EPS_0",
+    "MU_0",
     "SIGN_CONVENTION",
-    "forms",
-    "kinetics",
-    "multiplicity",
-    "paths",
-    "sampling",
+    "measurement",
+    "oscillators",
+    "phasors",
     "units",
     "validation",
 ]

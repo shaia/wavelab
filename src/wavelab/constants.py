@@ -2,30 +2,31 @@
 
 SIGN CONVENTION (fixed project-wide, never varied):
 
-    dU = δQ + δW_on
+    psi(x, t) = Re[A e^{i(k x - omega t)}]
 
-Heat δQ is positive when energy flows INTO the system; work δW_on is positive when work is
-done ON the system. Both are inexact differentials — they describe transfers along a path,
-not properties of a state. Engine efficiencies, which are conventionally written with work
-done BY the system, convert explicitly as W_by = -W_on at the one place that needs it.
+The time factor is e^{-i omega t}; a wave with positive k travels toward +x; phasors rotate
+clockwise. Forward Fourier transforms carry e^{-i.} with the 1/(2 pi) on the inverse — the
+same sign `numpy.fft` uses — and an absorbing medium has complex index n + i kappa. The
+engineering convention e^{j(omega t - k x)} converts by i <-> -j and appears nowhere in this
+codebase.
 """
 
 from __future__ import annotations
 
 from typing import Final
 
-#: Boltzmann constant [J/K] (SI 2019 exact definition).
-K_B: Final[float] = 1.380649e-23
+#: Speed of light in vacuum [m/s] (exact — the SI metre is defined from it).
+C_LIGHT: Final[float] = 299_792_458.0
 
-#: Avogadro constant [1/mol] (SI 2019 exact definition).
-N_A: Final[float] = 6.02214076e23
+#: Vacuum permeability [N/A^2] (CODATA 2018 — measured, no longer exactly 4*pi*1e-7).
+MU_0: Final[float] = 1.25663706212e-6
 
-#: Molar gas constant [J/(mol*K)], exact product of the two above.
-R_GAS: Final[float] = K_B * N_A
+#: Vacuum permittivity [F/m], fixed by c and mu_0 through c^2 = 1/(mu_0 eps_0).
+EPS_0: Final[float] = 1.0 / (MU_0 * C_LIGHT**2)
 
-#: Atomic mass unit [kg] (CODATA 2018).
-AMU: Final[float] = 1.66053906660e-27
-
-#: The one work convention this course uses. Referenced by docs and tests so that a change
+#: The one phase convention this course uses. Referenced by docs and tests so that a change
 #: here would be impossible to make silently.
-SIGN_CONVENTION: Final[str] = "dU = dQ + dW_on  (work done ON the system is positive)"
+SIGN_CONVENTION: Final[str] = (
+    "psi(x,t) = Re[A e^{i(kx - omega t)}]  "
+    "(time factor e^{-i omega t}; positive k travels toward +x)"
+)
