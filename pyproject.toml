@@ -1,0 +1,65 @@
+[project]
+name = "thermolab"
+version = "0.1.0"
+description = "ThermoLab: interactive bilingual (EN/HE) university thermal & statistical physics course"
+authors = [
+    { name = "shaia", email = "shaia@outlook.com" }
+]
+# 3.12 is this project's development floor (see .python-version). The upper bound has to admit
+# the CPython that Pyodide runs in the browser — 3.14 with jupyterlite-pyodide-kernel 0.8.2 —
+# because the wheel built from this file is installed into that kernel by piplite, and micropip
+# honours Requires-Python. Check PYODIDE_PYTHON_VERSION in jupyterlite_pyodide_kernel/constants.py
+# before narrowing it again.
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "ipywidgets>=8.1.8",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.1",
+    "pint>=0.25.3",
+    "scipy>=1.18.0",
+    "sympy>=1.14.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "dimensional: pint dimensional-consistency checks (accuracy framework category 1)",
+    "conservation: energy / particle-number conservation (category 2)",
+    "analytic_limit: known analytic special cases and limits (category 3)",
+    "large_n: large-N scaling behaviour, e.g. fluctuations ~ N^-1/2 (category 4)",
+    "convergence: numerical convergence under step refinement (category 5)",
+    "seed_independence: results independent of RNG seed within statistical error (category 6)",
+    "slow: long-running tests, excluded from quick runs",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "NPY", "B"]
+
+[tool.ruff.lint.isort]
+# The render scripts and validators are run as scripts, not imported as packages, so their
+# sibling helpers (media/render/_common.py, scripts/_content.py) are local imports that ruff
+# would otherwise sort in with third-party ones.
+known-first-party = ["thermolab", "_common", "_content", "_findings"]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.165.2",
+    "imageio-ffmpeg>=0.6.0",
+    "jupyterlab>=4.6.2",
+    "jupyterlite-core>=0.8.1",
+    "jupyterlite-pyodide-kernel>=0.8.2",
+    "jupyterquiz>=2.9.6.4",
+    "nbformat>=5.11.0",
+    "nbmake>=1.5.5",
+    "pytest>=9.1.1",
+    "pyyaml>=6.0.3",
+    "ruff>=0.16.2",
+]

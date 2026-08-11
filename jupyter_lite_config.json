@@ -1,0 +1,10 @@
+{
+  "LiteBuildConfig": {
+    "contents": ["notebooks"],
+    "output_dir": "_site/lite",
+    "apps": ["lab", "repl"]
+  },
+  "PipliteAddon": {
+    "piplite_urls": ["dist"]
+  }
+}

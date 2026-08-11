@@ -1,0 +1,99 @@
+# Build the whole site and publish it to GitHub Pages.
+#
+# Pull requests build and validate but do not deploy, so a broken page is caught before it can
+# reach the published site. Pushes to master build, validate and deploy.
+#
+# The site is served from a path prefix on a project Pages site (https://<user>.github.io/<repo>/),
+# so the build is told what that prefix is: actions/configure-pages reports it, and build_site.py
+# turns it into BASE_URL=<prefix>/<lang> for each MyST project. Moving to a custom domain later
+# changes the reported prefix to "/" and needs no change here.
+
+name: Publish site
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deployment finish rather than publishing a half-uploaded site.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Pages
+        id: pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      # The dev group carries jupyterlite, jupyterquiz and the bundled ffmpeg the animations
+      # encode through, so it must not be skipped.
+      - run: uv sync --locked
+
+      # Rendering the animations is minutes of simulation, and build_site.py's own staleness
+      # check cannot help here: actions/checkout stamps every file with the checkout time, so
+      # the mtime comparison it relies on is meaningless. Cache the output against the code
+      # that produces it instead, and pass the mode explicitly.
+      - name: Cache rendered animations
+        id: media
+        uses: actions/cache@v4
+        with:
+          path: |
+            content/en/media
+            content/he/media
+          key: media-${{ hashFiles('media/render/**/*.py', 'src/thermolab/**/*.py') }}
+
+      - name: Build site
+        env:
+          # On a pull request configure-pages has not run; assume the project-site prefix so the
+          # PR build exercises the same layout that will be deployed.
+          SITE_BASE_PATH: ${{ steps.pages.outputs.base_path || format('/{0}', github.event.repository.name) }}
+        run: |
+          uv run python scripts/build_site.py \
+            ${{ steps.media.outputs.cache-hit == 'true' && '--no-media' || '--media' }}
+
+      # After the build, not before: check_parity.py resolves every figure target on disk and the
+      # module pages include generated quiz files — both are gitignored and only exist once the
+      # build has produced them. --fast skips the notebook execution pass; ruff, the physics tests
+      # and the four content validators still gate the deployment.
+      - name: Validate
+        run: uv run python scripts/validate_all.py --fast
+
+      # Actions deployments never run Jekyll, so this is only insurance against a future change
+      # in how the artifact is served: the bundle contains _quiz/ path segments that Jekyll drops.
+      - run: touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

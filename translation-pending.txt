@@ -1,0 +1,2 @@
+# Pages intentionally not yet translated to Hebrew (one repo-relative EN path per line).
+# This file must be EMPTY (comments only) for any release.

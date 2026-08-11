@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+
+# Build outputs
+_site/
+_build/
+content/en/_build/
+content/he/_build/
+.jupyterlite.doit.db
+# The thermolab wheel JupyterLite serves to Pyodide, rebuilt by scripts/build_site.py
+dist/
+# JupyterLite's wheel-metadata cache, written next to the config it reads
+.cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+Thumbs.db
+.DS_Store
+# Generated media (rendered from media/render/*.py)
+content/en/media/
+content/he/media/
+content/en/_generated/
+content/he/_generated/
+
+# Instructor-only material: worked solutions, marking rubrics, answer keys.
+# This repository is public — publishing these would hand students the answers.
+instructor/
+
+# Local agent/editor configuration
+.claude/
+.vscode/
+.idea/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.log

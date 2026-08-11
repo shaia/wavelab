@@ -1,0 +1,172 @@
+[
+  {
+    "question": "An isolated gas, released from a small corner of its container, spreads to fill the whole volume and is never observed to spontaneously regather in the corner. Newton's laws are exactly time-reversible. What resolves the apparent tension?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Nothing in the mechanics forbids regathering; there are simply so vastly many more microstates corresponding to \"spread out\" that regathering is never observed in practice.",
+        "correct": true,
+        "feedback": "Right. The asymmetry lives entirely in the counting, not in the laws of motion. A time-reversed trajectory that regathers the gas is exactly as valid mechanically as the one that spreads it out — it is just overwhelmingly outnumbered."
+      },
+      {
+        "answer": "Collisions between gas molecules are inelastic, so kinetic energy is lost and the gas cannot regather.",
+        "correct": false,
+        "feedback": "This module's model assumes no such dissipation, and in any case real molecular collisions conserve kinetic energy on average in a gas at equilibrium. Energy loss is not what prevents regathering — counting is."
+      },
+      {
+        "answer": "Time-reversal symmetry is only approximate at the molecular scale, so the reverse process is mechanically forbidden.",
+        "correct": false,
+        "feedback": "Time-reversal symmetry of the underlying mechanics is not approximate here — reverse every velocity in a valid trajectory and you get another valid trajectory. The reverse process is not forbidden; it is merely represented by a vanishingly small fraction of the accessible microstates."
+      },
+      {
+        "answer": "Once the gas reaches equilibrium, the molecules stop moving, so there is nothing left to regather.",
+        "correct": false,
+        "feedback": "The molecules never stop moving; equilibrium is a statement about a macroscopic average, not about individual motion. This is the same point module 04 makes about pressure never going to zero at equilibrium."
+      }
+    ]
+  },
+  {
+    "question": "\"Every accessible microstate of an isolated system is equally probable.\" What kind of statement is this, within the framework this module builds?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A postulate — the foundation the rest of the module is built on, justified by the agreement of its consequences with experiment, not derived from anything more basic.",
+        "correct": true,
+        "feedback": "Correct, and worth being precise about. Nothing in this module proves equal probability from Newton's laws or anything else; it is assumed, and everything that follows — multiplicity, entropy, the even split dominating — is a consequence of that one assumption."
+      },
+      {
+        "answer": "A theorem, proved from Newton's laws applied to the colliding objects.",
+        "correct": false,
+        "feedback": "No proof from Newton's laws is given here or exists in general; the assumption is a postulate of statistical mechanics, not a derived theorem. Confusing the two hides exactly what is being assumed."
+      },
+      {
+        "answer": "An approximation that only holds at high temperature.",
+        "correct": false,
+        "feedback": "The postulate carries no temperature dependence at all in this module's model — there are no energy differences between the two states to begin with. Temperature enters statistical mechanics elsewhere, not here."
+      },
+      {
+        "answer": "A restatement of energy conservation.",
+        "correct": false,
+        "feedback": "Energy conservation is a separate statement (and, in this module's model, all microstates share the same energy by construction, so conservation says nothing about which one is occupied). Equal probability is an additional, independent assumption."
+      }
+    ]
+  },
+  {
+    "question": "The number of objects N in a two-state system is quadrupled, with everything else held fixed. What happens to the relative width of the multiplicity peak, sigma / (N/2)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It halves, since the relative width scales as N^(-1/2) and quadrupling N halves 1/sqrt(N).",
+        "correct": true,
+        "feedback": "Exactly. The relative width is 1/sqrt(N) exactly, so N -> 4N takes 1/sqrt(N) -> 1/sqrt(4N) = (1/2) * 1/sqrt(N) — the peak becomes twice as sharp, relatively speaking."
+      },
+      {
+        "answer": "It quarters, since N appears to the first power in the multiplicity formula.",
+        "correct": false,
+        "feedback": "The relative width scales as N^(-1/2), not N^(-1). Quadrupling N changes 1/sqrt(N) by a factor of 1/sqrt(4) = 1/2, not 1/4."
+      },
+      {
+        "answer": "It doubles, because there are more objects and therefore more ways to deviate from the even split.",
+        "correct": false,
+        "feedback": "There are indeed more ways to deviate in absolute terms, but there are even more ways to sit near the peak, and the ratio — which is what \"relative width\" measures — falls, not rises, as N grows."
+      },
+      {
+        "answer": "It is unchanged, because the even split n = N/2 always dominates regardless of N.",
+        "correct": false,
+        "feedback": "The even split dominating is true at every N, but \"dominating\" becomes more extreme as N grows — that sharpening is exactly what the shrinking relative width describes. The width is not independent of N."
+      }
+    ]
+  },
+  {
+    "question": "For a two-state system of N = 1,000,000 objects, use the N^(-1/2) law to estimate the relative width of the multiplicity peak, sigma / (N/2). Give your answer as a decimal fraction.",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          0.0008,
+          0.0012000000000000001
+        ],
+        "correct": true,
+        "feedback": "sigma / (N/2) = N^(-1/2) = 1/1000 = 0.001, i.e. 0.1%. The same law that gave a mole of gas an undetectable pressure fluctuation in module 04 gives a mole-scale multiplicity peak a relative width of about 1.3e-12 — the reason macroscopic systems never wander far from the even split."
+      }
+    ]
+  },
+  {
+    "question": "Two crystals of the same element look identical under a microscope: same lattice structure, same density. One is a single isotope. The other is a 50/50 random mixture of two isotopes of the same element, on the same lattice. Compare their entropies.",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The mixed crystal has vastly higher entropy, because entropy counts the number of accessible microstates, and there are astronomically many ways to arrange two isotopes across the lattice sites — even though nothing about the appearance changes.",
+        "correct": true,
+        "feedback": "Correct. Multiplicity(1000, 500) is about 2.7e299 for the mixed crystal against Omega=1 for the pure one, giving the mixed crystal roughly 690 k_B of entropy that the pure crystal simply does not have. Nothing about either crystal looks more \"disordered\" — the difference is purely in how many microstates share the visible macrostate."
+      },
+      {
+        "answer": "They have equal entropy, since neither crystal looks disordered and entropy is a measure of visible disorder.",
+        "correct": false,
+        "feedback": "This is exactly the intuition this example is built to break. Entropy is k_B ln Omega, a count of microstates, not a measure of how messy something looks. The two crystals look equally tidy and have wildly different entropies."
+      },
+      {
+        "answer": "The pure crystal has higher entropy, because maintaining isotopic purity requires more structural order.",
+        "correct": false,
+        "feedback": "This has the comparison backwards, and it also imports \"order\" as if it settled the question. The pure crystal has exactly one microstate (Omega = 1, S = 0); the mixed crystal has an enormous number of them."
+      },
+      {
+        "answer": "Entropy cannot be compared between the two crystals unless one is visibly messier than the other.",
+        "correct": false,
+        "feedback": "Entropy is well defined for both macrostates regardless of appearance — it is computed from the multiplicity of each, not from a visual inspection. The comparison in this question is exactly the kind Boltzmann's formula was built to make."
+      }
+    ]
+  },
+  {
+    "question": "Two independent subsystems, A and B, are part of one larger isolated system. Over time, subsystem A's entropy decreases while subsystem B's increases by a larger amount, so the combined entropy S_A + S_B rises. Is this consistent with the second law as developed in this module?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Yes — the second law here constrains only the total entropy of the isolated combined system; it places no requirement on any individual subsystem's entropy.",
+        "correct": true,
+        "feedback": "Correct. Because Omega_AB = Omega_A * Omega_B for independent subsystems, entropies add exactly: S_AB = S_A + S_B. Nothing about that additivity requires each term to move in the same direction — only their sum is constrained to (typically) increase for the isolated whole."
+      },
+      {
+        "answer": "No — every subsystem's entropy must increase individually, so this scenario is physically impossible.",
+        "correct": false,
+        "feedback": "This is the misconception this example exists to falsify. A worked case in the module's advanced section gives concrete numbers: subsystem A's entropy falls by about 0.17 k_B while subsystem B's rises by about 133.8 k_B, and the total rises. Nothing in the derivation forbids a subsystem's entropy from falling."
+      },
+      {
+        "answer": "No, unless A and B are exchanging energy, in which case any change is allowed.",
+        "correct": false,
+        "feedback": "The permissibility does not hinge on energy exchange specifically — it follows directly from additivity of entropy across independent subsystems, which holds whenever Omega_AB = Omega_A * Omega_B, regardless of what is being exchanged."
+      },
+      {
+        "answer": "Yes, but only because the total entropy was decreasing overall, which compensates.",
+        "correct": false,
+        "feedback": "The premise states explicitly that the combined entropy rises, not falls. The consistency here does not require any compensating decrease elsewhere — it only requires that the sum of the two subsystem entropies not decrease."
+      }
+    ]
+  },
+  {
+    "question": "As N grows, the relative discrepancy between S(2N, N) and 2 S(N, N/2) — the test of whether Boltzmann entropy is exactly extensive — behaves how?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It shrinks toward zero as N grows, but is not exactly zero at any finite N.",
+        "correct": true,
+        "feedback": "Correct. The discrepancy is set by the sub-leading, logarithmic term in Stirling's approximation, (1/2) ln(pi N) roughly, divided by the leading extensive term, N ln 2. That ratio falls with N but never reaches exactly zero for finite N — extensivity is a thermodynamic-limit statement, not an identity."
+      },
+      {
+        "answer": "It is exactly zero for every N, since entropy is extensive by definition.",
+        "correct": false,
+        "feedback": "Extensivity is not built into the definition S = k_B ln Omega; it is something the combinatorics only delivers approximately, with the approximation improving as N grows. Measured directly, the discrepancy is about 0.9% at N=200 and about 0.002% at N=200,000 — small, but not zero."
+      },
+      {
+        "answer": "It grows without bound as N grows, since larger systems have more ways to deviate.",
+        "correct": false,
+        "feedback": "The opposite is measured: the discrepancy shrinks as N grows, because the leading term in the entropy (proportional to N) grows faster than the sub-leading correction (proportional to ln N)."
+      },
+      {
+        "answer": "It depends only on whether N is even or odd, not on the size of N.",
+        "correct": false,
+        "feedback": "The discrepancy is set by the size of N through the logarithmic correction term, not by parity. It shrinks systematically and predictably as N increases."
+      }
+    ]
+  }
+]

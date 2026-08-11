@@ -1,0 +1,146 @@
+[
+  {
+    "question": "A gas sits at equilibrium in a sealed container, its pressure gauge perfectly steady. What are the molecules doing?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Moving as fast as ever, colliding constantly; only the averages have settled.",
+        "correct": true,
+        "feedback": "Right. Equilibrium is a statement about macroscopic averages, not about the microscopic motion. At 300 K nitrogen molecules average roughly 500 m/s whether or not the gauge is moving."
+      },
+      {
+        "answer": "They have come to rest, which is why the pressure no longer changes.",
+        "correct": false,
+        "feedback": "This would require zero kinetic energy, i.e. absolute zero. It also cannot be right on its own terms: motionless molecules exert no pressure at all, so the gauge would read zero rather than a steady value."
+      },
+      {
+        "answer": "They move but no longer strike the walls, so no further momentum is transferred.",
+        "correct": false,
+        "feedback": "Wall collisions are precisely what the pressure is. They continue at an enormous rate; what is steady is the rate, not its absence."
+      },
+      {
+        "answer": "They oscillate in place about fixed positions, as in a solid.",
+        "correct": false,
+        "feedback": "That describes a solid, where atoms are bound to lattice sites. In a gas the molecules travel freely between collisions and explore the whole container."
+      }
+    ]
+  },
+  {
+    "question": "Container A holds 1 mole of helium at 300 K. Container B holds 2 moles of helium at 300 K, in twice the volume. Which statement is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Both have the same pressure and the same mean energy per atom; B has twice the internal energy.",
+        "correct": true,
+        "feedback": "Correct, and this is the distinction worth carrying forward: temperature measures energy *per particle*, internal energy measures the *total*. Doubling N and V together leaves P = N k T / V unchanged."
+      },
+      {
+        "answer": "B has twice the pressure, because it contains twice as many atoms.",
+        "correct": false,
+        "feedback": "Particle number alone does not set the pressure — density does. B has twice the particles in twice the volume, so N/V, and hence P, is unchanged."
+      },
+      {
+        "answer": "B has twice the temperature, because it has twice the internal energy.",
+        "correct": false,
+        "feedback": "This is the most common confusion in the whole subject. Temperature tracks the mean energy per particle; spreading twice the energy over twice the particles leaves the mean, and therefore the temperature, exactly where it was."
+      },
+      {
+        "answer": "A has the higher pressure, because its atoms are more crowded.",
+        "correct": false,
+        "feedback": "The atoms are not more crowded: both containers have the same number density N/V, which is what \"crowded\" means here."
+      }
+    ]
+  },
+  {
+    "question": "You double the mass of every particle while holding the temperature and density fixed. What happens to the pressure?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It is unchanged, because the heavier particles move more slowly by exactly the compensating factor.",
+        "correct": true,
+        "feedback": "Exactly. P = N m <v_x^2> / V and equipartition fixes m<v_x^2> = k_B T, so the mass cancels. Heavier particles hit harder but less often, and the two effects cancel identically rather than approximately."
+      },
+      {
+        "answer": "It doubles, because each collision delivers twice the momentum.",
+        "correct": false,
+        "feedback": "Each collision does deliver more momentum — but at fixed temperature the heavier particles are slower (<v_x^2> = k_B T / m), so they arrive at the wall less often and carry less speed. Work through P = N m <v_x^2>/V and watch m cancel."
+      },
+      {
+        "answer": "It halves, because the heavier particles move more slowly.",
+        "correct": false,
+        "feedback": "You have kept the slowing but dropped the heavier punch. Both effects are present and they cancel."
+      },
+      {
+        "answer": "It is unchanged, because pressure never depends on what the gas is made of.",
+        "correct": false,
+        "feedback": "The conclusion is right but the reason is not. Pressure is independent of mass only for an *ideal* gas; real gases at high density differ from one another because their particles have different sizes and attractions."
+      }
+    ]
+  },
+  {
+    "question": "A box holds 10,000 non-interacting particles in thermal equilibrium. Estimate the relative standard deviation of its pressure, sigma_P / <P>, using the N^(-1/2) law. Give your answer as a decimal fraction.",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          0.008,
+          0.012
+        ],
+        "correct": true,
+        "feedback": "sigma_P/<P> = N^(-1/2) = 1/100 = 0.01, i.e. 1%. Note how quickly this becomes unmeasurable: a mole gives about 4e-13."
+      }
+    ]
+  },
+  {
+    "question": "Which single change would make a gas's pressure fluctuations easiest to detect?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Measuring a very small sample, so that N is small.",
+        "correct": true,
+        "feedback": "Yes. The relative fluctuation depends on N and essentially nothing else — not on temperature, not on the species, not on the pressure itself. Small N is the only lever."
+      },
+      {
+        "answer": "Raising the temperature, so the collisions are more violent.",
+        "correct": false,
+        "feedback": "Hotter collisions are more violent, but there are correspondingly more of them and the mean pressure rises too. The *relative* fluctuation is N^(-1/2), independent of temperature."
+      },
+      {
+        "answer": "Using heavier molecules, so each impact is larger.",
+        "correct": false,
+        "feedback": "Mass cancels out of the pressure at fixed temperature, and it cancels out of the relative fluctuation too."
+      },
+      {
+        "answer": "Compressing the gas, so collisions happen more often.",
+        "correct": false,
+        "feedback": "Compression raises both the mean pressure and the absolute fluctuation, leaving the ratio unchanged at N^(-1/2)."
+      }
+    ]
+  },
+  {
+    "question": "In which situation is the kinetic model used in this module least trustworthy?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Helium at 4 K and high density, close to liquefaction.",
+        "correct": true,
+        "feedback": "Right on both counts. High density makes interparticle forces and finite particle size matter, and low temperature brings quantum statistics into play — the two failure modes named in the model specification."
+      },
+      {
+        "answer": "Nitrogen at room temperature and atmospheric pressure.",
+        "correct": false,
+        "feedback": "This is the model's home ground: the molecules occupy about a thousandth of the volume and quantum effects are utterly negligible."
+      },
+      {
+        "answer": "Argon in a vacuum chamber at very low density.",
+        "correct": false,
+        "feedback": "Low density makes the model *better*, not worse — that is precisely the dilute limit in which \"non-interacting\" is an excellent description."
+      },
+      {
+        "answer": "Air in a very large room rather than a small flask.",
+        "correct": false,
+        "feedback": "Container size is irrelevant to the model's validity; density and temperature are what matter. If anything, larger N makes the macroscopic description sharper."
+      }
+    ]
+  }
+]

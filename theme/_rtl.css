@@ -1,0 +1,35 @@
+/* Hebrew-only styles.
+
+   These rules are UNCONDITIONAL (no [dir="rtl"] selector) on purpose: the mystmd theme is a
+   hydrating React app that rebuilds the document and drops any `dir` attribute we inject, so
+   direction must come from CSS the theme itself loads. CSS `direction` drives the Unicode
+   bidi algorithm exactly as the `dir` attribute would. */
+
+html,
+body {
+  direction: rtl;
+}
+
+main,
+article,
+nav,
+aside {
+  direction: rtl;
+}
+
+article,
+main p,
+main li,
+main dd {
+  text-align: right;
+}
+
+/* Code blocks stay left-aligned inside RTL prose */
+pre,
+pre * {
+  text-align: left;
+}
+
+table {
+  direction: rtl;
+}

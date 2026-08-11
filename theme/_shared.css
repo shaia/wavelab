@@ -1,0 +1,37 @@
+/* ThermoLab shared styles — included in BOTH language builds.
+   Generated into content/<lang>/thermolab.css by scripts/build_css.py; do not edit
+   the generated files. */
+
+/* Math and code are always LTR, and bidi-isolated so surrounding text cannot reorder them.
+   Harmless in the English build, essential in the Hebrew one. */
+.katex {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.katex-display {
+  direction: ltr;
+}
+
+code,
+kbd,
+samp,
+pre {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* The book theme puts a "Made with MyST" link in the sidebar footer whenever the
+   `primary_sidebar_footer` template part is empty. The theme's only supported way to drop it
+   is to supply replacement content for that part, which we have none for — and injected HTML
+   does not survive hydration — so hide it. The header's copy of the same string is handled by
+   the `logo_text` option in each myst.yml. */
+.myst-made-with-myst {
+  display: none;
+}
+
+/* Numbers-with-units that must never be reordered by the bidi algorithm */
+.thermolab-qty {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

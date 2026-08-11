@@ -1,0 +1,53 @@
+# Misconception registry (brainstorm §6): each entry is a design requirement, not a footnote.
+# assigned_module: which module must confront it with (a) a falsifying experiment and
+# (b) a quiz/exam distractor built on the wrong model.
+# status: pending | addressed (check_assessment.py verifies addressed ones).
+misconceptions:
+  - id: lln-compensation
+    statement: "The law of large numbers works because later outcomes compensate earlier deviations."
+    assigned_module: 00-orientation
+    status: addressed
+  - id: heat-temperature-same
+    statement: "Heat and temperature are the same kind of quantity."
+    assigned_module: 04-pressure
+    status: addressed
+  - id: heat-stored-in-body
+    statement: "Heat is stored inside a body."
+    assigned_module: 05-work-paths
+    status: addressed
+  - id: temperature-total-energy
+    statement: "Temperature measures total internal energy."
+    assigned_module: 04-pressure
+    status: addressed
+  - id: entropy-is-disorder
+    statement: "Entropy always means 'disorder'."
+    assigned_module: 08-multiplicity
+    status: addressed
+  - id: adiabatic-constant-t
+    statement: "An adiabatic process must have constant temperature."
+    assigned_module: 05-work-paths
+    status: addressed
+  - id: reversible-just-backward
+    statement: "A reversible process is simply one that can run backward."
+    assigned_module: 05-work-paths
+    status: addressed
+  - id: subsystem-entropy-increase
+    statement: "Entropy of every subsystem must increase."
+    assigned_module: 08-multiplicity
+    status: addressed
+  - id: equilibrium-motion-stops
+    statement: "Equilibrium means that microscopic motion stops."
+    assigned_module: 04-pressure
+    status: addressed
+  - id: canonical-equal-probability
+    statement: "The canonical ensemble means every microstate is equally probable."
+    assigned_module: unassigned   # ensembles module (11), beyond Milestone 1
+    status: pending
+  - id: dq-dw-exact
+    statement: "dQ and dW are ordinary exact differentials."
+    assigned_module: 05-work-paths
+    status: addressed
+  - id: negative-t-colder
+    statement: "Negative temperature means colder than absolute zero."
+    assigned_module: unassigned   # ensembles/paramagnet module, beyond Milestone 1
+    status: pending

@@ -1,0 +1,186 @@
+[
+  {
+    "question": "Averaging 100 fair dice gives an answer that typically lands within about 0.17 of 3.5. You now average 10,000 dice instead. Which statement is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "About 0.017 — the typical distance falls as N^(-1/2), so a hundredfold larger N shrinks it tenfold.",
+        "correct": true,
+        "feedback": "Correct, in both the number and the reason. sigma of the average is sigma_1/sqrt(N), so multiplying N by 100 divides the scatter by 10."
+      },
+      {
+        "answer": "About 0.017 — the later rolls compensate for the early deviations and cancel them out.",
+        "correct": false,
+        "feedback": "The number is right and the mechanism is wrong, which is worth more than half the marks in the wrong direction. Dice have no memory: after a run of sixes the next roll still averages 3.5, and the laboratory measures exactly this. The early excess is never cancelled — it is divided by an ever-larger N until it stops mattering. Convergence is dilution, not compensation."
+      },
+      {
+        "answer": "About 0.0017 — the typical distance falls as 1/N.",
+        "correct": false,
+        "feedback": "This is the most common wrong scaling. Variances add, so the variance of the average falls as 1/N — and the scatter is the square root of the variance, hence N^(-1/2). Re-read the boxed result in the derivation section."
+      },
+      {
+        "answer": "About 0.17 — averaging more dice does not change how far a single experiment strays.",
+        "correct": false,
+        "feedback": "If this were true no macroscopic quantity would ever be reproducible. Run the laboratory's second animation: the scatter of the dots visibly narrows as N grows."
+      }
+    ]
+  },
+  {
+    "question": "Compute the variance of a single roll of a fair six-sided die. Give a decimal number.",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          2.867,
+          2.9669999999999996
+        ],
+        "correct": true,
+        "feedback": "<X> = 7/2 and <X^2> = 91/6, so the variance is 91/6 - 49/4 = 35/12 = 2.9167. The standard deviation is its square root, about 1.708 — and the dimensionless ratio sigma_1/mu_1 is about 0.488, the coefficient in front of N^(-1/2). If you got 1.708 you computed the standard deviation instead; if you got 17.5 you forgot to subtract the square of the mean."
+      }
+    ]
+  },
+  {
+    "question": "As N grows, what happens to the absolute scatter of the SUM of N dice, and to the relative scatter of their AVERAGE?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The sum's absolute scatter grows as sqrt(N); the average's relative scatter falls as N^(-1/2).",
+        "correct": true,
+        "feedback": "Right, and both come from the single statement that variances of independent quantities add. The sum becomes less predictable in absolute terms at the same time as the average becomes more predictable in relative terms; there is no contradiction, because they are different questions about the same data."
+      },
+      {
+        "answer": "Both shrink, since averaging always suppresses randomness.",
+        "correct": false,
+        "feedback": "The average shrinks, but the sum does not. Var(S_N) = N sigma_1^2, so the sum's standard deviation is sigma_1 sqrt(N), which grows without bound. Only after dividing by N does the scatter shrink."
+      },
+      {
+        "answer": "Both grow, since more dice means more opportunities for an extreme result.",
+        "correct": false,
+        "feedback": "True of the sum, false of the average. More dice does make an extreme *total* larger in absolute terms — but the total it is compared against grows faster (as N rather than sqrt(N)), so the fractional deviation of the average falls."
+      },
+      {
+        "answer": "The sum's scatter stays constant; the average's falls as 1/N.",
+        "correct": false,
+        "feedback": "Neither half is right. Both exponents follow from Var(S_N) = N sigma_1^2: take the square root for the sum, then divide by N for the average."
+      }
+    ]
+  },
+  {
+    "question": "Which of these expressions could be a molecular speed? (k_B is the Boltzmann constant, T a temperature, m a particle mass.)",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "sqrt(3 k_B T / m)",
+        "correct": true,
+        "feedback": "Correct. k_B T is an energy, so k_B T / m has dimensions of energy per mass, which is (length/time)^2; the square root is a speed. Note what this check cannot tell you: whether the numerical factor is 1, 2 or 3. Dimensions reject wrong formulas; they never produce right ones."
+      },
+      {
+        "answer": "3 k_B T / m",
+        "correct": false,
+        "feedback": "This has dimensions of speed squared, not speed — energy per unit mass. You are one square root away."
+      },
+      {
+        "answer": "sqrt(3 k_B T m)",
+        "correct": false,
+        "feedback": "Multiplying by the mass rather than dividing gives energy times mass, whose square root is a momentum, not a speed. Check by writing out kg m^2 s^-2 times kg."
+      },
+      {
+        "answer": "sqrt(3 k_B T / m^2)",
+        "correct": false,
+        "feedback": "This gives speed divided by the square root of a mass. A useful habit: reduce every candidate to powers of kg, m, s and K before deciding."
+      }
+    ]
+  },
+  {
+    "question": "For f(x, y) = x^2 y, evaluate the partial derivative of f with respect to x at constant y, at the point (x, y) = (2, 3).",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          11.99,
+          12.01
+        ],
+        "correct": true,
+        "feedback": "Holding y fixed, d/dx of x^2 y is 2xy, which is 2*2*3 = 12. If you got 4 you differentiated x^2 and dropped the factor y; if you got 4 for the other partial you computed the derivative with respect to y instead, which is x^2."
+      }
+    ]
+  },
+  {
+    "question": "What is the total differential df of f(x, y) = x^2 y?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "df = 2xy dx + x^2 dy",
+        "correct": true,
+        "feedback": "Correct — each partial derivative multiplies the differential of its own variable. This is the object thermodynamics manipulates constantly; every Maxwell relation in module 10 is a statement about differentials of exactly this kind."
+      },
+      {
+        "answer": "df = x^2 dx + 2xy dy",
+        "correct": false,
+        "feedback": "The two coefficients have been swapped. The coefficient of dx must be the derivative with respect to x, at constant y, which is 2xy."
+      },
+      {
+        "answer": "df = 2xy dx",
+        "correct": false,
+        "feedback": "This is the response to changing x alone. The total differential accounts for both variables changing; dropping the dy term is exactly the error that makes a partial derivative and a total derivative disagree."
+      },
+      {
+        "answer": "df = 2xy + x^2",
+        "correct": false,
+        "feedback": "A differential form must carry the differentials dx and dy. Without them this is just a sum of two derivatives, and it cannot be integrated along a path."
+      }
+    ]
+  },
+  {
+    "question": "Is the differential form w = y dx (that is, M = y and N = 0) exact?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "No — dM/dy = 1 but dN/dx = 0, so no potential function exists and the integral depends on the path.",
+        "correct": true,
+        "feedback": "Correct. The mixed-partials criterion settles it without integrating anything, and the integrals confirm it: from (0,0) to (1,1) this form gives 0, 1/2 or 1 depending on the route. In module 5 this is the mathematics behind heat and work being path functions."
+      },
+      {
+        "answer": "Yes — it is the differential of xy.",
+        "correct": false,
+        "feedback": "d(xy) = y dx + x dy, which has an extra term. Differentiate your candidate potential and compare with the form you were given; the x dy term has nowhere to come from."
+      },
+      {
+        "answer": "Yes — every form built from smooth functions is exact.",
+        "correct": false,
+        "feedback": "Smoothness is not the issue. Exactness is a condition on how M and N are related to each other, and most smooth forms fail it."
+      },
+      {
+        "answer": "It cannot be decided without first choosing a path.",
+        "correct": false,
+        "feedback": "This has it backwards: the criterion is precisely what lets you decide *before* choosing any path, and its whole content is whether the choice of path will matter."
+      }
+    ]
+  },
+  {
+    "question": "A gas is compressed: the surroundings push a piston inward and the volume decreases. In the sign convention this course uses everywhere, the work term appearing in the first law is which of the following?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Positive, because energy was transferred into the gas.",
+        "correct": true,
+        "feedback": "Correct. This course writes the first law with the work done *on* the system, so everything that enters the system adds to its internal energy and there is no minus sign to remember. Compression puts energy in, so the term is positive."
+      },
+      {
+        "answer": "Negative, because the volume of the gas decreased.",
+        "correct": false,
+        "feedback": "The sign tracks the direction of energy flow, not the direction of the volume change. Compressing the gas does work on it, so energy went in."
+      },
+      {
+        "answer": "Negative, because work always enters the first law with a minus sign.",
+        "correct": false,
+        "feedback": "That is the other common convention, in which the work counted is the work done *by* the system. Both conventions are correct physics and this course uses the other one — see the conventions page, which puts the two side by side."
+      },
+      {
+        "answer": "Zero, because compression transfers heat rather than work.",
+        "correct": false,
+        "feedback": "Pushing a piston is mechanical energy transfer, which is work by definition. Heat may also flow, but that is a separate term in the same equation."
+      }
+    ]
+  }
+]

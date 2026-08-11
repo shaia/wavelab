@@ -1,0 +1,393 @@
+# Canonical EN <-> HE physics glossary. The ONLY source of Hebrew terminology.
+# he_reject: common wrong/nonstandard spellings the glossary lint flags in Hebrew content.
+terms:
+  - key: thermodynamics
+    en: thermodynamics
+    he: תרמודינמיקה
+  - key: statistical-mechanics
+    en: statistical mechanics
+    he: מכניקה סטטיסטית
+  - key: temperature
+    en: temperature
+    he: טמפרטורה
+  - key: pressure
+    en: pressure
+    he: לחץ
+  - key: volume
+    en: volume
+    he: נפח
+  - key: heat
+    en: heat
+    he: חום
+  - key: work
+    en: work
+    he: עבודה
+  - key: internal-energy
+    en: internal energy
+    he: אנרגיה פנימית
+  - key: entropy
+    en: entropy
+    he: אנטרופיה
+    he_reject: [אנתרופיה]
+  - key: enthalpy
+    en: enthalpy
+    he: אנתלפיה
+  - key: free-energy
+    en: free energy
+    he: אנרגיה חופשית
+  - key: equilibrium
+    en: equilibrium
+    he: שיווי משקל
+    he_reject: [שווי משקל]
+  - key: thermal-equilibrium
+    en: thermal equilibrium
+    he: שיווי משקל תרמי
+  - key: state-variable
+    en: state variable
+    he: משתנה מצב
+  - key: state-function
+    en: state function
+    he: פונקציית מצב
+    he_reject: [פונקצית מצב]
+  - key: path-function
+    en: path function
+    he: פונקציית מסלול
+    he_reject: [פונקצית מסלול]
+  - key: equation-of-state
+    en: equation of state
+    he: משוואת מצב
+  - key: ideal-gas
+    en: ideal gas
+    he: גז אידיאלי
+    he_reject: [גז אידאלי]
+  - key: kinetic-theory
+    en: kinetic theory
+    he: תורה קינטית
+  - key: microstate
+    en: microstate
+    he: מיקרו-מצב
+    he_reject: [מיקרומצב]
+  - key: macrostate
+    en: macrostate
+    he: מאקרו-מצב
+    he_reject: [מקרומצב, מאקרומצב]
+  - key: multiplicity
+    en: multiplicity
+    he: ריבוי מצבים
+  - key: probability
+    en: probability
+    he: הסתברות
+  - key: probability-distribution
+    en: probability distribution
+    he: התפלגות הסתברות
+  - key: random-walk
+    en: random walk
+    he: הילוך אקראי
+    he_reject: [הליכה אקראית]
+  - key: fluctuation
+    en: fluctuation
+    he: פלוקטואציה
+    he_reject: [תנודה סטטיסטית]
+  - key: ensemble
+    en: ensemble
+    he: צבר
+    he_reject: [אנסמבל]
+  - key: canonical-ensemble
+    en: canonical ensemble
+    he: צבר קנוני
+  - key: microcanonical-ensemble
+    en: microcanonical ensemble
+    he: צבר מיקרו-קנוני
+  - key: partition-function
+    en: partition function
+    he: פונקציית החלוקה
+    he_reject: [פונקצית החלוקה]
+  - key: boltzmann-distribution
+    en: Boltzmann distribution
+    he: התפלגות בולצמן
+    he_reject: [התפלגות בולטזמן]
+  - key: heat-capacity
+    en: heat capacity
+    he: קיבול חום
+    he_reject: [קיבולת חום]
+  - key: adiabatic
+    en: adiabatic
+    he: אדיאבטי
+  - key: isothermal
+    en: isothermal
+    he: איזותרמי
+  - key: isobaric
+    en: isobaric
+    he: איזוברי
+  - key: quasistatic
+    en: quasistatic
+    he: כמו-סטטי
+    he_reject: [קוואזיסטטי, קוואזי-סטטי]
+  - key: reversible
+    en: reversible process
+    he: תהליך הפיך
+  - key: irreversible
+    en: irreversible process
+    he: תהליך בלתי הפיך
+    he_reject: [תהליך אי הפיך]
+  - key: heat-engine
+    en: heat engine
+    he: מנוע חום
+  - key: carnot-efficiency
+    en: Carnot efficiency
+    he: נצילות קרנו
+    he_reject: [יעילות קרנו]
+  - key: exact-differential
+    en: exact differential
+    he: דיפרנציאל מדויק
+  - key: inexact-differential
+    en: inexact differential
+    he: דיפרנציאל לא מדויק
+  - key: equipartition
+    en: equipartition theorem
+    he: משפט חלוקת האנרגיה השווה
+  - key: degrees-of-freedom
+    en: degrees of freedom
+    he: דרגות חופש
+  - key: mean-free-path
+    en: mean free path
+    he: מהלך חופשי ממוצע
+  - key: piston
+    en: piston
+    he: בוכנה
+  - key: elastic-collision
+    en: elastic collision
+    he: התנגשות אלסטית
+  - key: central-limit-theorem
+    en: central limit theorem
+    he: משפט הגבול המרכזי
+  - key: stirling-approximation
+    en: Stirling's approximation
+    he: קירוב סטירלינג
+  - key: momentum
+    en: momentum
+    he: תנע
+    he_reject: [מומנטום]
+  - key: impulse
+    en: impulse
+    he: מתקף
+  - key: collision
+    en: collision
+    he: התנגשות
+  - key: wall
+    en: wall
+    he: דופן
+  - key: particle
+    en: particle
+    he: חלקיק
+  - key: molecule
+    en: molecule
+    he: מולקולה
+  - key: density
+    en: density
+    he: צפיפות
+  - key: number-density
+    en: number density
+    he: צפיפות מספרית
+  - key: distribution
+    en: distribution
+    he: התפלגות
+  - key: maxwell-boltzmann
+    en: Maxwell-Boltzmann distribution
+    he: התפלגות מקסוול-בולצמן
+    he_reject: [התפלגות מקסוול בולצמן]
+  - key: ideal-gas-law
+    en: ideal gas law
+    he: חוק הגזים האידיאליים
+  - key: mass
+    en: mass
+    he: מסה
+  - key: speed
+    en: speed
+    he: מהירות
+  - key: average
+    en: average
+    he: ממוצע
+  - key: standard-deviation
+    en: standard deviation
+    he: סטיית תקן
+  - key: thermodynamic-limit
+    en: thermodynamic limit
+    he: הגבול התרמודינמי
+  - key: osmotic-pressure
+    en: osmotic pressure
+    he: לחץ אוסמוטי
+  - key: radiation-pressure
+    en: radiation pressure
+    he: לחץ קרינה
+  - key: virial
+    en: virial equation
+    he: משוואת הוויריאל
+  - key: stress-tensor
+    en: stress tensor
+    he: טנזור המאמצים
+  - key: momentum-flux
+    en: momentum flux
+    he: שטף תנע
+  - key: cycle
+    en: thermodynamic cycle
+    he: מחזור תרמודינמי
+  - key: isochoric
+    en: isochoric
+    he: איזוכורי
+  - key: integrating-factor
+    en: integrating factor
+    he: גורם אינטגרציה
+  - key: differential-form
+    en: differential form
+    he: תבנית דיפרנציאלית
+  - key: external-pressure
+    en: external pressure
+    he: לחץ חיצוני
+  - key: quadrature
+    en: numerical quadrature
+    he: אינטגרציה נומרית
+  - key: convergence-order
+    en: order of convergence
+    he: סדר ההתכנסות
+  - key: microcanonical
+    en: microcanonical
+    he: מיקרו-קנוני
+  - key: postulate
+    en: postulate
+    he: הנחת יסוד
+  - key: isotope
+    en: isotope
+    he: איזוטופ
+  - key: crystal
+    en: crystal
+    he: גביש
+  - key: lattice
+    en: lattice
+    he: סריג
+  - key: logarithm
+    en: logarithm
+    he: לוגריתם
+  - key: extensive
+    en: extensive
+    he: אקסטנסיבי
+  - key: additive
+    en: additive
+    he: אדיטיבי
+  - key: combinatorics
+    en: combinatorics
+    he: קומבינטוריקה
+  - key: binomial-coefficient
+    en: binomial coefficient
+    he: מקדם בינומי
+  - key: gaussian
+    en: Gaussian
+    he: גאוסי
+  - key: distinguishable
+    en: distinguishable
+    he: ניתן להבחנה
+  - key: indistinguishable
+    en: indistinguishable
+    he: בלתי ניתן להבחנה
+  - key: ehrenfest-urn
+    en: Ehrenfest urn
+    he: כד ארנפסט
+  - key: poincare-recurrence
+    en: Poincaré recurrence theorem
+    he: משפט החזרה של פואנקרה
+  - key: loschmidt-paradox
+    en: Loschmidt's paradox
+    he: הפרדוקס של לושמידט
+  - key: gibbs-paradox
+    en: Gibbs paradox
+    he: הפרדוקס של גיבס
+  - key: shannon-entropy
+    en: Shannon entropy
+    he: אנטרופיית שאנון
+  - key: entropic-force
+    en: entropic force
+    he: כוח אנטרופי
+  - key: polymer
+    en: polymer
+    he: פולימר
+  - key: diffusion
+    en: diffusion
+    he: דיפוזיה
+  - key: entropy-of-mixing
+    en: entropy of mixing
+    he: אנטרופיית ערבוב
+  - key: spin
+    en: spin
+    he: ספין
+  - key: ergodicity
+    en: ergodicity
+    he: ארגודיות
+  - key: asymptotic
+    en: asymptotic
+    he: אסימפטוטי
+  - key: random-variable
+    en: random variable
+    he: משתנה מקרי
+  - key: expectation
+    en: expectation
+    he: תוחלת
+  - key: variance
+    en: variance
+    he: שונות
+  - key: independence
+    en: independence
+    he: אי-תלות
+    he_reject: [עצמאות]
+  - key: law-of-large-numbers
+    en: law of large numbers
+    he: חוק המספרים הגדולים
+  - key: sample-mean
+    en: sample mean
+    he: ממוצע מדגם
+  - key: die
+    en: die
+    he: קובייה
+    he_reject: [קוביה]
+  - key: dimensionless
+    en: dimensionless
+    he: חסר ממד
+  - key: relative-error
+    en: relative error
+    he: שגיאה יחסית
+  - key: partial-derivative
+    en: partial derivative
+    he: נגזרת חלקית
+  - key: total-differential
+    en: total differential
+    he: דיפרנציאל שלם
+    he_reject: [דיפרנציאל מלא]
+  - key: mixed-partials
+    en: mixed partial derivatives
+    he: נגזרות מעורבות
+  - key: line-integral
+    en: line integral
+    he: אינטגרל קווי
+  - key: potential-function
+    en: potential function
+    he: פונקציה פוטנציאלית
+    he_reject: [פונקצית פוטנציאל]
+  - key: dimensional-analysis
+    en: dimensional analysis
+    he: ניתוח ממדי
+    he_reject: [אנליזה ממדית]
+  - key: sign-convention
+    en: sign convention
+    he: מוסכמת סימנים
+  - key: boltzmann-constant
+    en: Boltzmann constant
+    he: קבוע בולצמן
+    he_reject: [קבוע בולטזמן]
+  - key: first-law
+    en: first law of thermodynamics
+    he: החוק הראשון של התרמודינמיקה
+  - key: chebyshev-inequality
+    en: Chebyshev's inequality
+    he: אי-שוויון צ'בישב
+  - key: markov-inequality
+    en: Markov's inequality
+    he: אי-שוויון מרקוב
