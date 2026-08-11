@@ -1,4 +1,4 @@
-# WaveLab — Explore, Derive and Simulate Waves and Optics
+# WaveLab — Explore, Derive and Simulate Waves, Oscillations & Optics
 
 An interactive, bilingual (English / עברית) computational textbook and virtual laboratory for
 university-level waves, oscillations and optics. Not a tutorial: a full learning environment
@@ -9,8 +9,8 @@ live simulations, laboratories, quizzes, exams and demonstration videos.
 The guiding idea, everywhere:
 
 > **A vibrating string, a resonant cavity, a diffraction pattern and a quantum wavefunction
-> are one mathematical structure wearing four costumes. Learn to think in waves once, and you
-> have learned them all.**
+> are one mathematical structure wearing four costumes. Learn to think in waves once, and
+> you have learned them all.**
 
 ## What's here
 
@@ -23,7 +23,7 @@ The guiding idea, everywhere:
 | Assessment | `assessment/` | Quiz banks (YAML, bilingual), exam-style problems, misconception registry |
 | Animations | `media/render/` → `content/*/media/` | Simulation-rendered MP4 demonstrations, language-neutral, embedded in both site copies |
 | Validation | `tests/`, `scripts/` | The scientific-accuracy framework, mechanized (see below) |
-| Instructor material | `instructor/` | Worked solutions and marking rubrics — never deployed |
+| Course design | `waves_optics_interactive_course_master_plan.md` | The full-curriculum blueprint this repo is built against |
 
 ## Quickstart
 
@@ -86,7 +86,7 @@ Other tools you will reach for while authoring:
 uv run python scripts/render_quizzes.py   # quiz banks -> site pages + notebook JSON
 uv run python scripts/sync_notebooks.py   # copy EN code cells into the HE notebooks
 uv run python scripts/stamp_hashes.py     # mark a finished translation as up to date
-uv run python media/render/render_resonance.py  # regenerate a module's animations
+uv run python media/render/render_sho.py  # regenerate a module's animations
 ```
 
 On Windows, `uv` may not be on PATH; call it as `& "$env:USERPROFILE\.local\bin\uv.exe"`.
@@ -97,11 +97,11 @@ Live-preview a single language while writing: `cd content/en && npx myst start`.
 
 Every module passes six automated physics-test categories (dimensional consistency,
 conservation, analytic limits, large-N scaling, numerical convergence, seed independence),
-notebook execution in both languages, content lint (structure, model-spec blocks, fixed phase
-convention `e^{i(kx − ωt)}`, epistemic labeling), assessment lint (answer keys, objective and
-misconception coverage), and EN↔HE parity (tree, equation identity, notebook code-cell
-identity, glossary consistency) — plus a human/assisted review pass. See `.claude/CLAUDE.md`
-for the full conventions.
+notebook execution in both languages, content lint (structure, model-spec blocks, the fixed
+phase convention `psi = Re[A e^{i(kx - omega t)}]`, epistemic labeling), assessment lint
+(answer keys, objective and misconception coverage), and EN↔HE parity (tree, equation
+identity, notebook code-cell identity, glossary consistency) — plus a human/assisted review
+pass.
 
 ## Bilingual design
 
@@ -112,18 +112,9 @@ RTL-aware build. `translation-pending.txt` must be empty for any release.
 
 ## Course map
 
-One arc, from a mass on a spring to an optical image, in the order the mathematics builds:
-mathematical and computational foundations (complex numbers, Fourier series, transforms and
-convolution) → oscillations (simple, damped, driven, transient) → coupled oscillators and
-normal modes → continuous systems and the wave equation → standing waves, wave packets and
-dispersion → electromagnetic waves and propagation in matter → interfaces (Snell, Fresnel,
-Brewster, total internal reflection) → polarization → interference and coherence →
-diffraction → geometrical optics → Fourier optics and imaging → Gaussian beams, resonators,
-lasers and waveguides, with optional advanced photonics.
-
-The progression is the point: a coupled mass system, a resonant cavity, a diffraction pattern
-and a quantum wavefunction all use the same mathematical structures, so the course is built to
-introduce each structure once and then reuse it.
-
-Currently built: phasors (the language of waves) and the simple harmonic oscillator — plus the
-course conventions reference page.
+The full curriculum runs from mathematical foundations through oscillations, coupled
+oscillators and normal modes, the wave equation, Fourier methods and dispersion,
+electromagnetic waves, interfaces, polarization, interference, diffraction, geometrical
+optics, Fourier optics, and on to Gaussian beams, lasers and photonics — the complete plan
+lives in `waves_optics_interactive_course_master_plan.md`. Currently built: phasors (the
+language of waves) and the simple harmonic oscillator — plus the course conventions page.
