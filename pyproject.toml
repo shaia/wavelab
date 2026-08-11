@@ -1,7 +1,7 @@
 [project]
 name = "wavelab"
 version = "0.1.0"
-description = "WaveLab: interactive bilingual (EN/HE) university thermal & statistical physics course"
+description = "WaveLab: interactive bilingual (EN/HE) university waves, oscillations & optics course"
 authors = [
     { name = "shaia", email = "shaia@outlook.com" }
 ]

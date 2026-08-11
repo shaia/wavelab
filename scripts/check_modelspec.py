@@ -3,8 +3,8 @@
 Enforces the module authoring contract from `.claude/CLAUDE.md`: every module page
 carries its section labels in the mandated order, non-empty `objectives:` metadata,
 a well-formed seven-bullet model-spec block, at least one epistemic admonition, and
-the project's `dU = δQ + δW_on` sign convention everywhere except the one place that
-is allowed to convert it.
+the project's `e^{i(kx - omega t)}` phase convention everywhere except the one place
+that is allowed to convert it.
 
 Run standalone (`python scripts/check_modelspec.py`) or import `check()`.
 """

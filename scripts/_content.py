@@ -210,8 +210,8 @@ def mask_non_prose(text: str) -> str:
     numbers stay accurate.
 
     Masked: fenced and inline code, math, MyST labels, directive names, and
-    identifier-like tokens — slugs, ids and file paths such as `04-pressure`,
-    `heat-temperature-same` or `../media/pressure-impacts.gif`. Those legitimately
+    identifier-like tokens — slugs, ids and file paths such as `01-sho`,
+    `amplitude-is-intensity` or `../media/beats-envelope.gif`. Those legitimately
     contain English words in every language's copy of a page, so flagging them would
     make the glossary check cry wolf on every file and train authors to ignore it.
     """

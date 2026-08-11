@@ -2,33 +2,27 @@ version: 1
 project:
   id: wavelab-en
   title: "WaveLab"
-  description: "Explore, derive and simulate thermal physics — an interactive university course"
-  keywords: [thermodynamics, statistical mechanics, physics, interactive]
+  description: "Explore, derive and simulate waves, oscillations and optics — an interactive university course"
+  keywords: [waves, oscillations, optics, physics, interactive]
   numbering:
     heading_2: false
   math:
     # project-wide macros so notation is uniform and translations can't drift
-    '\dbar': '\delta'
-    '\Won': 'W_{\mathrm{on}}'
-    '\kB': 'k_{\mathrm{B}}'
+    '\ii': '\mathrm{i}'
+    '\Real': '\operatorname{Re}'
+    '\Imag': '\operatorname{Im}'
+    '\wnat': '\omega_0'
   toc:
     - file: index.md
     - title: Foundations
       children:
-        - file: foundations/00-orientation.md
-        - file: foundations/00-orientation-problems.md
-        - file: foundations/math-refresher.md
+        - file: foundations/00-phasors.md
+        - file: foundations/00-phasors-problems.md
         - file: conventions.md
-    - title: Thermodynamics
+    - title: Oscillations
       children:
-        - file: thermodynamics/04-pressure.md
-        - file: thermodynamics/04-pressure-problems.md
-        - file: thermodynamics/05-work-paths.md
-        - file: thermodynamics/05-work-paths-problems.md
-    - title: Statistical mechanics
-      children:
-        - file: statistical-mechanics/08-multiplicity.md
-        - file: statistical-mechanics/08-multiplicity-problems.md
+        - file: oscillations/01-sho.md
+        - file: oscillations/01-sho-problems.md
 site:
   template: book-theme
   options:

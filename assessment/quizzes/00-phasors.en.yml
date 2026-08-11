@@ -1,0 +1,180 @@
+module: 00-phasors
+questions:
+  - id: Q-00-1
+    type: multiple-choice
+    objectives: [OBJ-00-2]
+    misconception: superposition-always-adds
+    prompt: >-
+      Two identical loudspeakers each produce, at your ear, a pure tone of amplitude A at
+      the same frequency. Which received amplitudes are possible, depending on their phase
+      difference?
+    choices:
+      - text: Anything from 0 up to 2A, set by the phase difference.
+        correct: true
+        feedback: >-
+          Right. The resultant obeys A_sum^2 = A^2 + A^2 + 2 A^2 cos(delta): 2A when in
+          phase, exactly 0 when opposed, everything in between otherwise. Adding a signal
+          can silence a signal — that is how noise cancellation works.
+      - text: Exactly 2A — two sources of amplitude A always add to 2A.
+        correct: false
+        feedback: >-
+          Only when the phases agree. Amplitudes are not volumes of water; they carry signs
+          moment by moment, and with a half-cycle offset every push from one speaker meets
+          an equal pull from the other.
+      - text: Between A and 2A — a second source can only add, never remove.
+        correct: false
+        feedback: >-
+          This is the intuition this module exists to replace. At phase difference pi the
+          two signals cancel completely: the sum of two oscillations can be smaller than
+          either of them, all the way down to zero.
+      - text: Always sqrt(2) A, because uncorrelated signals add in quadrature.
+        correct: false
+        feedback: >-
+          Quadrature addition applies to *random-phase* (incoherent) sources on average.
+          These two speakers hold a fixed phase relation, so the full range 0 to 2A is
+          available — which value you get is set by delta.
+
+  - id: Q-00-2
+    type: multiple-choice
+    objectives: [OBJ-00-1, OBJ-00-5]
+    prompt: >-
+      Under the course convention, the oscillation x(t) = 5 cos(omega t + pi/3) is
+      represented by which phasor?
+    choices:
+      - text: 5 e^(-i pi/3), an arrow of length 5 at angle -60 degrees.
+        correct: true
+        feedback: >-
+          Correct. The phasor is A e^(-i phi), so that Re[phasor x e^(-i omega t)]
+          reproduces A cos(omega t + phi). The minus sign in the phasor pairs with the
+          clockwise rotation e^(-i omega t).
+      - text: 5 e^(+i pi/3), an arrow of length 5 at angle +60 degrees.
+        correct: false
+        feedback: >-
+          That is the engineering convention's phasor (which rotates counterclockwise as
+          e^(+j omega t)). Under this course's clockwise rotation it represents
+          5 cos(omega t - pi/3) — the wrong sign of the phase.
+      - text: 5 cos(pi/3) = 2.5, a real number.
+        correct: false
+        feedback: >-
+          That is the signal's value at t = 0, one snapshot. The phasor must encode both
+          numbers that characterise the oscillation — amplitude and phase — which takes a
+          complex number, not a real one.
+      - text: (5, pi/3) — a pair of real numbers; no complex number is needed.
+        correct: false
+        feedback: >-
+          The pair does record the information, but it does not *add* correctly: summing
+          two oscillations means summing their phasors as complex numbers, and no
+          componentwise rule on (A, phi) pairs does that.
+
+  - id: Q-00-3
+    type: numeric
+    objectives: [OBJ-00-2]
+    prompt: >-
+      Two same-frequency oscillations have amplitudes 3.0 and 4.0 and a phase difference of
+      a quarter cycle (delta = pi/2). What is the amplitude of their sum?
+    answer: 5.0
+    tolerance: 0.1
+    feedback: >-
+      A^2 = 3^2 + 4^2 + 2 x 3 x 4 x cos(pi/2) = 9 + 16 + 0 = 25, so A = 5. At a quarter
+      cycle the cross term vanishes and amplitudes add like the sides of a right triangle —
+      the 3-4-5 triangle, drawn with arrows.
+
+  - id: Q-00-4
+    type: multiple-choice
+    objectives: [OBJ-00-3]
+    prompt: >-
+      A 440 Hz tuning fork sounds together with a string vibrating at 442 Hz, at equal
+      loudness. What do you hear?
+    choices:
+      - text: A tone near 441 Hz whose loudness pulses 2 times per second.
+        correct: true
+        feedback: >-
+          Right. The sum is a carrier at the average frequency, 441 Hz, inside a slow
+          envelope; loudness follows the envelope squared and pulses at the full
+          difference, 2 Hz. Musicians tune by slowing these beats to a stop.
+      - text: Two separate steady tones, at 440 Hz and at 442 Hz.
+        correct: false
+        feedback: >-
+          The ear cannot separate tones 2 Hz apart — and at any single moment the air
+          carries one summed pressure signal. That sum is a 441 Hz oscillation whose
+          amplitude slowly pulses: beats.
+      - text: A steady tone at 882 Hz, the sum of the frequencies.
+        correct: false
+        feedback: >-
+          Frequencies do not add when signals superpose — signals add. The sum frequency
+          appears only through *nonlinear* processing; linear superposition produces the
+          average frequency modulated at the difference.
+      - text: A steady tone at 441 Hz of constant loudness.
+        correct: false
+        feedback: >-
+          The carrier is indeed 441 Hz, but its amplitude cannot be constant: the two
+          components drift from agreement to opposition once per second per hertz of
+          detuning, so the loudness must pulse. Constant loudness would need equal
+          frequencies.
+
+  - id: Q-00-5
+    type: multiple-choice
+    objectives: [OBJ-00-4]
+    prompt: >-
+      One hundred small radio transmitters each deliver unit intensity to a distant
+      receiver. Compare the received intensity when their phases are independent and random
+      with when they are locked together.
+    choices:
+      - text: About 100 when random, exactly 10,000 when locked.
+        correct: true
+        feedback: >-
+          Right. Random phases: cross terms average away, intensities add, giving N = 100.
+          Locked phases: amplitudes add to N, and intensity is amplitude squared, N^2 =
+          10,000. That factor of N between them is why a laser outshines a lamp.
+      - text: About 100 in both cases — the total power is fixed by the sources.
+        correct: false
+        feedback: >-
+          Total *emitted* power is fixed, but locking the phases redirects it: the locked
+          array concentrates emission into narrow directions (this receiver among them) at
+          the expense of others. Locally, intensity can reach N^2.
+      - text: About 10,000 in both cases, since there are 100 sources either way.
+        correct: false
+        feedback: >-
+          With random phases the field arrows perform a random walk: typical resultant
+          amplitude sqrt(N), hence intensity N = 100, not N^2. Getting N^2 requires the
+          arrows aligned — coherence.
+      - text: About 10 when random — a random walk of 100 steps typically reaches sqrt(100).
+        correct: false
+        feedback: >-
+          sqrt(N) = 10 is the typical *amplitude*, and it is the right random-walk
+          reasoning — but intensity is amplitude squared, so the expected intensity is
+          N = 100.
+
+  - id: Q-00-6
+    type: multiple-choice
+    objectives: [OBJ-00-2]
+    misconception: phase-is-unphysical
+    prompt: >-
+      A student says: "Phase is just a mathematical bookkeeping angle — nothing physical
+      ever depends on it." What is the correct assessment?
+    choices:
+      - text: Phase differences are measurable physics — they decide interference — while one oscillation's absolute phase is a clock-setting convention.
+        correct: true
+        feedback: >-
+          Exactly. Whether two waves brighten or silence each other is set by their phase
+          difference, and interferometers measure such differences to fractions of a
+          wavelength. Only the overall phase — when you started the clock — is
+          conventional.
+      - text: The student is right — only amplitudes are measurable, and phase never affects any observation.
+        correct: false
+        feedback: >-
+          Noise-cancelling headphones falsify this in your ears: the anti-noise differs
+          from the noise *only* in phase, and the result is silence instead of doubled
+          sound. Phase differences have loudly observable consequences.
+      - text: All phases, including the absolute phase of a single oscillation, are separately measurable.
+        correct: false
+        feedback: >-
+          Too strong in the other direction. The absolute phase encodes the choice of
+          t = 0; shift your clock and it changes with no physical consequence. What
+          experiments access is phase *differences*.
+      - text: Phase matters only when the amplitudes of the two oscillations are exactly equal.
+        correct: false
+        feedback: >-
+          The cross term 2 A1 A2 cos(delta) is present for any two nonzero amplitudes;
+          equal amplitudes merely allow the special case of *complete* cancellation.
+          Interference does not need equality.

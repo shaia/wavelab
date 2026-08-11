@@ -1,14 +1,16 @@
-# WaveLab — Explore, Derive and Simulate Thermal Physics
+# WaveLab — Explore, Derive and Simulate Waves and Optics
 
 An interactive, bilingual (English / עברית) computational textbook and virtual laboratory for
-university-level thermal and statistical physics. Not a tutorial: a full learning environment
+university-level waves, oscillations and optics. Not a tutorial: a full learning environment
 meant to take a student from zero to exam-ready at the level of leading university courses,
 at the depth of a good book on the subject — plus everything interactive computing adds:
 live simulations, laboratories, quizzes, exams and demonstration videos.
 
-The guiding question, everywhere:
+The guiding idea, everywhere:
 
-> **How does predictable macroscopic behaviour emerge from uncertain microscopic behaviour?**
+> **A vibrating string, a resonant cavity, a diffraction pattern and a quantum wavefunction
+> are one mathematical structure wearing four costumes. Learn to think in waves once, and you
+> have learned them all.**
 
 ## What's here
 
@@ -84,7 +86,7 @@ Other tools you will reach for while authoring:
 uv run python scripts/render_quizzes.py   # quiz banks -> site pages + notebook JSON
 uv run python scripts/sync_notebooks.py   # copy EN code cells into the HE notebooks
 uv run python scripts/stamp_hashes.py     # mark a finished translation as up to date
-uv run python media/render/render_pressure.py   # regenerate a module's animations
+uv run python media/render/render_resonance.py  # regenerate a module's animations
 ```
 
 On Windows, `uv` may not be on PATH; call it as `& "$env:USERPROFILE\.local\bin\uv.exe"`.
@@ -95,8 +97,8 @@ Live-preview a single language while writing: `cd content/en && npx myst start`.
 
 Every module passes six automated physics-test categories (dimensional consistency,
 conservation, analytic limits, large-N scaling, numerical convergence, seed independence),
-notebook execution in both languages, content lint (structure, model-spec blocks, fixed sign
-convention `dU = δQ + δW_on`, epistemic labeling), assessment lint (answer keys, objective and
+notebook execution in both languages, content lint (structure, model-spec blocks, fixed phase
+convention `e^{i(kx − ωt)}`, epistemic labeling), assessment lint (answer keys, objective and
 misconception coverage), and EN↔HE parity (tree, equation identity, notebook code-cell
 identity, glossary consistency) — plus a human/assisted review pass. See `.claude/CLAUDE.md`
 for the full conventions.
@@ -110,10 +112,18 @@ RTL-aware build. `translation-pending.txt` must be empty for any release.
 
 ## Course map
 
-Module 0 (orientation & prerequisites from zero) → 12 core modules (equilibrium, equations of
-state, probability, kinetic theory, first law, processes, second law, entropy, fundamental
-relation, potentials, ensembles, partition functions) → 6 advanced modules (chemical potential,
-phase equilibrium, phase transitions, radiation & solids, quantum statistics, fluctuations &
-transport). Currently built: orientation, the microscopic origin of pressure, work &
-thermodynamic paths, and entropy & multiplicity — plus two reference pages, the course
-conventions and a mathematics refresher.
+One arc, from a mass on a spring to an optical image, in the order the mathematics builds:
+mathematical and computational foundations (complex numbers, Fourier series, transforms and
+convolution) → oscillations (simple, damped, driven, transient) → coupled oscillators and
+normal modes → continuous systems and the wave equation → standing waves, wave packets and
+dispersion → electromagnetic waves and propagation in matter → interfaces (Snell, Fresnel,
+Brewster, total internal reflection) → polarization → interference and coherence →
+diffraction → geometrical optics → Fourier optics and imaging → Gaussian beams, resonators,
+lasers and waveguides, with optional advanced photonics.
+
+The progression is the point: a coupled mass system, a resonant cavity, a diffraction pattern
+and a quantum wavefunction all use the same mathematical structures, so the course is built to
+introduce each structure once and then reuse it.
+
+Currently built: phasors (the language of waves) and the simple harmonic oscillator — plus the
+course conventions reference page.

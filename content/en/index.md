@@ -1,13 +1,15 @@
-# WaveLab: Explore, Derive and Simulate Thermal Physics
+# WaveLab: Explore, Derive and Simulate Waves and Optics
 
-An interactive computational textbook and virtual laboratory for university-level thermal and
-statistical physics — built to take you from zero to exam-ready, at the depth of a good book,
-with everything a computer adds: live simulations, laboratories, quizzes, exams and
+An interactive computational textbook and virtual laboratory for university-level waves,
+oscillations and optics — built to take you from zero to exam-ready, at the depth of a good
+book, with everything a computer adds: live simulations, laboratories, quizzes, exams and
 demonstration videos.
 
-Everything in this course revolves around one question:
+Everything in this course revolves around one idea:
 
-> **How does predictable macroscopic behaviour emerge from uncertain microscopic behaviour?**
+> **A vibrating string, a resonant cavity, a diffraction pattern and a quantum wavefunction
+> are one mathematical structure wearing four costumes. Learn to think in waves once, and
+> you have learned them all.**
 
 ## How to study here
 
@@ -19,21 +21,25 @@ Every module follows the same climb:
 4. **Advanced** — clearly marked deeper material. Skip it freely on a first pass; nothing later depends on it.
 
 :::{note} Conventions used everywhere
-The first law is always written $dU = \dbar Q + \dbar \Won$ — work done **on** the system.
-Heat and work carry $\dbar$ (inexact differentials) because they are path functions, not
-properties of a state. Units are SI and $\kB$ is always explicit. The full list is on the
-[conventions](conventions.md) page.
+A plane wave is always $\Real[A\,e^{\ii(kx - \omega t)}]$ — the time factor is
+$e^{-\ii\omega t}$ and phasors rotate clockwise. Forward Fourier transforms carry the minus
+sign, matching `numpy.fft`, and an absorbing medium has index $n + \ii\kappa$. Units are SI.
+The full list is on the [conventions](conventions.md) page.
 :::
 
-## Modules
+## The course map
 
-The course has an orientation module, twelve core modules and six advanced modules.
+The full course runs from oscillations through waves to optics and photonics: mathematical
+foundations, oscillations, coupled oscillators and normal modes, the wave equation, Fourier
+methods and dispersion, electromagnetic waves, interfaces, polarization, interference,
+diffraction, geometrical optics, Fourier optics, and Gaussian beams, lasers and waveguides.
+
 Currently available:
 
-- **[Orientation](foundations/00-orientation.md)** — how many unpredictable things add up to a reliable one. Start here.
-- **[Microscopic origin of pressure](thermodynamics/04-pressure.md)** — how steady pressure emerges from violent, irregular collisions.
-- **[Work and thermodynamic paths](thermodynamics/05-work-paths.md)** — why work depends on the road taken, not just the endpoints.
-- **[Entropy and multiplicity](statistical-mechanics/08-multiplicity.md)** — why an isolated gas almost never gathers in one corner.
+- **[Phasors: the language of waves](foundations/00-phasors.md)** — why adding two sounds can
+  produce silence, and the one complex-number idea the whole course runs on. Start here.
+- **[The simple harmonic oscillator](oscillations/01-sho.md)** — the single curve that clocks,
+  molecules and circuits all follow, and why its period ignores its amplitude.
 
-Two reference pages sit outside the sequence and are meant to be returned to:
-[conventions](conventions.md) and the [mathematics refresher](foundations/math-refresher.md).
+One reference page sits outside the sequence and is meant to be returned to:
+[conventions](conventions.md).

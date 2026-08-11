@@ -115,3 +115,129 @@ terms:
   - key: markov-inequality
     en: Markov's inequality
     he: אי-שוויון מרקוב
+  - key: oscillation
+    en: oscillation
+    he: תנודה
+  - key: oscillator
+    en: oscillator
+    he: מתנד
+  - key: wave
+    en: wave
+    he: גל
+  - key: amplitude
+    en: amplitude
+    he: משרעת
+    he_reject: [אמפליטודה]
+  - key: phase
+    en: phase
+    he: מופע
+  - key: phase-difference
+    en: phase difference
+    he: הפרש מופע
+  - key: frequency
+    en: frequency
+    he: תדירות
+  - key: angular-frequency
+    en: angular frequency
+    he: תדירות זוויתית
+  - key: period
+    en: period
+    he: זמן מחזור
+  - key: phasor
+    en: phasor
+    he: פאזור
+  - key: complex-number
+    en: complex number
+    he: מספר מרוכב
+  - key: imaginary-unit
+    en: imaginary unit
+    he: היחידה המדומה
+  - key: euler-formula
+    en: Euler's formula
+    he: נוסחת אוילר
+  - key: complex-conjugate
+    en: complex conjugate
+    he: צמוד מרוכב
+  - key: superposition
+    en: superposition
+    he: סופרפוזיציה
+  - key: interference
+    en: interference
+    he: התאבכות
+    he_reject: [אינטרפרנציה]
+  - key: constructive-interference
+    en: constructive interference
+    he: התאבכות בונה
+  - key: destructive-interference
+    en: destructive interference
+    he: התאבכות הורסת
+  - key: beats
+    en: beats
+    he: פעימות
+  - key: envelope
+    en: envelope
+    he: מעטפת
+  - key: coherence
+    en: coherence
+    he: קוהרנטיות
+  - key: simple-harmonic-motion
+    en: simple harmonic motion
+    he: תנועה הרמונית פשוטה
+  - key: harmonic
+    en: harmonic
+    he: הרמוני
+  - key: restoring-force
+    en: restoring force
+    he: כוח מחזיר
+  - key: spring-constant
+    en: spring constant
+    he: קבוע הקפיץ
+  - key: spring
+    en: spring
+    he: קפיץ
+  - key: pendulum
+    en: pendulum
+    he: מטוטלת
+  - key: equilibrium-position
+    en: equilibrium position
+    he: נקודת שיווי המשקל
+  - key: natural-frequency
+    en: natural frequency
+    he: תדירות עצמית
+  - key: initial-conditions
+    en: initial conditions
+    he: תנאי התחלה
+  - key: phase-space
+    en: phase space
+    he: מרחב הפאזה
+  - key: potential-energy
+    en: potential energy
+    he: אנרגיה פוטנציאלית
+  - key: kinetic-energy
+    en: kinetic energy
+    he: אנרגיה קינטית
+  - key: damping
+    en: damping
+    he: ריסון
+  - key: resonance
+    en: resonance
+    he: תהודה
+    he_reject: [רזוננס]
+  - key: quality-factor
+    en: quality factor
+    he: מקדם טיב
+  - key: wavelength
+    en: wavelength
+    he: אורך גל
+  - key: wavenumber
+    en: wavenumber
+    he: מספר גל
+  - key: plane-wave
+    en: plane wave
+    he: גל מישורי
+  - key: intensity
+    en: intensity
+    he: עוצמה
+  - key: isochronism
+    en: isochronism
+    he: איזוכרוניות

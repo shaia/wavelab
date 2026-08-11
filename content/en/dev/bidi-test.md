@@ -6,36 +6,37 @@ both site copies. Do not delete — it is the upgrade canary for theme/mystmd ch
 
 ## Inline math in prose
 
-The ideal gas law $PV = N\kB T$ sits inside a sentence. A ratio like $V_2/V_1 = 2$ and a
-signed quantity $\Delta U = -3\,\mathrm{J}$ must keep their order. Mixed digits: at
-$T = 300\,\mathrm{K}$ with $N = 10^{4}$ particles.
+The plane wave $\psi(x,t) = \Real[A\,e^{\ii(kx - \omega t)}]$ sits inside a sentence. A ratio
+like $\lambda_2/\lambda_1 = 2$ and a signed quantity $\Delta\varphi = -3\,\mathrm{rad}$ must
+keep their order. Mixed digits: at $\lambda = 633\,\mathrm{nm}$ with $N = 10^{4}$ grating
+lines.
 
 ## Display math
 
 $$
-W = \int_{V_1}^{V_2} P\,dV = N\kB T \ln\frac{V_2}{V_1}
+\frac{\partial^{2}\psi}{\partial x^{2}} = \frac{1}{v^{2}}\frac{\partial^{2}\psi}{\partial t^{2}}
 $$
 
 $$
-dU = \dbar Q + \dbar \Won
+I(\theta) = I_0\left[\frac{\sin\beta}{\beta}\right]^{2}, \qquad \beta = \frac{\pi a \sin\theta}{\lambda}
 $$
 
 ## Lists with math
 
-- First: $P = N\kB T/V$ at fixed $T$.
-- Second: fluctuations scale as $N^{-1/2}$.
-- Third: efficiency bound $\eta \le 1 - T_c/T_h$.
+- First: $k = 2\pi/\lambda$ at fixed $\lambda$.
+- Second: $N$ random phasors sum to a resultant of length $\sim N^{1/2}$.
+- Third: total internal reflection above $\theta_c = \arcsin(n_2/n_1)$.
 
 ## Table with math
 
-| Quantity | Symbol | Ideal-gas value |
+| Quantity | Symbol | Plane-wave value |
 |---|---|---|
-| Pressure | $P$ | $N\kB T/V$ |
-| Mean kinetic energy | $\langle E_k \rangle$ | $\tfrac{3}{2}\kB T$ |
+| Wavenumber | $k$ | $2\pi/\lambda$ |
+| Time-averaged intensity | $\langle I \rangle$ | $\tfrac{1}{2}c\epsilon_0 n E_0^2$ |
 
 ## Code span and block
 
-Inline code `wavelab.kinetics.simulate(n=100, rng=rng)` inside a sentence, then a block:
+Inline code `wavelab.phasors.random_phasor_sum(n=100, rng=rng)` inside a sentence, then a block:
 
 ```python
 import numpy as np

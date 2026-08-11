@@ -2,4 +2,52 @@
 # assigned_module: which module must confront it with (a) a falsifying experiment and
 # (b) a quiz/exam distractor built on the wrong model.
 # status: pending | addressed (check_assessment.py verifies addressed ones).
-misconceptions: []
+misconceptions:
+  - id: superposition-always-adds
+    statement: "Two overlapping waves always make a bigger signal."
+    assigned_module: 00-phasors
+    status: addressed
+  - id: phase-is-unphysical
+    statement: "Only amplitude is real physics; phase has no measurable consequence."
+    assigned_module: 00-phasors
+    status: addressed
+  - id: amplitude-changes-period
+    statement: "A larger amplitude means a longer period."
+    assigned_module: 01-sho
+    status: addressed
+  - id: fastest-at-turning-points
+    statement: "The oscillating mass moves fastest at maximum displacement, where the force is biggest."
+    assigned_module: 01-sho
+    status: addressed
+  - id: energy-varies-over-cycle
+    statement: "The total energy of an undamped oscillator oscillates in time."
+    assigned_module: 01-sho
+    status: addressed
+  - id: resonance-peak-at-omega0
+    statement: "The driven amplitude peaks at exactly the natural frequency, regardless of damping."
+    assigned_module: 02-damped-driven
+    status: pending
+  - id: wave-carries-medium
+    statement: "A travelling wave transports the medium along with it."
+    assigned_module: 04-waves
+    status: pending
+  - id: packet-at-phase-velocity
+    statement: "A pulse travels at the phase velocity, so a phase velocity above c would break relativity."
+    assigned_module: 05-fourier
+    status: pending
+  - id: frequency-changes-in-medium
+    statement: "Light entering glass changes its frequency."
+    assigned_module: 06-em-waves
+    status: pending
+  - id: third-polarizer-only-dims
+    statement: "Inserting an extra polarizer can only ever reduce the transmitted light."
+    assigned_module: 07-polarization
+    status: pending
+  - id: interference-destroys-energy
+    statement: "Destructive interference destroys the waves' energy."
+    assigned_module: 08-interference
+    status: pending
+  - id: narrow-slit-narrow-pattern
+    statement: "A narrower slit produces a narrower diffraction pattern."
+    assigned_module: 09-diffraction
+    status: pending

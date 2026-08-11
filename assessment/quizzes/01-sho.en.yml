@@ -1,0 +1,180 @@
+module: 01-sho
+questions:
+  - id: Q-01-1
+    type: multiple-choice
+    objectives: [OBJ-01-3]
+    misconception: amplitude-changes-period
+    prompt: >-
+      A mass on a spring is pulled twice as far from equilibrium as before and released.
+      What happens to the period of the oscillation?
+    choices:
+      - text: It is unchanged — the period does not depend on amplitude.
+        correct: true
+        feedback: >-
+          Right: omega0 = sqrt(k/m) contains no amplitude. The mass has twice as far to
+          travel, but the restoring force is doubled at every stage of the journey, and the
+          two effects cancel exactly. This cancellation is special to the linear force law.
+      - text: It doubles — the mass has twice the distance to cover.
+        correct: false
+        feedback: >-
+          It does have twice the distance — and twice the force everywhere along the way,
+          hence proportionally higher speeds. For F = -kx the cancellation is exact. (For a
+          pendulum at large angles it is not, and the period does grow.)
+      - text: It halves — the larger force whips the mass around faster.
+        correct: false
+        feedback: >-
+          You kept the stronger force but dropped the longer path. Both effects are
+          present, and for a linear spring they cancel identically, leaving the period
+          exactly as it was.
+      - text: It grows by a factor sqrt(2).
+        correct: false
+        feedback: >-
+          This would follow if the period scaled as the square root of the distance, as in
+          free fall. An oscillator is not free fall: the force grows with displacement, and
+          the amplitude drops out of the period entirely.
+
+  - id: Q-01-2
+    type: multiple-choice
+    objectives: [OBJ-01-1, OBJ-01-3]
+    prompt: >-
+      The mass on a spring is replaced by one four times heavier, same spring, same release
+      point. What happens to the period?
+    choices:
+      - text: It doubles.
+        correct: true
+        feedback: >-
+          T = 2 pi sqrt(m/k), so four times the mass gives twice the period. Heavier means
+          more sluggish: the same force produces less acceleration, and every stage of the
+          cycle takes longer by sqrt(4) = 2.
+      - text: It quadruples.
+        correct: false
+        feedback: >-
+          The period scales as the *square root* of the mass, not linearly: inertia enters
+          through a = F/m inside a cycle whose length also readjusts. sqrt(4) = 2, so the
+          period doubles.
+      - text: It is unchanged — period is a property of the spring alone.
+        correct: false
+        feedback: >-
+          The spring sets only half the story. The period is set by the tug-of-war between
+          stiffness (which speeds the return) and inertia (which resists it):
+          T = 2 pi sqrt(m/k) contains both.
+      - text: It halves — more mass means more momentum through the bottom of the swing.
+        correct: false
+        feedback: >-
+          At the same amplitude the heavier mass moves more slowly, not faster: it carries
+          more inertia for the same restoring force. The period grows with mass; it does
+          not shrink.
+
+  - id: Q-01-3
+    type: multiple-choice
+    objectives: [OBJ-01-4]
+    misconception: fastest-at-turning-points
+    prompt: >-
+      At which point in its cycle does an oscillating mass move fastest, and at which is
+      its acceleration largest?
+    choices:
+      - text: Fastest at the equilibrium point; largest acceleration at the turning points.
+        correct: true
+        feedback: >-
+          Right, and the two answers deliberately sit at opposite ends: speed peaks where
+          all the energy is kinetic (x = 0, zero force), acceleration peaks where the
+          spring is most stretched (x = +/-A, zero speed). Velocity runs a quarter cycle
+          ahead of position.
+      - text: Fastest at the turning points, where the force on it is biggest.
+        correct: false
+        feedback: >-
+          This confuses force with speed. At the turning points the force is indeed
+          largest — but the mass is momentarily at rest there; that is what "turning point"
+          means. Big force means big *acceleration*, and the speed it builds peaks a
+          quarter cycle later, at the centre.
+      - text: Both speed and acceleration are largest at the equilibrium point.
+        correct: false
+        feedback: >-
+          Speed, yes; acceleration, no. At equilibrium the spring is unstretched, so the
+          force — and with it the acceleration — is exactly zero there, even as the mass
+          flies through at top speed.
+      - text: The speed is the same everywhere; only the direction changes.
+        correct: false
+        feedback: >-
+          That describes uniform circular motion, not oscillation along a line. Here the
+          mass repeatedly stops at the extremes and is fastest at the centre — the speed
+          varies between zero and omega0 times the amplitude.
+
+  - id: Q-01-4
+    type: multiple-choice
+    objectives: [OBJ-01-3, OBJ-01-4]
+    misconception: energy-varies-over-cycle
+    prompt: >-
+      Over one full cycle of an undamped oscillator, how do the kinetic energy K, the
+      potential energy U, and the total E = K + U behave?
+    choices:
+      - text: K and U each oscillate at twice the natural frequency; E stays exactly constant.
+        correct: true
+        feedback: >-
+          Right. K goes as sin^2 and U as cos^2 of (omega0 t + phi): each peaks twice per
+          cycle — kinetic at each centre crossing, potential at each extreme — while their
+          sum is pinned at (1/2) k A^2. A constant built from two oscillating parts.
+      - text: All three oscillate together at the natural frequency.
+        correct: false
+        feedback: >-
+          If E oscillated, energy would have to flow somewhere outside the mass-spring
+          system — but there is no damping and no drive. The exchange is entirely internal,
+          K against U, and their sum cannot move.
+      - text: K and U oscillate at the natural frequency; E is constant.
+        correct: false
+        feedback: >-
+          E is constant, but check the rate of the exchange: the mass passes through the
+          centre (K maximal) twice per cycle, once in each direction. sin^2 and cos^2
+          repeat at twice the base frequency.
+      - text: E slowly decreases as it is shared back and forth between K and U.
+        correct: false
+        feedback: >-
+          Sharing is not spending. Converting kinetic energy to potential and back is
+          lossless in this model; decrease requires a dissipative force, which is module
+          02's damping term, absent here.
+
+  - id: Q-01-5
+    type: numeric
+    objectives: [OBJ-01-1, OBJ-01-2]
+    prompt: >-
+      A cart of mass 0.5 kg on a spring of stiffness 8.0 N/m is struck at its equilibrium
+      position, giving it velocity 0.20 m/s. What amplitude (in metres) does the
+      oscillation reach?
+    answer: 0.05
+    tolerance: 0.005
+    feedback: >-
+      omega0 = sqrt(8.0/0.5) = 4.0 rad/s, and starting from x0 = 0 the amplitude is
+      A = v0/omega0 = 0.20/4.0 = 0.05 m. All the initial energy is kinetic; A is where the
+      spring has absorbed it all.
+
+  - id: Q-01-6
+    type: multiple-choice
+    objectives: [OBJ-01-5]
+    prompt: >-
+      Why do systems as different as molecules, bridges and circuits all oscillate
+      harmonically when slightly disturbed?
+    choices:
+      - text: Near any stable equilibrium, the potential energy is approximately parabolic — its Taylor expansion starts with the squared term.
+        correct: true
+        feedback: >-
+          Exactly. At an equilibrium the linear term of U(x) vanishes, so the first
+          surviving term is (1/2) U''(x_e) x^2 — a spring with k = U''(x_e), whatever the
+          underlying mechanism. Every smooth valley is a parabola at its bottom.
+      - text: Because most physical systems literally contain a spring or an elastic element.
+        correct: false
+        feedback: >-
+          An LC circuit contains no elastic material at all, yet oscillates harmonically.
+          The universality is mathematical — a property of stable equilibria of smooth
+          potentials — not a fact about springs as hardware.
+      - text: They do not — each system merely happens to be well fitted by a cosine.
+        correct: false
+        feedback: >-
+          The agreement is derived, not coincidental: expand any smooth potential about a
+          stable minimum and the harmonic term dominates for small displacements. The
+          cosine is a consequence, with a stated regime of validity.
+      - text: Because energy conservation forces all bounded motion to be sinusoidal.
+        correct: false
+        feedback: >-
+          Energy conservation bounds the motion but does not shape it: a large-angle
+          pendulum conserves energy and is visibly not sinusoidal. Sinusoidal motion needs
+          the *linear* restoring force, which only the small-displacement limit supplies.

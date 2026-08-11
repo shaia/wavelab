@@ -391,8 +391,8 @@ def expected_lite_notebooks() -> list[Path]:
     """Where each authored notebook must land inside the bundle.
 
     `LiteBuildConfig.contents: ["notebooks"]` copies the *contents* of notebooks/ to the
-    root of the file tree, so notebooks/he/labs/04-pressure.ipynb is served from
-    _site/lite/files/he/labs/04-pressure.ipynb — the path the module pages link to.
+    root of the file tree, so notebooks/he/labs/01-sho.ipynb is served from
+    _site/lite/files/he/labs/01-sho.ipynb — the path the module pages link to.
     """
     expected = []
     for lang in LANGS:
@@ -542,7 +542,7 @@ def serve(port: int, base_path: str) -> None:
     print(f"\nserving {SITE} at http://localhost:{port}/  (Ctrl-C to stop)")
     print(f"  English   http://localhost:{port}/en/")
     print(f"  Hebrew    http://localhost:{port}/he/")
-    print(f"  Labs      http://localhost:{port}/lite/lab/index.html?path=en/labs/04-pressure.ipynb")
+    print(f"  Labs      http://localhost:{port}/lite/lab/index.html?path=en/labs/01-sho.ipynb")
     try:
         subprocess.run(
             [sys.executable, "-m", "http.server", str(port), "--directory", str(SITE)], cwd=ROOT
