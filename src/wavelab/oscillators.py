@@ -18,6 +18,11 @@ MODEL SPECIFICATION
 Closed forms follow the project phase convention (constants.SIGN_CONVENTION): the driven
 steady state is the complex amplitude X = (F0/m) / (omega0^2 - omega^2 - i gamma omega),
 whose argument is the angle by which the displacement *lags* the drive.
+
+The `q_from_*` functions are the other direction: they extract Q from *data* — a ringdown
+record, a swept amplitude curve, a swept phase curve — the way a laboratory does. All three
+estimate the same number by different routes, which is the point: agreement between them is
+an experimental result, not an identity, once noise is in the record.
 """
 
 from __future__ import annotations
@@ -171,15 +176,244 @@ def driven_amplitude(
     |X| is the response amplitude and arg(X) the angle by which the displacement lags the
     drive: +pi/2 exactly at omega0, and the *amplitude* peak sits below omega0, at
     omega^2 = omega0^2 - gamma^2/2, whenever there is damping.
+
+    The scalar face of `steady_state_response`; both share one closed form, so a change to
+    the physics cannot reach one without the other.
+    """
+    return complex(
+        steady_state_response(omega_drive, mass, stiffness, damping, force_amplitude)
+    )
+
+
+def steady_state_response(
+    omega: np.ndarray,
+    mass: float,
+    stiffness: float,
+    damping: float,
+    force_amplitude: float = 1.0,
+) -> np.ndarray:
+    """The complex steady-state amplitude X(omega), vectorized over the drive frequency.
+
+        X(omega) = (F0 / m) / (omega0^2 - omega^2 - i gamma omega)
+
+    This is the whole resonance curve in one call: `abs(X)` is the amplitude response and
+    `angle(X)` the phase lag, rising 0 -> pi/2 -> pi as the drive is swept through omega0.
+    Module 03 uses it to weight each harmonic of a periodic drive, which is why it takes an
+    array where `driven_amplitude` takes a number.
     """
     omega0 = natural_frequency(mass, stiffness)
     gamma = damping_rate(mass, damping)
-    if omega_drive < 0:
-        raise ValueError("omega_drive must be non-negative")
-    denominator = omega0**2 - omega_drive**2 - 1j * gamma * omega_drive
-    if denominator == 0:
+    frequencies = np.asarray(omega, dtype=float)
+    if np.any(frequencies < 0):
+        raise ValueError("drive frequencies must be non-negative")
+    denominator = omega0**2 - frequencies**2 - 1j * gamma * frequencies
+    if np.any(denominator == 0):
         raise ValueError("undamped oscillator driven exactly at resonance has no steady state")
-    return complex(force_amplitude / mass / denominator)
+    return (force_amplitude / mass) / denominator
+
+
+def resonance_peak_omega(mass: float, stiffness: float, damping: float) -> float:
+    """Where |X(omega)| is largest: omega0 sqrt(1 - 1/(2 Q^2)), or 0.0 if there is no peak.
+
+    Minimising the denominator's modulus gives omega_peak^2 = omega0^2 - gamma^2/2, which is
+    *below* omega0 for any damping at all — the falsifier for the `resonance-peak-at-omega0`
+    misconception. Below Q = 1/sqrt(2) the interior maximum does not exist: the response
+    falls monotonically from its static value F0/k and the oscillator is a low-pass filter
+    with no resonance. That case returns 0.0, the frequency at which the response really is
+    largest, rather than raising — a sweep across the threshold is a plot, not an error.
+    """
+    omega0 = natural_frequency(mass, stiffness)
+    gamma = damping_rate(mass, damping)
+    discriminant = omega0**2 - gamma**2 / 2.0
+    return float(np.sqrt(discriminant)) if discriminant > 0 else 0.0
+
+
+def power_absorbed(
+    omega: np.ndarray,
+    mass: float,
+    stiffness: float,
+    damping: float,
+    force_amplitude: float = 1.0,
+) -> np.ndarray:
+    """Cycle-averaged power the drive delivers in the steady state, (1/2) gamma m omega^2 |X|^2 [W].
+
+    In the steady state every joule the drive supplies is dissipated, so this single
+    expression is both <F v> and <b v^2>; the conservation tests check that identity against
+    an integration rather than assuming it.
+
+    Unlike the *amplitude*, this peaks at exactly omega0 whatever the damping — the
+    denominator can be written ((omega0^2 - omega^2)/omega)^2 + gamma^2, which is minimal
+    there. Displacement resonance and power resonance are different frequencies, and the
+    difference is the whole content of the advanced section on module 02's page.
+    """
+    gamma = damping_rate(mass, damping)
+    frequencies = np.asarray(omega, dtype=float)
+    response = steady_state_response(frequencies, mass, stiffness, damping, force_amplitude)
+    return 0.5 * gamma * mass * frequencies**2 * np.abs(response) ** 2
+
+
+def q_from_ringdown(
+    times: np.ndarray, positions: np.ndarray, threshold: float = 0.1
+) -> float:
+    """Q measured from a free decay: the envelope gives gamma, the crossings give omega_d.
+
+    Zero crossings are half periods, so omega_d = pi / (mean spacing), and the amplitude of
+    each half cycle in between is a point on the decaying envelope, whose logarithm falls as
+    -gamma t / 2. Q is then omega0 / gamma with omega0 recovered from
+    omega0^2 = omega_d^2 + gamma^2/4. (The shorthand Q = omega_d/gamma is the high-Q limit
+    of that and disagrees with `quality_factor` at the percent level around Q ~ 2, which is
+    exactly the region module 02's regime sweep explores, so the exact form is used.)
+
+    Two choices make this survive a noisy record, which is the only kind a laboratory has:
+
+    `threshold` is a hysteresis, as a fraction of the largest excursion. A crossing is
+    registered between two samples of *opposite* sign that both exceed it, so noise wobbling
+    around zero cannot be counted as a dozen crossings — the failure that makes naive
+    crossing counting useless. It also ends the analysis by itself: once the ringing has
+    decayed below the threshold the record stops contributing, which is the same judgement
+    an experimenter makes by eye about where a trace becomes noise.
+
+    Each half cycle's amplitude is read as sqrt(2 <x^2>) over that window rather than as its
+    largest sample. Both estimate the same thing on clean data; on noisy data the largest
+    sample is biased upward by roughly the noise's extreme value, while the RMS is biased by
+    sigma^2/A^2 — a hundred times smaller on the late, small cycles that set the fitted decay
+    rate.
+
+    The record must be a free decay about equilibrium: no drive, no offset.
+    """
+    t = np.asarray(times, dtype=float)
+    x = np.asarray(positions, dtype=float)
+    if t.shape != x.shape:
+        raise ValueError("times and positions must have the same shape")
+    if not 0.0 < threshold < 1.0:
+        raise ValueError("threshold must be a fraction of the peak excursion, in (0, 1)")
+
+    level = threshold * float(np.max(np.abs(x)))
+    strong = np.nonzero(np.abs(x) > level)[0]
+    if strong.size < 2:
+        raise ValueError("record never rises above the hysteresis threshold")
+    turns = np.nonzero(np.diff(np.sign(x[strong])))[0]
+    if turns.size < 3:
+        raise ValueError("need at least three zero crossings above the threshold")
+
+    before, after = strong[turns], strong[turns + 1]
+    fractions = x[before] / (x[before] - x[after])
+    crossings = t[before] + fractions * (t[after] - t[before])
+    omega_d = float(np.pi / np.mean(np.diff(crossings)))
+
+    # Windows are bounded by the *interpolated crossing times*, not by the threshold-crossing
+    # sample indices: as the ringing decays toward the threshold, the strong samples retreat
+    # toward each peak, and windows cut at them would no longer be half cycles. That misalign-
+    # ment biases the late amplitudes and, through them, the fitted decay rate.
+    bounds = np.searchsorted(t, crossings)
+    centres: list[float] = []
+    amplitudes: list[float] = []
+    for index, (start, stop) in enumerate(zip(bounds[:-1], bounds[1:], strict=True)):
+        window = x[start:stop]
+        if window.size < 2:
+            continue
+        centres.append(float(0.5 * (crossings[index] + crossings[index + 1])))
+        amplitudes.append(float(np.sqrt(2.0 * np.mean(window**2))))
+
+    envelope = np.asarray(amplitudes)
+    if envelope.size < 3 or np.any(envelope <= 0.0):
+        raise ValueError(
+            "could not extract a usable decay envelope — a low-Q ringdown may need a "
+            "smaller threshold, since it has few cycles above any given fraction of its peak"
+        )
+    slope = float(np.polyfit(np.asarray(centres), np.log(envelope), 1)[0])
+    gamma = -2.0 * slope
+    if gamma <= 0.0:
+        raise ValueError("the envelope does not decay — is this a ringdown?")
+    omega0 = float(np.sqrt(omega_d**2 + gamma**2 / 4.0))
+    return omega0 / gamma
+
+
+def q_from_bandwidth(omega: np.ndarray, amplitude: np.ndarray) -> float:
+    """Q measured from a swept resonance curve: peak frequency over half-power width.
+
+    The two frequencies where the amplitude has fallen to its maximum over sqrt(2) — half
+    the power — are located by linear interpolation on the supplied grid, and
+    Q = omega_peak / (omega_high - omega_low).
+
+    Exact only in the high-Q limit, by two separate roads: the half-power width of |X|
+    approaches gamma, and omega_peak approaches omega0. Both corrections are O(1/Q^2), so
+    at Q = 20 this agrees with `quality_factor` to about a part in 10^3 and at Q = 2 it does
+    not. The sweep must bracket both half-power points; a curve that never falls far enough
+    on one side raises rather than quietly reporting the edge of the grid.
+    """
+    w = np.asarray(omega, dtype=float)
+    a = np.asarray(amplitude, dtype=float)
+    if w.shape != a.shape:
+        raise ValueError("omega and amplitude must have the same shape")
+    if w.size < 5:
+        raise ValueError("need at least five sweep points to locate a half-power width")
+
+    peak = int(np.argmax(a))
+    half_power = a[peak] / np.sqrt(2.0)
+    if a[0] > half_power or a[-1] > half_power:
+        raise ValueError("sweep does not bracket both half-power points — widen the range")
+
+    low = _crossing(w[: peak + 1], a[: peak + 1], half_power)
+    high = _crossing(w[peak:][::-1], a[peak:][::-1], half_power)
+    return float(w[peak] / (high - low))
+
+
+def q_from_phase_slope(omega: np.ndarray, phase_lag: np.ndarray) -> float:
+    """Q measured from how fast the phase lag turns through pi/2: Q = (omega0/2) dphi/domega.
+
+    Differentiating phi(omega) = atan2(gamma omega, omega0^2 - omega^2) at omega0 gives
+    exactly 2/gamma, so half the resonant frequency times the slope is omega0/gamma — no
+    high-Q approximation anywhere, which is what makes this the estimator that stays honest
+    where the bandwidth route drifts.
+
+    The slope is not taken by differencing the sweep. A numerical derivative of measured
+    phases divides the noise by the grid spacing and multiplies it into the answer; on a
+    realistically noisy sweep that alone put a 17% scatter on Q. Instead the phase relation
+    is rearranged into the line it exactly is,
+
+        omega * tan(phi - pi/2) = (1/gamma) omega^2 - omega0^2/gamma,
+
+    and fitted over the half-power band pi/4 <= phi <= 3 pi/4, where the tangent is bounded
+    by one and every point carries information about the same two numbers. The fit gives
+    gamma = 1/slope and omega0^2 = -intercept/slope, hence Q = sqrt(-intercept * slope). On a
+    noiseless sweep this returns (omega0/2) dphi/domega to the last digit; on a noisy one it
+    averages instead of amplifying.
+
+    `phase_lag` must be the *lag* in radians, rising through pi/2 — `np.angle` of
+    `steady_state_response` under this project's phase convention.
+    """
+    w = np.asarray(omega, dtype=float)
+    phi = np.asarray(phase_lag, dtype=float)
+    if w.shape != phi.shape:
+        raise ValueError("omega and phase_lag must have the same shape")
+    if w.size < 5:
+        raise ValueError("need at least five sweep points to measure a phase slope")
+
+    band = (phi >= np.pi / 4.0) & (phi <= 3.0 * np.pi / 4.0)
+    if int(np.count_nonzero(band)) < 5:
+        raise ValueError(
+            "fewer than five sweep points lie in the half-power phase band pi/4..3pi/4 — "
+            "the sweep either misses resonance or is too coarse across it"
+        )
+
+    ordinate = w[band] * np.tan(phi[band] - np.pi / 2.0)
+    slope, intercept = np.polyfit(w[band] ** 2, ordinate, 1)
+    if slope <= 0.0 or intercept >= 0.0:
+        raise ValueError("phase sweep does not have the shape of a resonance")
+    return float(np.sqrt(-intercept * slope))
+
+
+def _crossing(x: np.ndarray, y: np.ndarray, level: float) -> float:
+    """The first x at which y crosses `level`, by linear interpolation between samples."""
+    below = y < level
+    index = np.nonzero(np.diff(below))[0]
+    if index.size == 0:
+        raise ValueError(f"no crossing of level {level}")
+    i = int(index[0])
+    span = y[i + 1] - y[i]
+    fraction = 0.0 if span == 0 else (level - y[i]) / span
+    return float(x[i] + fraction * (x[i + 1] - x[i]))
 
 
 def max_stable_dt(mass: float, stiffness: float) -> float:

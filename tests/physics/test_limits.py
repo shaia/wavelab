@@ -117,6 +117,117 @@ def test_amplitude_peak_sits_below_omega0():
     assert measured_peak < OMEGA0
 
 
+def test_steady_state_response_agrees_with_the_scalar_driven_amplitude():
+    """One closed form, two faces: the vectorized sweep must equal the scalar call exactly.
+
+    Module 03 weights each harmonic of a periodic drive with `steady_state_response` while
+    module 02's page quotes `driven_amplitude`; if the two ever disagreed, the course would
+    be teaching two different oscillators under one name.
+    """
+    omegas = np.linspace(0.0, 3.0 * OMEGA0, 41)
+    swept = oscillators.steady_state_response(omegas, MASS, STIFFNESS, 0.4, 1.0)
+    scalar = [oscillators.driven_amplitude(w, MASS, STIFFNESS, 0.4, 1.0) for w in omegas]
+    assert np.allclose(swept, scalar, rtol=0.0, atol=0.0)
+
+
+def test_steady_state_response_low_and_high_frequency_limits():
+    """Slow drive: the mass tracks the force at F0/k, in phase. Fast drive: pure inertia,
+    amplitude F0/(m omega^2) and a lag of pi — the mass moves *against* the force."""
+    slow = oscillators.steady_state_response(np.array([1e-6]), MASS, STIFFNESS, 0.4, 1.0)[0]
+    assert np.isclose(abs(slow), 1.0 / STIFFNESS, rtol=1e-6)
+    assert abs(np.angle(slow)) < 1e-6
+
+    fast_omega = 1e5
+    fast = oscillators.steady_state_response(
+        np.array([fast_omega]), MASS, STIFFNESS, 0.4, 1.0
+    )[0]
+    assert np.isclose(abs(fast), 1.0 / (MASS * fast_omega**2), rtol=1e-6)
+    assert np.isclose(np.angle(fast), np.pi, atol=1e-4)
+
+
+def test_resonance_peak_omega_matches_the_measured_maximum():
+    """The closed form against a brute-force sweep, at three very different dampings."""
+    omegas = np.linspace(1e-6, 2.0 * OMEGA0, 200_001)
+    for damping in (0.05, 0.4, 1.2):
+        amplitude = np.abs(
+            oscillators.steady_state_response(omegas, MASS, STIFFNESS, damping, 1.0)
+        )
+        measured = omegas[np.argmax(amplitude)]
+        predicted = oscillators.resonance_peak_omega(MASS, STIFFNESS, damping)
+        assert abs(measured - predicted) < omegas[1] - omegas[0]
+        assert predicted < OMEGA0
+
+
+def test_resonance_peak_omega_limits():
+    """As damping vanishes the peak climbs to omega0; below Q = 1/sqrt(2) it is gone."""
+    assert np.isclose(
+        oscillators.resonance_peak_omega(MASS, STIFFNESS, 1e-9), OMEGA0, rtol=1e-12
+    )
+    threshold_damping = np.sqrt(2.0 * MASS * STIFFNESS)  # Q = 1/sqrt(2) exactly
+    assert oscillators.resonance_peak_omega(MASS, STIFFNESS, threshold_damping) == 0.0
+    assert oscillators.resonance_peak_omega(MASS, STIFFNESS, 2.0 * threshold_damping) == 0.0
+    just_below = oscillators.resonance_peak_omega(
+        MASS, STIFFNESS, threshold_damping * (1.0 - 1e-6)
+    )
+    assert 0.0 < just_below < 0.01 * OMEGA0  # the peak leaves through zero, not through omega0
+
+
+def test_power_absorbed_peaks_exactly_at_omega0():
+    """Displacement resonance sits below omega0; *power* resonance sits on it, at any damping.
+
+    The distinction the advanced section makes, pinned numerically: the same sweep whose
+    amplitude peak moves with damping has a power peak that does not move at all.
+    """
+    omegas = np.linspace(1e-6, 2.0 * OMEGA0, 200_001)
+    for damping in (0.05, 0.4, 1.2):
+        power = oscillators.power_absorbed(omegas, MASS, STIFFNESS, damping, 1.0)
+        assert abs(omegas[np.argmax(power)] - OMEGA0) < omegas[1] - omegas[0]
+
+
+def test_three_q_extractors_agree_on_clean_data():
+    """Q from a ringdown, from a bandwidth, and from a phase slope: one number three ways.
+
+    Even without noise the three carry different residuals, and the tolerances say which:
+    the phase-slope route is exact, the bandwidth route is O(1/Q^2) low because the half-power
+    width of |X| is only asymptotically gamma, and the ringdown route is O((gamma P)^2) low
+    because it reads each half cycle's amplitude as its root mean square. Checked at Q = 20,
+    where the last two are a part in 10^3 and two parts in 10^3.
+    """
+    damping = 0.1  # Q = 20
+    expected = oscillators.quality_factor(MASS, STIFFNESS, damping)
+
+    t = np.linspace(0.0, 30.0 * PERIOD, 60_001)
+    ringdown = oscillators.damped_position(t, MASS, STIFFNESS, damping, 0.1, 0.0)
+    assert np.isclose(oscillators.q_from_ringdown(t, ringdown), expected, rtol=3e-3)
+
+    omegas = np.linspace(0.5 * OMEGA0, 1.5 * OMEGA0, 100_001)
+    response = oscillators.steady_state_response(omegas, MASS, STIFFNESS, damping, 1.0)
+    assert np.isclose(
+        oscillators.q_from_bandwidth(omegas, np.abs(response)), expected, rtol=2e-3
+    )
+    assert np.isclose(
+        oscillators.q_from_phase_slope(omegas, np.angle(response)), expected, rtol=1e-6
+    )
+
+
+def test_phase_slope_stays_exact_where_the_bandwidth_estimator_drifts():
+    """At Q = 2.5 the half-power width is no longer gamma; the phase slope still is.
+
+    Worth pinning because it is the one place the three faces of Q visibly come apart, and
+    the laboratory asks students to notice it.
+    """
+    damping = 0.8  # Q = 2.5
+    expected = oscillators.quality_factor(MASS, STIFFNESS, damping)
+    omegas = np.linspace(1e-6, 4.0 * OMEGA0, 200_001)
+    response = oscillators.steady_state_response(omegas, MASS, STIFFNESS, damping, 1.0)
+
+    assert np.isclose(
+        oscillators.q_from_phase_slope(omegas, np.angle(response)), expected, rtol=1e-6
+    )
+    from_bandwidth = oscillators.q_from_bandwidth(omegas, np.abs(response))
+    assert abs(from_bandwidth - expected) / expected > 0.05
+
+
 def test_driven_simulation_reaches_the_predicted_steady_state():
     """After the transient dies, the simulated amplitude equals |X(omega)|."""
     damping = 0.8

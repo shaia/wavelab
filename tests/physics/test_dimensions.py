@@ -59,6 +59,45 @@ def test_driven_amplitude_magnitude_is_a_length():
     assert (FORCE / MASS / denominator_scale).check("[length]")
 
 
+def test_cycle_averaged_absorbed_power_is_in_watts():
+    """<P> = (1/2) gamma m omega^2 |X|^2. Every factor matters: drop the mass and the
+    expression still *looks* like a power on the page, but it is metres-squared per second."""
+    omega = Quantity(3.0, "rad/s")
+    gamma = DAMPING / MASS
+    displacement = FORCE / MASS / ((STIFFNESS / MASS) - omega**2)
+    power = 0.5 * gamma * MASS * omega**2 * displacement**2
+    assert power.check("[power]")
+    assert power.to("watt").magnitude > 0.0
+
+
+def test_absorbed_power_equals_the_work_rate_of_the_drive():
+    """The same number reached the other way, <F v>: force times velocity is a power too,
+    and the two expressions must have identical dimensions or the balance is meaningless."""
+    omega = Quantity(3.0, "rad/s")
+    displacement = FORCE / MASS / ((STIFFNESS / MASS) - omega**2)
+    work_rate = 0.5 * FORCE * omega * displacement
+    assert work_rate.check("[power]")
+
+
+def test_quality_factor_expressions_are_all_dimensionless():
+    """Q wears three costumes — omega0/gamma, a bandwidth ratio, and half a frequency times
+    a phase slope. All three must be pure numbers, or they could not be the same Q."""
+    omega0 = (STIFFNESS / MASS) ** 0.5
+    gamma = DAMPING / MASS
+    assert (omega0 / gamma).check("[]")
+    assert (omega0 / Quantity(0.4, "rad/s")).check("[]")  # bandwidth route
+    phase_slope = Quantity(2.0, "rad") / Quantity(0.8, "rad/s")  # dphi/domega
+    assert (0.5 * omega0 * phase_slope).check("[]")
+
+
+def test_transient_takeover_time_is_a_time():
+    """2/gamma is the transient's lifetime; expressed in periods it is Q/pi, a pure number."""
+    gamma = DAMPING / MASS
+    omega0 = (STIFFNESS / MASS) ** 0.5
+    assert (2.0 / gamma).check("[time]")
+    assert ((2.0 / gamma) / (2.0 * np.pi / omega0)).check("[]")
+
+
 def test_light_speed_from_the_electromagnetic_constants():
     """c = 1/sqrt(mu0 eps0) — checked dimensionally and numerically, module 5's payoff."""
     c = (1.0 / (MU_0_Q * EPS_0_Q)) ** 0.5
@@ -80,6 +119,13 @@ def test_library_returns_plain_floats():
     amplitude, phase = oscillators.amplitude_phase(0.1, 0.2, omega0)
     assert isinstance(amplitude, float) and isinstance(phase, float)
     assert isinstance(oscillators.quality_factor(0.5, 8.0, 0.4), float)
+    assert isinstance(oscillators.resonance_peak_omega(0.5, 8.0, 0.4), float)
+    sweep = np.linspace(0.1, 8.0, 401)
+    response = oscillators.steady_state_response(sweep, 0.5, 8.0, 0.4, 1.0)
+    assert response.dtype == np.complex128
+    assert oscillators.power_absorbed(sweep, 0.5, 8.0, 0.4, 1.0).dtype == np.float64
+    assert isinstance(oscillators.q_from_bandwidth(sweep, np.abs(response)), float)
+    assert isinstance(oscillators.q_from_phase_slope(sweep, np.angle(response)), float)
 
 
 def test_verlet_step_is_dimensionally_consistent():

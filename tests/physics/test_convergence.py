@@ -64,6 +64,41 @@ def test_integrator_is_second_order_when_driven():
     assert abs(study.observed_order - 2.0) < 0.2
 
 
+def test_simulated_steady_state_converges_to_the_closed_form_at_second_order():
+    """Integrate past the transient, measure the amplitude, refine the step: error ~ dt^2.
+
+    The closed form `steady_state_response` is the exact answer here, so this is the test
+    that lets module 02's resonance curves be drawn from the formula while the laboratory
+    draws them from an integration and expects the same picture.
+    """
+    damping = 0.4
+    drive_omega = 3.4
+    exact = float(
+        abs(oscillators.steady_state_response(drive_omega, MASS, STIFFNESS, damping, 1.0))
+    )
+
+    def measured_amplitude(steps_per_period: int) -> float:
+        dt = PERIOD / steps_per_period
+        # 40/gamma leaves e^{-20} of the transient behind, four orders below the smallest
+        # discretisation error measured here — otherwise the leftover transient, not dt,
+        # would set the error floor and the fitted order would come out near zero.
+        settle = 40.0 / oscillators.damping_rate(MASS, damping)
+        n_steps = int(round((settle + 6.0 * PERIOD) / dt))
+        trajectory = oscillators.simulate(
+            MASS, STIFFNESS, 0.0, 0.0, dt, n_steps,
+            damping=damping, drive_amplitude=1.0, drive_omega=drive_omega,
+        )
+        keep = trajectory.times >= settle
+        # x^2 + (v/omega)^2 is A^2 at every sample of a pure sinusoid, so this reads the
+        # amplitude without the O(dt^2) bias that taking the largest *sample* would add.
+        x = trajectory.positions[keep]
+        v = trajectory.velocities[keep]
+        return float(np.sqrt(np.mean(x**2 + (v / drive_omega) ** 2)))
+
+    study = convergence_study(measured_amplitude, REFINEMENTS, exact)
+    assert abs(study.observed_order - 2.0) < 0.35
+
+
 def test_time_step_recommendation_sits_in_the_convergent_regime():
     """max_stable_dt must land where the error is already small and still second order:
     a run at that step and one at half that step must differ by about a factor of four."""

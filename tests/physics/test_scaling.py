@@ -78,6 +78,87 @@ def test_averaging_n_records_shrinks_fit_scatter_as_inverse_sqrt_n():
     assert abs(exponent - (-0.5)) < 0.2
 
 
+def test_quality_factor_is_invariant_under_uniform_scaling():
+    """Scale (m, k, b) together by alpha and nothing about the response changes shape.
+
+    Q is the only dimensionless number the driven oscillator has, so a scaling that leaves it
+    alone must leave the whole normalised response alone. That is why the course can talk
+    about "a Q = 10 system" without naming a mass.
+    """
+    damping = 0.4
+    reference = oscillators.quality_factor(MASS, STIFFNESS, damping)
+    for alpha in (0.1, 3.0, 250.0):
+        scaled = oscillators.quality_factor(
+            alpha * MASS, alpha * STIFFNESS, alpha * damping
+        )
+        assert np.isclose(scaled, reference, rtol=1e-12)
+        assert np.isclose(
+            oscillators.natural_frequency(alpha * MASS, alpha * STIFFNESS), OMEGA0, rtol=1e-12
+        )
+
+
+def test_response_curves_collapse_onto_one_at_fixed_q():
+    """Plotted as |X| k / F0 against omega/omega0, every oscillator of a given Q is the same
+    curve — the reason a single figure on the module page can stand for all of them."""
+    ratio = np.linspace(0.05, 2.5, 601)
+    curves = []
+    for mass, stiffness, damping in ((0.5, 8.0, 0.4), (2.0, 32.0, 1.6), (0.05, 0.8, 0.04)):
+        omega0 = oscillators.natural_frequency(mass, stiffness)
+        response = oscillators.steady_state_response(
+            ratio * omega0, mass, stiffness, damping, 1.0
+        )
+        curves.append(np.abs(response) * stiffness)
+    for other in curves[1:]:
+        assert np.allclose(other, curves[0], rtol=1e-10)
+
+
+def test_half_power_bandwidth_narrows_as_one_over_q():
+    """Delta omega = omega0 / Q: doubling Q halves the width. Measured off swept curves, so
+    it is the bandwidth *estimator* being held to the law, not just the algebra."""
+    # Q >= 10 throughout: the half-power width of |X| is gamma only in the high-Q limit, and
+    # its O(1/Q^2) bias reaches 0.5% at Q = 10 (see q_from_bandwidth). Reaching lower would
+    # test the approximation's failure, which test_limits already does deliberately.
+    qs, widths = [], []
+    for damping in (0.025, 0.05, 0.1, 0.2):
+        omegas = np.linspace(0.5 * OMEGA0, 1.5 * OMEGA0, 200_001)
+        amplitude = np.abs(
+            oscillators.steady_state_response(omegas, MASS, STIFFNESS, damping, 1.0)
+        )
+        qs.append(oscillators.quality_factor(MASS, STIFFNESS, damping))
+        widths.append(OMEGA0 / oscillators.q_from_bandwidth(omegas, amplitude))
+    assert abs(scaling_exponent(qs, widths) - (-1.0)) < 0.02
+    for q, width in zip(qs, widths, strict=True):
+        assert np.isclose(width, OMEGA0 / q, rtol=1e-2)
+
+
+def test_ringdown_length_grows_linearly_with_q():
+    """Struck once, a high-Q oscillator rings for about Q/pi periods before dropping to 1/e.
+
+    The amplitude envelope is e^{-gamma t/2}, so the 1/e time is 2/gamma = 2Q/omega0, which
+    is Q/pi periods — the "a wine glass rings for thousands of cycles" intuition, measured.
+    """
+    qs, cycles = [], []
+    for damping in (0.05, 0.1, 0.2, 0.4):
+        gamma = oscillators.damping_rate(MASS, damping)
+        t = np.linspace(0.0, 8.0 / gamma, 200_001)
+        x = oscillators.damped_position(t, MASS, STIFFNESS, damping, 0.1, 0.0)
+        # A running maximum taken from the right is the decaying upper envelope: |x| itself
+        # touches zero every half period, so reading a threshold crossing off |x| would time
+        # the first zero crossing, not the decay. The staircase is then fitted rather than
+        # thresholded, so the answer is not quantised to half a period.
+        envelope = np.maximum.accumulate(np.abs(x)[::-1])[::-1]
+        # The last period of the running max sits below the true envelope — there is no
+        # later peak for it to hold — so it is dropped before fitting the e-folding time.
+        usable = t <= t[-1] - 2.0 * np.pi / OMEGA0
+        slope = float(np.polyfit(t[usable], np.log(envelope[usable]), 1)[0])
+        decay_time = -1.0 / slope
+        qs.append(oscillators.quality_factor(MASS, STIFFNESS, damping))
+        cycles.append(decay_time / (2.0 * np.pi / OMEGA0))
+    assert abs(scaling_exponent(qs, cycles) - 1.0) < 0.02
+    for q, cycle_count in zip(qs, cycles, strict=True):
+        assert np.isclose(cycle_count, q / np.pi, rtol=0.05)
+
+
 def test_reported_fit_error_shrinks_with_record_length():
     """Doubling the record twice must shrink fit_cosine's own 1-sigma frequency error;
     the covariance-based error bar has to know that more data pins omega down harder."""
