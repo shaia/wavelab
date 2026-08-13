@@ -4,9 +4,6 @@ terms:
   - key: probability
     en: probability
     he: הסתברות
-  - key: probability-distribution
-    en: probability distribution
-    he: התפלגות הסתברות
   - key: fluctuation
     en: fluctuation
     he: פלוקטואציה
@@ -14,9 +11,6 @@ terms:
   - key: degrees-of-freedom
     en: degrees of freedom
     he: דרגות חופש
-  - key: central-limit-theorem
-    en: central limit theorem
-    he: משפט הגבול המרכזי
   - key: momentum
     en: momentum
     he: תנע
@@ -36,33 +30,28 @@ terms:
   - key: average
     en: average
     he: ממוצע
-  - key: standard-deviation
-    en: standard deviation
-    he: סטיית תקן
+  # Two unrelated senses of "quadrature" both occur here: numerical integration
+  # (Fresnel integrals, module 28's wavelet sum) and 90-degree phase separation
+  # (lock-in demodulation, squeezed-light quadratures). Keep the pairs distinct.
   - key: quadrature
     en: numerical quadrature
     he: אינטגרציה נומרית
+  - key: quadrature-phase
+    en: in quadrature
+    he: ברביע
+    he_reject: [בקוודרטורה]
   - key: convergence-order
     en: order of convergence
     he: סדר ההתכנסות
   - key: logarithm
     en: logarithm
     he: לוגריתם
-  - key: combinatorics
-    en: combinatorics
-    he: קומבינטוריקה
-  - key: binomial-coefficient
-    en: binomial coefficient
-    he: מקדם בינומי
   - key: gaussian
     en: Gaussian
     he: גאוסי
   - key: asymptotic
     en: asymptotic
     he: אסימפטוטי
-  - key: random-variable
-    en: random variable
-    he: משתנה מקרי
   - key: expectation
     en: expectation
     he: תוחלת
@@ -73,12 +62,6 @@ terms:
     en: independence
     he: אי-תלות
     he_reject: [עצמאות]
-  - key: law-of-large-numbers
-    en: law of large numbers
-    he: חוק המספרים הגדולים
-  - key: sample-mean
-    en: sample mean
-    he: ממוצע מדגם
   - key: dimensionless
     en: dimensionless
     he: חסר ממד
@@ -88,20 +71,6 @@ terms:
   - key: partial-derivative
     en: partial derivative
     he: נגזרת חלקית
-  - key: total-differential
-    en: total differential
-    he: דיפרנציאל שלם
-    he_reject: [דיפרנציאל מלא]
-  - key: mixed-partials
-    en: mixed partial derivatives
-    he: נגזרות מעורבות
-  - key: line-integral
-    en: line integral
-    he: אינטגרל קווי
-  - key: potential-function
-    en: potential function
-    he: פונקציה פוטנציאלית
-    he_reject: [פונקצית פוטנציאל]
   - key: dimensional-analysis
     en: dimensional analysis
     he: ניתוח ממדי
@@ -109,12 +78,6 @@ terms:
   - key: sign-convention
     en: sign convention
     he: מוסכמת סימנים
-  - key: chebyshev-inequality
-    en: Chebyshev's inequality
-    he: אי-שוויון צ'בישב
-  - key: markov-inequality
-    en: Markov's inequality
-    he: אי-שוויון מרקוב
   - key: oscillation
     en: oscillation
     he: תנודה
@@ -226,6 +189,37 @@ terms:
   - key: quality-factor
     en: quality factor
     he: מקדם טיב
+  # Damping and resonance vocabulary, deposited with module 02-damped-driven.
+  - key: underdamped
+    en: underdamped
+    he: תת-ריסון
+  - key: overdamped
+    en: overdamped
+    he: ריסון-יתר
+  - key: critical-damping
+    en: critical damping
+    he: ריסון קריטי
+  - key: transient
+    en: transient
+    he: תגובת מעבר
+  - key: steady-state
+    en: steady state
+    he: מצב מתמיד
+  - key: phase-lag
+    en: phase lag
+    he: פיגור מופע
+  - key: lorentzian
+    en: Lorentzian
+    he: לורנציאן
+  - key: ringdown
+    en: ringdown
+    he: דעיכה חופשית
+    he_reject: [רינגדאון]
+  # Shared with module 04-fourier-transform, which cites it; deposited here because 02 is
+  # built first (plans/part-01-oscillations.md section 5.2).
+  - key: bandwidth
+    en: bandwidth
+    he: רוחב פס
   - key: wavelength
     en: wavelength
     he: אורך גל
