@@ -330,29 +330,32 @@ with Griffiths for electromagnetic foundations and Saleh & Teich/Siegman for adv
 
 # 6. Course Scope
 
-A complete version of the course could contain approximately **35–45 notebooks**.
+The notebook-by-notebook listing in sections 7–19 enumerates **60 notebooks**, which the
+implementation plans group into **48 core modules** — a module covers one or two closely
+related notebooks — plus optional electives.
 
-A standard semester offering might select approximately **24–30 core notebooks**.
+A standard semester offering might select approximately **24–30 core modules**.
 
 A more advanced version could include the full sequence.
 
-Suggested structure:
+Structure (part numbering matches the section headings below):
 
-| Part | Subject | Approximate Notebooks |
+| Part | Subject | Notebooks |
 |---|---|---:|
 | 0 | Mathematical and computational foundations | 3 |
 | I | Oscillations | 4 |
 | II | Coupled oscillators and normal modes | 3 |
-| III | Continuous systems and wave equation | 4 |
-| IV | Fourier methods, packets, and dispersion | 3 |
-| V | Electromagnetic waves and interfaces | 4 |
-| VI | Polarization | 2–4 |
-| VII | Interference and coherence | 3–5 |
-| VIII | Diffraction | 4 |
-| IX | Geometrical optics | 3–5 |
-| X | Fourier optics and imaging | 4–6 |
-| XI | Gaussian beams, lasers, and photonics | 4–8 |
-| XII | Optional advanced topics | 6–10 |
+| III | Continuous systems and the wave equation | 4 |
+| IV | Standing waves, Fourier modes, and dispersion | 4 |
+| V | Electromagnetic waves | 4 |
+| VI | Reflection, refraction, and interfaces | 4 |
+| VII | Polarization | 4 |
+| VIII | Interference and coherence | 6 |
+| IX | Diffraction | 7 |
+| X | Geometrical optics | 5 |
+| XI | Fourier optics | 6 |
+| XII | Gaussian beams, lasers, and photonics | 6 |
+| XIII | Optional advanced topics | 6–10 |
 
 ---
 
@@ -1934,40 +1937,36 @@ This keeps the notebooks focused on physics.
 # 33. Suggested Repository Structure
 
 ```text
-physics-courses/
+physics_lab/
 │
-├── common/
-│   ├── mathematics/
-│   ├── numerical_methods/
-│   ├── visualization/
-│   ├── uncertainty/
-│   └── units/
+├── thermolab/                      # thermodynamics, same architecture
 │
-├── classical_mechanics/
-│
-├── thermodynamics/
-│
-├── waves_optics/
-│   ├── 00_foundations/
-│   ├── 01_oscillations/
-│   ├── 02_coupled_oscillators/
-│   ├── 03_wave_equation/
-│   ├── 04_fourier_waves/
-│   ├── 05_em_waves/
-│   ├── 06_interfaces/
-│   ├── 07_polarization/
-│   ├── 08_interference/
-│   ├── 09_diffraction/
-│   ├── 10_geometrical_optics/
-│   ├── 11_fourier_optics/
-│   ├── 12_gaussian_beams/
-│   ├── 13_lasers_photonics/
-│   ├── labs/
-│   ├── hecht_problems/
-│   ├── projects/
-│   └── exams/
-│
-└── quantum_mechanics/
+└── wavelab/                        # this course
+    ├── plans/                      # per-part implementation plans (this document's successor)
+    ├── content/
+    │   ├── en/                     # MyST Markdown — the source of truth
+    │   │   ├── foundations/        # part 0
+    │   │   ├── oscillations/       # part I
+    │   │   ├── normal-modes/       # part II
+    │   │   ├── waves/              # part III
+    │   │   ├── fourier-waves/      # part IV
+    │   │   ├── em-waves/           # part V
+    │   │   ├── interfaces/         # part VI
+    │   │   ├── polarization/       # part VII
+    │   │   ├── interference/       # part VIII
+    │   │   ├── diffraction/        # part IX
+    │   │   ├── ray-optics/         # part X
+    │   │   ├── fourier-optics/     # part XI
+    │   │   ├── photonics/          # part XII
+    │   │   └── advanced/           # part XIII, electives
+    │   └── he/                     # Hebrew mirror, same tree
+    ├── notebooks/{en,he}/labs/     # virtual laboratories
+    ├── src/wavelab/                # the physics library notebooks call
+    ├── assessment/                 # quiz banks, misconception registry
+    ├── glossary/                   # canonical EN↔HE terminology
+    ├── media/render/               # animation generators
+    ├── scripts/                    # build and validation
+    └── tests/                      # physics accuracy and content lints
 ```
 
 ---

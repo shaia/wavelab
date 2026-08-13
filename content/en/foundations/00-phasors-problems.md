@@ -74,7 +74,7 @@ vanishes.
 
 (c) The random-phase resultant amplitude is itself random: about how large are its typical
 fluctuations from one realisation to the next, relative to its RMS value? (A qualitative
-answer with a reason suffices — this is the seed of the speckle phenomenon, module 8.)
+answer with a reason suffices — this is the seed of the speckle phenomenon, module 41.)
 
 ## Problem 5 — the phasor polygon, numerically
 
@@ -90,5 +90,5 @@ with $\left|\sin(N\delta/2)/\sin(\delta/2)\right|$.
 (b) Repeat with random phases at $N = 10, 100, 1000$, averaging $\left|\text{sum}\right|^2$
 over at least 50 seeds, and fit the scaling exponent of RMS amplitude versus $N$.
 
-(c) The pattern in (a) is the diffraction grating of module 9 in disguise; the scaling in
+(c) The pattern in (a) is the diffraction grating of module 31 in disguise; the scaling in
 (b) is incoherent light. In two sentences, connect each computation to its optics future.

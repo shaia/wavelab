@@ -169,7 +169,7 @@ Everything the opening puzzle asked is in this one line. Equal amplitudes and $\
 $A^2 = 2A_1^2 - 2A_1^2 = 0$ — the headphones. Equal amplitudes and $\delta = 0$: $A = 2A_1$,
 and the *intensity*, which goes as amplitude squared, is four times one source, not two.
 Where did the missing energy go at $\delta=\pi$, and where did the extra come from at
-$\delta=0$? Hold that thought — it is a quiz question now and becomes module 8's central
+$\delta=0$? Hold that thought — it is a quiz question now and becomes module 23's central
 topic, when this same formula reappears wearing its optics costume,
 $I = I_1 + I_2 + 2\sqrt{I_1 I_2}\cos\delta$.
 
@@ -237,13 +237,13 @@ proof: the derivation above is what carries the claim.
 You have just learned the arithmetic that runs the rest of the course — and a surprising
 amount of physics beyond it.
 
-- **Interference (module 8).** Replace "two oscillations" by "two paths light can take":
+- **Interference (module 23).** Replace "two oscillations" by "two paths light can take":
   the interference law becomes $I = I_1 + I_2 + 2\sqrt{I_1 I_2}\cos\delta$, with $\delta$ set
   by the path difference. Young's double slit is this module plus geometry.
-- **Diffraction (module 9).** An aperture is a *continuum* of sources; the tip-to-tail
+- **Diffraction (module 29).** An aperture is a *continuum* of sources; the tip-to-tail
   polygon of arrows becomes an integral — and computing the arrow sum for every direction at
   once is exactly a Fourier transform.
-- **Coherence (module 8).** The violinists: sources with locked phases add like arrows,
+- **Coherence (module 27).** The violinists: sources with locked phases add like arrows,
   sources with random phases add like intensities. "Coherent" names the first situation.
 - **AC circuits.** Impedance is the phasor idea applied to voltage and current; an
   engineering course rotates the arrows the other way (the $j$ of
@@ -298,11 +298,11 @@ it. Two loudspeakers driven in antiphase cancel along the midplane but reinforce
 and the total radiated power integrates correctly over all directions. The headphone case is
 sharper: the anti-noise wave changes the *radiation load* the speaker and the noise source
 each see, so less acoustic energy is emitted into the ear canal in the first place. Energy
-bookkeeping in interference is module 8's subtlest topic, and this paragraph is its trailer.
+bookkeeping in interference is module 23's subtlest topic, and this paragraph is its trailer.
 
 **The rotating-wave idea.** Dividing out $e^{-\ii\omega t}$ — working "in the rotating
 frame" — is a trick with a long career ahead of it: it is how the driven oscillator of
-module 1.3 is solved, how magnetic resonance is analysed, and how quantum optics tames
+module 02 is solved, how magnetic resonance is analysed, and how quantum optics tames
 fast-oscillating terms (there it is called the rotating-wave approximation).
 
 **Negative frequencies.** A real cosine is the sum of *two* complex exponentials,

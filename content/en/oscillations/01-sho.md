@@ -242,7 +242,7 @@ culture, and it starts here.
   $U''$ at its bottom sets infrared absorption frequencies — how astronomers identify
   molecules they will never touch.
 - **Phonons and the quantum oscillator.** Crystals are lattices of coupled oscillators
-  (module 02 makes this literal), and the quantum harmonic oscillator — energy levels
+  (module 06 makes this literal), and the quantum harmonic oscillator — energy levels
   $\hbar\wnat(n + \tfrac12)$ — inherits every structure built here.
 
 :::{admonition} The natural frequency
@@ -302,10 +302,10 @@ engineering history.
 oscillation's frequency begins to depend on amplitude, harmonics of $\wnat$ appear in the
 motion, and neighbouring oscillators can exchange energy in new ways. That is not a defect:
 thermal expansion of solids, the workings of an optical frequency comb, and the entire
-subject of nonlinear optics (module 20) live in those discarded terms.
+subject of nonlinear optics (module 51) live in those discarded terms.
 
 **Two conserved pictures.** The energy ellipse of this module is the $N = 1$ case of a deep
 pattern: phase-space orbits of conservative systems foliate into nested invariant curves.
-When modules 02–03 couple many oscillators, the ellipse becomes a torus and the normal-mode
+When modules 06–07 couple many oscillators, the ellipse becomes a torus and the normal-mode
 transformation is the change of coordinates that untangles it — the classical shadow of what
 quantum mechanics will call diagonalising the Hamiltonian.
