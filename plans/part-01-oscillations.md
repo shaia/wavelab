@@ -1,6 +1,6 @@
 # Part I — Oscillations — Implementation Plan
 
-> **Master plan:** §8 (Part I). **Modules:** `01-sho`, `02-damped-driven`, `05-impulse-response`. **Status:** partial — `01-sho` built.
+> **Master plan:** §8 (Part I). **Modules:** `01-sho`, `02-damped-driven`, `05-impulse-response`. **Status:** partial — `01-sho` and `02-damped-driven` built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -61,7 +61,7 @@ sequencing argument is owned by `part-00-foundations.md` §8.
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
 | `01-sho` | `content/en/oscillations/01-sho.md` | The simple harmonic oscillator | 1.1 | Georgi, harmonic oscillation; French, SHM chapters | **built** |
-| `02-damped-driven` | `content/en/oscillations/02-damped-driven.md` | Damping, resonance, and the quality factor | 1.2 + 1.3 | French, damped & forced vibrations; Georgi; MIT 8.03 resonance lectures | planned |
+| `02-damped-driven` | `content/en/oscillations/02-damped-driven.md` | Damping, resonance, and the quality factor | 1.2 + 1.3 | French, damped & forced vibrations; Georgi; MIT 8.03 resonance lectures | **built** |
 | `05-impulse-response` | `content/en/oscillations/05-impulse-response.md` | Impulse response: the oscillator as a linear system | 1.4 | Georgi, LTI/Green-function treatment; MIT 8.03; Goodman, linear-systems preview | planned |
 
 ## 4. Shared infrastructure for this part
@@ -91,9 +91,12 @@ steady_state_response(omega, mass, stiffness, damping, force_amplitude=1.0) -> n
 resonance_peak_omega(mass, stiffness, damping) -> float  # omega0 sqrt(1 - 1/(2Q^2)); 0.0 when Q <= 1/sqrt(2)
 power_absorbed(omega, mass, stiffness, damping, force_amplitude) -> np.ndarray
                        # cycle-averaged (1/2) gamma m omega^2 |X|^2 [W]; peaks at omega0 exactly
-q_from_ringdown(times, positions) -> float     # Q = omega_d/gamma via log-envelope fit + zero crossings
+q_from_ringdown(times, positions, threshold=0.1) -> float
+                       # as built: Q = omega0/gamma, omega0 from omega_d^2 + gamma^2/4; envelope
+                       # from RMS per half cycle, crossings hysteretic (see the as-built note)
 q_from_bandwidth(omega, amplitude) -> float    # Q = omega_peak / width between |X|max/sqrt(2) crossings
-q_from_phase_slope(omega, phase_lag) -> float  # Q = (omega0/2) d(phase_lag)/d(omega) at the pi/2 crossing
+q_from_phase_slope(omega, phase_lag) -> float  # Q = (omega0/2) d(phase_lag)/d(omega) at the pi/2 crossing;
+                       # as built, obtained by fitting omega tan(phi - pi/2) vs omega^2, not by differencing
 impulse_response(t, mass, stiffness, damping) -> np.ndarray  # G(t): damped_position(x0=0, v0=1/m), 0 for t<0
 step_response(t, mass, stiffness, damping, force_amplitude) -> np.ndarray  # closed form; settles to F0/k
 convolution_response(force, dt, mass, stiffness, damping) -> np.ndarray    # causal (G*F) via fourier.convolve
@@ -299,10 +302,20 @@ blocked on parity until gap 1 closes.
   lab sweep — ≈ $3\times10^5$ steps total, seconds in Pyodide; animations ≤ 300 frames.
 - **Validation gates:** standard set with `--module 02-damped-driven`; the §4
   `steady_state_response` tests land with this module — part-00's module 03 cites them.
-- **Open questions for the author:** glass-shatter vs swing as lead hook (recommend
-  glass, swing inside predict); velocity-resonance preview in core or advanced
-  (recommend advanced); whether the $Q$-bench hides one system across its tabs
-  (recommend yes — "same number, three costumes" *is* the lesson).
+- **Open questions, as resolved when built:** the glass-shatter hook leads and the swing
+  moved into *explain*; the velocity/power-resonance distinction lives in *advanced*, where
+  it also carries the impedance preview; the laboratory's three $Q$ routes all interrogate
+  one hidden oscillator, since "same number, three costumes" is the lesson.
+- **As-built deviations from this section.** Three, each forced by the data rather than by
+  taste. (1) `q_from_ringdown` returns $\wnat/\gamma$ with $\wnat$ reconstructed from
+  $\omega_d^2 + \gamma^2/4$, not the shorthand $\omega_d/\gamma$ this section wrote: the
+  shorthand is a percent low at $Q \sim 2$, inside the regime the module's own sweep
+  explores. (2) The same function needed a hysteresis threshold and an RMS-per-half-cycle
+  envelope to survive noisy data at all — naive crossing counting returned $Q \approx 1160$
+  for a true $Q = 20$. (3) `q_from_phase_slope` fits the exactly-linear form
+  $\omega\tan(\varphi - \pi/2)$ against $\omega^2$ rather than differencing the sweep;
+  numerically differentiating measured phase put a 17% scatter on $Q$. All three are
+  documented in the function docstrings and pinned by tests.
 
 ### 5.3 `05-impulse-response` — Impulse response: the oscillator as a linear system
 
@@ -433,7 +446,25 @@ blocked on parity until gap 1 closes.
   half-period spacing vs prediction; (4) `convolution_response` vs `simulate` for step,
   ramp, burst; overshoot vs $Q$; (5) *measurement:* noisy kick data across seeds —
   report $Q_{\text{kick}}$ (linewidth) and $Q_{\text{ring}}$ (envelope) as value ±
-  uncertainty and test agreement (the module's punchline).
+  uncertainty and test agreement (the module's punchline). **The envelope route must call
+  `oscillators.q_from_ringdown`, not a fresh crossing counter written for this notebook.**
+  That function grew a hysteresis threshold and an RMS-per-half-cycle envelope when 02 was
+  built precisely because naive extraction returns $Q \approx 1160$ on a true $Q = 20$ once
+  the tail decays into the noise (§5.2, as-built deviations). A broken estimator here does
+  not read as a failed agreement test — it reads as a broken notebook, and it would break
+  the one step the module is built around. **$Q_{\text{kick}}$ likewise comes from *fitting*
+  `fourier.lorentzian_spectrum` to the ringdown spectrum, not from half-power crossings on
+  raw FFT bins** — step (2) already overlays that curve, so this costs the lab nothing but
+  turns an overlay into a measurement with an uncertainty step (5) can use. The reason is
+  arithmetic, not noise: bin spacing $2\pi/T$ puts $\gamma T/2\pi = n/\pi$ bins across the
+  FWHM for a record of $n$ amplitude e-folding times — $1.6$ bins at five — *independent of
+  $Q$*, so the crossings are under-resolved before any noise arrives, and recording longer
+  is not the escape it looks like ($10$ bins needs $31$ e-foldings, where the signal is
+  $10^{-14}$ of its start). Zero-padding interpolates the lineshape and adds no information.
+  Note that `q_from_bandwidth` will accept FFT bins and $|\hat{G}|$ without complaint, since
+  both are just arrays: this is a trap, not a type error. Its contract assumes a *driven*
+  sweep the experimenter can sample as finely as they like — a freedom module 02 had and a
+  ringdown, whose bin spacing is set by the same $\gamma$ that sets its linewidth, does not.
 - **Real-experiment counterpart:** strike a wine glass or tuning fork by a phone
   microphone; record WAV; import via `scipy.io.wavfile` (part-00's path); FFT the
   ring → $f_0$ and $Q$ from the linewidth, cross-checked against the audible decay
@@ -487,10 +518,12 @@ Build `02-damped-driven` first: part-00's module 03 consumes
 exponential ↔ Lorentzian pair). The cross-part sequence — agreed with part-00 §7 — is
 `02 → 03 → 04 → 05`.
 
-With `02-damped-driven`: deposit the §5.2 glossary terms (`bandwidth` is deposited here,
-cited by part-00's 04); add NEW registry entry `resonance-grows-forever`; flip
-`resonance-peak-at-omega0` to `addressed`; land the `steady_state_response`,
-`resonance_peak_omega`, `power_absorbed`, and `q_from_*` tests. With
+With `02-damped-driven` (**done**): the §5.2 glossary terms are deposited (`bandwidth`
+among them, cited by part-00's 04); registry entry `resonance-grows-forever` added and
+`resonance-peak-at-omega0` flipped to `addressed`; the `steady_state_response`,
+`resonance_peak_omega`, `power_absorbed` and `q_from_*` tests have landed across all six
+accuracy categories, and `media/render/render_resonance.py` renders the two animations.
+With
 `05-impulse-response`: deposit the §5.3 glossary terms; add NEW registry entry
 `response-follows-force-shape`; land the `impulse_response`, `step_response`,
 `convolution_response`, and $\hat{G}$-identity tests. Closing 01's gap list (§5.1, the
