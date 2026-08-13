@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import oscillators
+from wavelab import fourier, oscillators
 from wavelab.units import C_LIGHT_Q, EPS_0_Q, MU_0_Q, Quantity
 
 pytestmark = pytest.mark.dimensional
@@ -126,6 +126,42 @@ def test_library_returns_plain_floats():
     assert oscillators.power_absorbed(sweep, 0.5, 8.0, 0.4, 1.0).dtype == np.float64
     assert isinstance(oscillators.q_from_bandwidth(sweep, np.abs(response)), float)
     assert isinstance(oscillators.q_from_phase_slope(sweep, np.angle(response)), float)
+    assert isinstance(fourier.gibbs_overshoot(31), float)
+    times = (np.arange(512) - 256) * 0.01
+    duration, bandwidth = fourier.rms_widths(fourier.gaussian_pulse(times, 0.3), 0.01)
+    assert isinstance(duration, float) and isinstance(bandwidth, float)
+    assert fourier.spectrum(fourier.gaussian_pulse(times, 0.3), 0.01)[1].dtype == np.complex128
+
+
+def test_the_spectrum_axis_is_an_angular_frequency():
+    """`spectrum` must return radians per second, not hertz — a factor of 2 pi with a name.
+
+    The library speaks angular frequency everywhere, and this is the one place a stray 2 pi
+    could hide without changing any shape on a plot: the curve would look right and every
+    frequency read off it would be wrong by 6.28.
+    """
+    sample_dt = Quantity(0.01, "s")
+    count = 4096
+    spacing = 2.0 * np.pi / (count * sample_dt)
+    assert spacing.check("1/[time]")
+
+    nyquist = np.pi / sample_dt
+    assert nyquist.check("1/[time]")
+
+    omega, _ = fourier.spectrum(np.zeros(count), sample_dt.magnitude)
+    assert np.isclose(omega[1] - omega[0], spacing.magnitude, rtol=1e-12)
+    assert np.isclose(omega.max() + (omega[1] - omega[0]), nyquist.magnitude, rtol=1e-12)
+
+
+def test_the_uncertainty_product_is_dimensionless():
+    """Delta t times Delta omega multiplies a time by an inverse time — a pure number.
+
+    That is what lets one inequality serve a pulse in nanoseconds, a wave packet in microns
+    and a laser linewidth in megahertz without ever being restated.
+    """
+    duration = Quantity(2.0e-3, "s")
+    bandwidth = Quantity(250.0, "1/s")
+    assert (duration * bandwidth).check("[]")
 
 
 def test_verlet_step_is_dimensionally_consistent():

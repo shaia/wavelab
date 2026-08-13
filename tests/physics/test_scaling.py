@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import measurement, oscillators, phasors
+from wavelab import fourier, measurement, oscillators, phasors
 from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.large_n
@@ -172,3 +172,57 @@ def test_reported_fit_error_shrinks_with_record_length():
         )
         errors.append(measurement.fit_cosine(t, noisy, OMEGA0).omega_err)
     assert errors[0] > errors[1] > errors[2]
+
+
+# The bandwidth theorem's scaling content: squeezing a signal in time stretches its spectrum
+# by exactly the reciprocal factor, so their product is a scale-invariant number with a floor.
+FOURIER_SAMPLES = 4096
+FOURIER_DT = 0.01
+FOURIER_TIMES = (np.arange(FOURIER_SAMPLES) - FOURIER_SAMPLES // 2) * FOURIER_DT
+
+
+def test_squeezing_a_pulse_in_time_stretches_its_spectrum_by_the_same_factor():
+    """The time-scaling theorem: f(a t) transforms to F(omega / a) / |a|.
+
+    Both halves matter. The width scales, which is the part everyone remembers, and the height
+    scales inversely, which is what keeps the area — the signal's zero-frequency content —
+    fixed. A transform that got only the width right would pass a sketch and fail here.
+    """
+    sigma = 0.4
+    for factor in (2.0, 4.0):
+        squeezed = fourier.gaussian_pulse(FOURIER_TIMES, sigma / factor)
+        omega, transform = fourier.spectrum(squeezed, FOURIER_DT)
+        predicted = fourier.gaussian_spectrum(omega / factor, sigma) / factor
+        assert np.max(np.abs(transform - predicted)) < 1e-10
+
+
+def test_the_uncertainty_product_is_invariant_under_time_scaling():
+    """Delta t times Delta omega is a pure number: it cannot depend on the clock's units."""
+    products = []
+    for sigma in (0.2, 0.4, 0.8):
+        duration, bandwidth = fourier.rms_widths(
+            fourier.gaussian_pulse(FOURIER_TIMES, sigma), FOURIER_DT
+        )
+        products.append(duration * bandwidth)
+    for product in products:
+        assert np.isclose(product, 0.5, rtol=1e-9)
+
+
+def test_the_gaussian_alone_reaches_the_bandwidth_minimum():
+    """Delta t Delta omega >= 1/2 for every signal, with equality for the Gaussian only.
+
+    The chirped pulse is the sharpest of the comparisons: chirping does not touch |f|^2, so
+    its duration is identical to the plain Gaussian's, and the entire excess comes from a
+    spectrum broadened by phase alone. Bandwidth is not a property of the envelope.
+    """
+    plain = fourier.gaussian_pulse(FOURIER_TIMES, 0.4)
+    chirped = plain * np.exp(1j * 3.0 * FOURIER_TIMES**2)
+    beating = plain * np.cos(8.0 * FOURIER_TIMES)
+
+    plain_product = np.prod(fourier.rms_widths(plain, FOURIER_DT))
+    assert np.isclose(plain_product, 0.5, rtol=1e-9)
+
+    for name, signal in (("chirped", chirped), ("modulated", beating)):
+        product = np.prod(fourier.rms_widths(signal, FOURIER_DT))
+        assert product > 0.5, f"the {name} pulse cannot beat the bound"
+        assert product > plain_product

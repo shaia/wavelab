@@ -481,6 +481,63 @@ def simulate(
     return Trajectory(times=times, positions=positions, velocities=velocities)
 
 
+def simulate_forced(
+    mass: float,
+    stiffness: float,
+    x0: float,
+    v0: float,
+    dt: float,
+    force_samples: np.ndarray,
+    damping: float = 0.0,
+) -> Trajectory:
+    """Integrate m x'' = -k x - b x' + F(t) for a drive supplied as samples, by velocity Verlet.
+
+    `simulate` drives with a single cosine, which is all modules 01 and 02 ask for. Module 03
+    needs the other case — a periodic drive that is not a sinusoid — so that its harmonic-sum
+    prediction can be tested against an integration that knows nothing about harmonics. Adding
+    up separate `simulate` runs would assume exactly the superposition under test, so the force
+    arrives here as a sampled record instead.
+
+    `force_samples[i]` is F(i dt) [N], and the returned trajectory has the same length: an
+    array of n + 1 samples integrates n steps. The scheme is the one `simulate` uses, closing
+    kick and all, so it stays second order in the presence of damping.
+    """
+    _validate_oscillator(mass, stiffness)
+    if damping < 0:
+        raise ValueError("damping must be non-negative")
+    if dt <= 0:
+        raise ValueError("dt must be positive")
+
+    forces = np.asarray(force_samples, dtype=float)
+    if forces.ndim != 1:
+        raise ValueError("force_samples must be a one-dimensional record")
+    if forces.size < 2:
+        raise ValueError("force_samples must hold at least two points — one step needs both ends")
+
+    gamma = damping_rate(mass, damping)
+    omega0_sq = stiffness / mass
+    n_steps = forces.size - 1
+
+    times = np.arange(forces.size) * dt
+    positions = np.empty(forces.size)
+    velocities = np.empty(forces.size)
+    positions[0] = x0
+    velocities[0] = v0
+
+    x = float(x0)
+    v = float(v0)
+    for step in range(n_steps):
+        accel_now = -omega0_sq * x - gamma * v + forces[step] / mass
+        v_half = v + 0.5 * dt * accel_now
+        x = x + dt * v_half
+        conservative_next = -omega0_sq * x + forces[step + 1] / mass
+        v = (v_half + 0.5 * dt * conservative_next) / (1.0 + 0.5 * dt * gamma)
+        positions[step + 1] = x
+        velocities[step + 1] = v
+
+    return Trajectory(times=times, positions=positions, velocities=velocities)
+
+
 def _validate_oscillator(mass: float, stiffness: float) -> None:
     if mass <= 0:
         raise ValueError("mass must be positive")

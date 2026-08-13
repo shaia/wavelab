@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import measurement, oscillators, phasors
+from wavelab import fourier, measurement, oscillators, phasors
 from wavelab.validation import scaling_exponent, seed_study
 
 pytestmark = pytest.mark.seed_independence
@@ -146,3 +146,36 @@ def test_seed_study_detects_a_genuinely_biased_measurement():
 
     study = seed_study(biased_measure, n_seeds=8, base_seed=0)
     assert not study.agrees_with(OMEGA0, n_sigma=3.0)
+
+
+# Averaging spectra: a single periodogram of noise is a famously bad estimator — its scatter
+# does not fall as the record lengthens, only its frequency resolution improves. Averaging
+# independent records is what buys precision, and it buys it at the usual rate.
+PERIODOGRAM_SAMPLES = 1024
+PERIODOGRAM_DT = 0.01
+
+
+def _periodogram_scatter(n_averages: int, base_seed: int = 0) -> float:
+    """Relative scatter of a noise periodogram averaged over `n_averages` records."""
+    seeds = np.random.SeedSequence(base_seed).spawn(n_averages)
+    total = np.zeros(PERIODOGRAM_SAMPLES)
+    for seed in seeds:
+        noise = np.random.default_rng(seed).normal(size=PERIODOGRAM_SAMPLES)
+        _, transform = fourier.spectrum(noise, PERIODOGRAM_DT)
+        total += np.abs(transform) ** 2
+    averaged = total / n_averages
+    return float(np.std(averaged) / np.mean(averaged))
+
+
+def test_averaging_periodograms_shrinks_the_noise_floor_as_one_over_root_m():
+    """The scatter of an averaged noise spectrum falls as M^(-1/2), not the record length.
+
+    This is the rule behind every later laboratory that reports a spectral measurement with an
+    error bar: one long record and many short ones are not interchangeable, and only averaging
+    independent realisations pushes the floor down. A single periodogram has relative scatter
+    of order one however many samples it holds.
+    """
+    counts = [1, 4, 16, 64]
+    scatters = [_periodogram_scatter(m) for m in counts]
+    assert abs(scaling_exponent(counts, scatters) - (-0.5)) < 0.2
+    assert scatters[0] > scatters[-1]

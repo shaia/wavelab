@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import oscillators
+from wavelab import fourier, oscillators
 
 pytestmark = pytest.mark.conservation
 
@@ -165,3 +165,56 @@ def test_driven_oscillator_energy_stays_bounded():
     )
     energy_cap = 0.5 * STIFFNESS * (2.0 * steady_state) ** 2
     assert total.max() < energy_cap
+
+
+# Harmonic analysis conserves energy too: changing representation must not create or destroy
+# any. Parseval is that statement, and it holds in both the periodic and the sampled worlds.
+FOURIER_SAMPLES = 4096
+FOURIER_DT = 0.01
+
+
+def test_parseval_holds_for_the_fourier_coefficients():
+    """Mean square in time equals the sum of |c_n|^2 — the harmonics carry all the power.
+
+    The signal is built from a finite coefficient set, so it is exactly band-limited and the
+    identity is exact rather than approximate: nothing is hiding above the cutoff. That makes
+    a failure here unambiguous, which a truncated waveform could not.
+    """
+    coefficients = fourier.triangle_coefficients(9)
+    phase = 2.0 * np.pi * np.arange(FOURIER_SAMPLES) / FOURIER_SAMPLES
+    signal = fourier.partial_sum(coefficients, 1.0, phase)
+
+    assert np.isclose(np.sum(np.abs(coefficients) ** 2), np.mean(signal**2), rtol=1e-12)
+    recovered = fourier.fourier_coefficients(signal, 9)
+    assert np.max(np.abs(recovered - coefficients)) < 1e-12
+
+
+def test_parseval_holds_for_a_sampled_spectrum():
+    """Energy in the record equals energy in its spectrum, once the 1/(2 pi) is respected.
+
+    This is the identity that lets a later module read a spectrum panel as an energy budget
+    rather than a picture, and it is where a wrong transform scaling would show up first.
+    """
+    times = (np.arange(FOURIER_SAMPLES) - FOURIER_SAMPLES // 2) * FOURIER_DT
+    signal = fourier.gaussian_pulse(times, 0.3) * np.cos(12.0 * times)
+    omega, transform = fourier.spectrum(signal, FOURIER_DT)
+
+    time_energy = np.sum(np.abs(signal) ** 2) * FOURIER_DT
+    spectral_energy = np.sum(np.abs(transform) ** 2) * (omega[1] - omega[0]) / (2.0 * np.pi)
+    assert np.isclose(time_energy, spectral_energy, rtol=1e-10)
+
+
+def test_the_spectrum_round_trips_through_its_inverse():
+    """Analysis then synthesis returns the signal to machine precision, losing nothing.
+
+    Module 12 propagates wave packets by transforming, multiplying by a phase, and
+    transforming back, so any loss here would accumulate into that calculation rather than
+    announcing itself.
+    """
+    times = (np.arange(FOURIER_SAMPLES) - FOURIER_SAMPLES // 2) * FOURIER_DT
+    signal = fourier.gaussian_pulse(times, 0.4) * np.cos(9.0 * times)
+    _, transform = fourier.spectrum(signal, FOURIER_DT)
+    restored = fourier.inverse_spectrum(transform, FOURIER_DT)
+
+    assert np.max(np.abs(restored - signal)) < 1e-12
+    assert np.max(np.abs(restored.imag)) < 1e-12

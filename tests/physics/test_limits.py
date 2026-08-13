@@ -11,7 +11,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import oscillators, phasors
+from wavelab import fourier, oscillators, phasors
+from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.analytic_limit
 
@@ -289,3 +290,146 @@ def test_beats_factor_into_carrier_and_envelope():
         * np.cos(0.5 * (omega1 + omega2) * t)
     )
     assert np.max(np.abs(signal - envelope_form)) < 1e-12
+
+
+# Harmonic analysis. The grid is centred on t = 0, which is what `spectrum` assumes and what
+# makes an even signal transform to a real spectrum instead of one wrapped in a phase ramp.
+SAMPLES = 4096
+SAMPLE_DT = 0.01
+SAMPLE_TIMES = (np.arange(SAMPLES) - SAMPLES // 2) * SAMPLE_DT
+PHASE_GRID = 2.0 * np.pi * np.arange(SAMPLES) / SAMPLES
+
+
+def test_closed_form_coefficients_match_the_numerical_integrals():
+    """Every waveform in the zoo, its closed form against the coefficient integral.
+
+    The residuals are the lesson as much as the agreement: the continuous triangle lands near
+    machine precision, while the three waveforms carrying a jump stall at about 1/N, because
+    no finite sample grid resolves a discontinuity. That is the same smoothness-buys-accuracy
+    statement the coefficient decay rates make, seen from the numerical side.
+    """
+    smooth = (2.0 / np.pi) * np.arcsin(np.sin(PHASE_GRID))
+    assert np.max(
+        np.abs(fourier.fourier_coefficients(smooth, 9) - fourier.triangle_coefficients(9))
+    ) < 1e-6
+
+    wrapped = (PHASE_GRID + np.pi) % (2.0 * np.pi) - np.pi
+    jumping = {
+        "square": (np.sign(np.sin(PHASE_GRID)), fourier.square_coefficients(9)),
+        "sawtooth": (wrapped / np.pi, fourier.sawtooth_coefficients(9)),
+        "pulse train": (
+            np.where(np.abs(wrapped) <= 0.25 * np.pi, 1.0, 0.0),
+            fourier.pulse_train_coefficients(0.25, 9),
+        ),
+    }
+    for name, (signal, closed_form) in jumping.items():
+        error = np.max(np.abs(fourier.fourier_coefficients(signal, 9) - closed_form))
+        assert error < 5.0 / SAMPLES, f"{name} coefficients are off by more than one part in N"
+
+
+def test_gaussian_transforms_into_a_gaussian():
+    """The only shape in the zoo that is its own transform — and numerically it is exact."""
+    sigma = 0.3
+    pulse = fourier.gaussian_pulse(SAMPLE_TIMES, sigma)
+    omega, transform = fourier.spectrum(pulse, SAMPLE_DT)
+    assert np.max(np.abs(transform - fourier.gaussian_spectrum(omega, sigma))) < 1e-10
+
+
+def test_a_decaying_exponential_has_a_lorentzian_half_width_of_one_over_tau():
+    """The ringdown pair, tested where it is meant to be read: the width of the line.
+
+    Pointwise agreement is not available here — `exp_decay` jumps at t = 0, and a sampled jump
+    costs first-order accuracy — so the claim under test is the physical one the course makes
+    everywhere from module 02 to module 27: a decay of time constant tau shows a line of
+    half-width 1/tau, and a faster decay a broader line.
+
+    The half-power point is located by which bins clear the threshold, so the tolerance is one
+    bin of the frequency axis — the resolution of the measurement, not a fudge factor.
+    """
+    for tau in (0.25, 0.5, 1.0):
+        decay = fourier.exp_decay(SAMPLE_TIMES, tau)
+        omega, transform = fourier.spectrum(decay, SAMPLE_DT)
+        magnitude = np.abs(transform)
+        half_power = magnitude >= magnitude.max() / np.sqrt(2.0)
+        measured = (omega[half_power].max() - omega[half_power].min()) / 2.0
+        assert abs(measured - 1.0 / tau) < omega[1] - omega[0]
+
+
+def test_the_rect_spectrum_approaches_the_sinc_only_as_the_grid_refines():
+    """A discontinuous pulse costs first-order accuracy — the Gaussian's exactness is earned.
+
+    The error does not fall to roundoff at any fixed grid and zero-padding cannot rescue it:
+    padding interpolates the transform of the *sampled* rect, which is not the continuous
+    sinc. What is true, and what this pins, is that the discrepancy is O(dt).
+    """
+    steps = [0.02, 0.01, 0.005]
+    errors = []
+    for dt in steps:
+        count = int(round(40.0 / dt))
+        times = (np.arange(count) - count // 2) * dt
+        omega, transform = fourier.spectrum(fourier.rect_pulse(times, 1.0), dt)
+        errors.append(float(np.max(np.abs(transform - fourier.sinc_spectrum(omega, 1.0)))))
+    assert abs(scaling_exponent(steps, errors) - 1.0) < 0.05
+
+
+def test_a_real_cosine_puts_its_phasor_in_the_negative_half_of_the_spectrum():
+    """Module 00's phasor, located exactly: pi x_hat at -omega0 and pi x_hat* at +omega0.
+
+    The drive frequency is placed *on a grid bin* on purpose. Off-bin the same cosine leaks
+    across neighbouring bins and the peak reads about a fifth low — not an error in the
+    transform, but the leakage module 04 teaches, and a trap for anyone testing this casually.
+    """
+    spacing = 2.0 * np.pi / (SAMPLES * SAMPLE_DT)
+    omega0 = 130 * spacing
+    phasor = 2.0 * np.exp(-1j * 0.7)
+    signal = np.real(phasor * np.exp(-1j * omega0 * SAMPLE_TIMES))
+
+    omega, transform = fourier.spectrum(signal, SAMPLE_DT)
+    negative = int(np.argmin(np.abs(omega + omega0)))
+    positive = int(np.argmin(np.abs(omega - omega0)))
+    assert np.isclose(transform[negative] * spacing / np.pi, phasor, rtol=1e-9)
+    assert np.isclose(transform[positive] * spacing / np.pi, np.conj(phasor), rtol=1e-9)
+
+
+def test_a_tone_above_nyquist_is_reported_as_a_different_frequency():
+    """The negative control: below Nyquist the spectrum tells the truth, above it, it lies.
+
+    A validator that can only ever pass is worse than none, so this asserts both halves. The
+    folded tone does not merely become inaccurate — it is reported *confidently* at the wrong
+    frequency, with nothing in the record to warn of it. That is why Nyquist is a validity
+    edge in this module's model specification rather than a quality setting.
+    """
+    dt = 0.01
+    nyquist = np.pi / dt
+    times = np.arange(4096) * dt
+
+    def apparent(true_omega: float) -> float:
+        omega, transform = fourier.spectrum(np.cos(true_omega * times), dt)
+        half = omega >= 0.0
+        return float(omega[half][np.argmax(np.abs(transform[half]))])
+
+    honest = 0.6 * nyquist
+    assert np.isclose(apparent(honest), honest, rtol=2e-2)
+
+    aliased = 1.4 * nyquist
+    assert not np.isclose(apparent(aliased), aliased, rtol=2e-2)
+    assert np.isclose(apparent(aliased), 2.0 * nyquist - aliased, rtol=2e-2)
+
+
+def test_the_forced_integrator_reproduces_the_cosine_drive_it_generalises():
+    """`simulate_forced` fed a sampled cosine must return `simulate`'s trajectory exactly.
+
+    Module 03 trusts the sampled-force integrator to check a harmonic sum against physics that
+    knows nothing of harmonics, so it has to be the same integrator, not merely a similar one.
+    """
+    damping, drive_omega, dt, n_steps = 0.4, 3.4, 1e-3, 20_000
+    times = np.arange(n_steps + 1) * dt
+    reference = oscillators.simulate(
+        MASS, STIFFNESS, 0.0, 0.0, dt, n_steps,
+        damping=damping, drive_amplitude=1.0, drive_omega=drive_omega,
+    )
+    sampled = oscillators.simulate_forced(
+        MASS, STIFFNESS, 0.0, 0.0, dt, np.cos(drive_omega * times), damping=damping
+    )
+    assert np.max(np.abs(reference.positions - sampled.positions)) < 1e-12
+    assert np.max(np.abs(reference.velocities - sampled.velocities)) < 1e-12
