@@ -1,0 +1,134 @@
+[
+  {
+    "question": "A mass of 2.0 kg sits on a spring of stiffness 8.0 N/m with a damping coefficient of 10.0 kg/s. Which regime is this, and what does the motion look like after the mass is displaced and released?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Overdamped — it creeps back to equilibrium without oscillating, crossing zero at most once.",
+        "correct": true,
+        "feedback": "Right. Critical damping is b = 2 sqrt(mk) = 2 sqrt(16) = 8.0 kg/s, and 10.0 is above it, so gamma = 5.0 exceeds 2 omega0 = 4.0. Both roots are real and negative: two decaying exponentials, no ringing. Note that increasing b further makes the return slower, not faster."
+      },
+      {
+        "answer": "Underdamped — it rings at a frequency slightly below sqrt(k/m) inside a decaying envelope.",
+        "correct": false,
+        "feedback": "Check the boundary before choosing a regime: ringing requires b < 2 sqrt(mk) = 8.0 kg/s, and this system has 10.0. Comparing b with sqrt(mk) = 4.0 rather than with 2 sqrt(mk) is the usual way to land here."
+      },
+      {
+        "answer": "Critically damped — b is large enough that the motion just fails to oscillate.",
+        "correct": false,
+        "feedback": "Critical is one exact value, b = 2 sqrt(mk) = 8.0 kg/s, not a range above some threshold. At 10.0 the system is past it and genuinely overdamped, which returns to equilibrium more slowly than the critical case, not faster."
+      },
+      {
+        "answer": "It depends on the release amplitude — heavy damping only matters for large displacements.",
+        "correct": false,
+        "feedback": "The equation is linear, so every amplitude scales the same solution: the regime is fixed by m, k and b alone. Amplitude-independence survived from module 01 intact; it is the *timing* of the drive, not the size of the motion, that this module makes decisive."
+      }
+    ]
+  },
+  {
+    "question": "You drive an oscillator by hand. Compare the displacement with the driving force at three frequencies: far below omega0, exactly at omega0, and far above it. What is the phase lag in each case?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0, then pi/2, then pi — in step, then a quarter cycle behind, then opposed.",
+        "correct": true,
+        "feedback": "Right, and each limit has a physical owner. Slowly, the spring is in charge and the mass sits where the force puts it. At omega0 the real part of the denominator vanishes and only the damping term survives, giving exactly pi/2 whatever the damping. Fast, inertia is in charge and the mass moves against the hand."
+      },
+      {
+        "answer": "0 throughout — the mass always follows the force, only the amplitude changes.",
+        "correct": false,
+        "feedback": "Then the drive could never do net work over a cycle in the steady state, and the damping would have nothing to pay it with. The lag is not a detail: it is what lets energy flow in, and it is largest in effect at resonance where the force is in phase with the *velocity*."
+      },
+      {
+        "answer": "pi/2 throughout — the response always lags a quarter cycle.",
+        "correct": false,
+        "feedback": "A quarter cycle is the value at omega0 exactly, and it is exact there for any damping — which is what makes it a good way to *find* omega0. Away from resonance the lag runs from 0 to pi, and how fast it turns is a third way of measuring Q."
+      },
+      {
+        "answer": "pi, then pi/2, then 0 — the lag decreases as the drive gets faster.",
+        "correct": false,
+        "feedback": "This is the sequence backwards. Test it against the slow limit: push a mass very gradually and it goes where you push it, which is a lag of zero, not of half a cycle. Lag grows with frequency because inertia progressively wins the argument."
+      }
+    ]
+  },
+  {
+    "question": "A damped oscillator is driven at a range of frequencies and its steady-state amplitude is recorded. At which frequency is the amplitude largest?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Slightly below omega0, at omega0 sqrt(1 - 1/(2 Q^2)) — and for Q below 1/sqrt(2) there is no peak at all.",
+        "correct": true,
+        "feedback": "Right. Maximising |X| means minimising (omega0^2 - omega^2)^2 + gamma^2 omega^2, which gives omega^2 = omega0^2 - gamma^2/2. The shift is 0.06% at Q = 20 — invisible, which is why the wrong answer survives — and 6.5% at Q = 2. Below Q = 1/sqrt(2) the square root has no real value and the response just falls away from F0/k."
+      },
+      {
+        "answer": "Exactly at omega0 = sqrt(k/m), regardless of the damping.",
+        "correct": false,
+        "feedback": "Exactly at omega0 is where the *phase lag* is pi/2 and where the absorbed *power* peaks — both of those are exact for any damping. The displacement amplitude is the one that shifts, because its denominator carries the extra factor of omega that the power expression cancels."
+      },
+      {
+        "answer": "Slightly above omega0, because damping has to be overcome before the mass responds.",
+        "correct": false,
+        "feedback": "Damping shifts the peak down, not up: it enters the denominator as -gamma^2/2 under the square root. The frequency that does sit above omega0 is the *acceleration* peak, at omega0 / sqrt(1 - 1/(2 Q^2)) — the mirror image of this one."
+      },
+      {
+        "answer": "At the damped free frequency omega_d = sqrt(omega0^2 - gamma^2/4).",
+        "correct": false,
+        "feedback": "A reasonable guess, and wrong by a factor of two in the correction: the ringing frequency of a *free* decay is omega_d, but the driven amplitude peaks at sqrt(omega0^2 - gamma^2/2), which is lower still. Three nearby frequencies — omega0, omega_d, omega_peak — that coincide only when the damping vanishes."
+      }
+    ]
+  },
+  {
+    "question": "Starting from rest, you drive a damped oscillator at exactly its natural frequency and never stop. What happens to the amplitude?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It climbs toward Q times the static response F0/k and settles there, taking about Q/pi periods.",
+        "correct": true,
+        "feedback": "Right. The envelope grows as Q (F0/k) (1 - e^(-gamma t / 2)): resonance is Q-fold amplification, not divergence. The build-up time 2/gamma is the same 2/gamma that sets how long a struck oscillator rings, which is why a high-Q system is loud and selective *and* slow."
+      },
+      {
+        "answer": "It grows without limit — that is what resonance means.",
+        "correct": false,
+        "feedback": "That is true only of the idealised undamped oscillator, which has no steady state at all. With any damping the energy lost per cycle grows as the amplitude squared while the energy supplied grows only linearly, so the two must balance — and they do, at Q F0/k."
+      },
+      {
+        "answer": "It grows for a while and then collapses, because the oscillator falls out of step with the drive.",
+        "correct": false,
+        "feedback": "Nothing makes it fall out of step: the steady-state solution repeats at the drive frequency forever, locked at a quarter-cycle lag. Beating and collapse happen when the drive is *detuned* from omega0, not when it sits on it."
+      },
+      {
+        "answer": "It reaches F0/k, the same amplitude a slowly applied force would produce.",
+        "correct": false,
+        "feedback": "F0/k is the answer far *below* resonance, where the spring alone opposes the force. At omega0 the spring and inertia terms cancel exactly and only the damping term survives in the denominator, leaving Q times as much."
+      }
+    ]
+  },
+  {
+    "question": "A swept measurement of a resonator gives a power-response peak at 2400 Hz with a half-power full width of 30 Hz. What is its quality factor Q?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          78.0,
+          82.0
+        ],
+        "correct": true,
+        "feedback": "Q = f0 / Delta f = 2400 / 30 = 80. The ratio is the same whether it is taken in hertz or in radians per second, because Q is dimensionless — that is exactly what lets one number describe the resonator regardless of the units on the axis."
+      }
+    ]
+  },
+  {
+    "question": "A bell with Q = 30 is struck once. After roughly how many complete oscillations has its amplitude fallen to 1/e of its initial value?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          8.55,
+          10.55
+        ],
+        "correct": true,
+        "feedback": "The amplitude decays as e^(-gamma t / 2), so it reaches 1/e at t = 2/gamma = 2Q/omega0. Divided by the period 2 pi/omega0 that is Q/pi = 30/pi = 9.5 oscillations. Note the factor of two: the *energy* falls to 1/e in half that time, Q/(2 pi) cycles, and quoting one number for the other is the commonest slip here."
+      }
+    ]
+  }
+]

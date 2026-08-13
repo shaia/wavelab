@@ -22,6 +22,8 @@ project:
       children:
         - file: oscillations/01-sho.md
         - file: oscillations/01-sho-problems.md
+        - file: oscillations/02-damped-driven.md
+        - file: oscillations/02-damped-driven-problems.md
 site:
   template: book-theme
   options:

@@ -26,28 +26,32 @@ misconceptions:
   - id: resonance-peak-at-omega0
     statement: "The driven amplitude peaks at exactly the natural frequency, regardless of damping."
     assigned_module: 02-damped-driven
-    status: pending
+    status: addressed
+  - id: resonance-grows-forever
+    statement: "Driving an oscillator at resonance makes its amplitude grow without limit."
+    assigned_module: 02-damped-driven
+    status: addressed
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
-    assigned_module: 04-waves
+    assigned_module: 08-wave-equation
     status: pending
   - id: packet-at-phase-velocity
     statement: "A pulse travels at the phase velocity, so a phase velocity above c would break relativity."
-    assigned_module: 05-fourier
+    assigned_module: 12-wave-packets
     status: pending
   - id: frequency-changes-in-medium
     statement: "Light entering glass changes its frequency."
-    assigned_module: 06-em-waves
+    assigned_module: 16-light-in-matter
     status: pending
   - id: third-polarizer-only-dims
     statement: "Inserting an extra polarizer can only ever reduce the transmitted light."
-    assigned_module: 07-polarization
+    assigned_module: 20-polarization
     status: pending
   - id: interference-destroys-energy
     statement: "Destructive interference destroys the waves' energy."
-    assigned_module: 08-interference
+    assigned_module: 23-interference
     status: pending
   - id: narrow-slit-narrow-pattern
     statement: "A narrower slit produces a narrower diffraction pattern."
-    assigned_module: 09-diffraction
+    assigned_module: 29-fraunhofer
     status: pending
