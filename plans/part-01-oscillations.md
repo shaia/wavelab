@@ -264,8 +264,7 @@ blocked on parity until gap 1 closes.
   `critical-damping` (ריסון קריטי), `transient` (תגובת מעבר), `steady-state`
   (מצב מתמיד), `phase-lag` (פיגור מופע), `lorentzian` (לורנציאן), `ringdown`
   (דעיכה חופשית — translator to decide; `he_reject` candidate: רינגדאון), `bandwidth`
-  (רוחב פס — shared key, also listed by part-00 for 04; single deposit by whichever
-  builds first — 02 in the agreed sequence).
+  (רוחב פס — deposited here; `04-fourier-transform` cites the same key).
 - **Interactive controls and simulations:** ringdown morph ($\gamma/2\wnat \in
   [0.05, 3]$, log slider); response explorer ($Q \in [0.5, 50]$, $\omega/\wnat \in
   [0, 3]$; dual panel); transient viewer; $Q$-bench — one hidden oscillator, three tabs
@@ -488,8 +487,8 @@ Build `02-damped-driven` first: part-00's module 03 consumes
 exponential ↔ Lorentzian pair). The cross-part sequence — agreed with part-00 §7 — is
 `02 → 03 → 04 → 05`.
 
-With `02-damped-driven`: deposit the §5.2 glossary terms (`bandwidth` coordinated with
-part-00); add NEW registry entry `resonance-grows-forever`; flip
+With `02-damped-driven`: deposit the §5.2 glossary terms (`bandwidth` is deposited here,
+cited by part-00's 04); add NEW registry entry `resonance-grows-forever`; flip
 `resonance-peak-at-omega0` to `addressed`; land the `steady_state_response`,
 `resonance_peak_omega`, `power_absorbed`, and `q_from_*` tests. With
 `05-impulse-response`: deposit the §5.3 glossary terms; add NEW registry entry

@@ -384,7 +384,8 @@ section on energy bookkeeping, the rotating frame, and negative frequencies. Obj
   (`spectrum` of $\cos$), and suppressing one half changes the signal into its analytic
   form — a different, complex signal. Distractor: "the negative-frequency half of an
   FFT is redundant noise the code should discard".
-- **Glossary terms:** `fourier-transform` (התמרת פורייה), `bandwidth` (רוחב פס),
+- **Glossary terms:** `fourier-transform` (התמרת פורייה), `bandwidth` (cited, deposited
+  by `02-damped-driven` — 02 precedes 04 in teaching order),
   `convolution` (קונבולוציה; `he_reject` candidate: עירוב), `sampling` (דגימה),
   `nyquist-frequency` (תדר נייקוויסט), `aliasing` (כיווץ תדרים? translator to decide —
   transliteration אליאסינג common), `spectral-leakage` (זליגה ספקטרלית),

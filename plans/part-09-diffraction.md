@@ -152,7 +152,7 @@ spec:
   that move with grid size); wraparound ghosts from missing zero padding; the growing
   evanescent branch.
 
-Function-level sketch (signatures + contracts; the four **orchestrator-fixed** names —
+Function-level sketch (signatures + contracts; the four **course-fixed** shared names —
 `fraunhofer_pattern`, `angular_spectrum_propagate`, `airy_radius`, `rayleigh_criterion` —
 are cited by parts X–XII and must not drift):
 
@@ -365,7 +365,7 @@ one-line disambiguation.
   than without the disk".
 - **Glossary terms:** `diffraction` (עקיפה), `huygens-principle` (עקרון הויגנס),
   `secondary-wavelet` (גלון משני — translator to confirm; `he_reject` candidate:
-  גל משני), `wavefront` (חזית גל), `fresnel-zone` (אזור פרנל), `poisson-spot`
+  גל משני), `wavefront` (cited, deposited by `14-em-waves`), `fresnel-zone` (אזור פרנל), `poisson-spot`
   (כתם פואסון), `obliquity-factor` (גורם הטיה — translator to decide), `zone-plate`
   (לוחית אזורים — advanced).
 - **Interactive controls and simulations:** wavelet builder (aperture preset,
@@ -1186,7 +1186,7 @@ entry `near-field-is-geometric-shadow`. All NEW registry entries land status `pe
 flipped to `addressed` with their quiz distractors.
 
 Per module: the standard four gates (README). Additionally: the four
-orchestrator-fixed signatures (`fraunhofer_pattern`, `angular_spectrum_propagate`,
+course-fixed signatures (`fraunhofer_pattern`, `angular_spectrum_propagate`,
 `airy_radius`, `rayleigh_criterion`) are frozen API — any change requires
 re-coordination with parts X–XII, and the physics tests double as their contract
 tests.

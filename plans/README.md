@@ -46,7 +46,7 @@ electives start at `50`.
 | Part | `content/en/` dir | Modules (id ← master-plan notebooks) |
 |---|---|---|
 | 0 Foundations | `foundations/` | `00-phasors` ← 0.1 **(built)** · `03-fourier-series` ← 0.2 · `04-fourier-transform` ← 0.3 |
-| I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 · `05-impulse-response` ← 1.4 |
+| I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 **(built)** · `05-impulse-response` ← 1.4 |
 | II Normal modes | `normal-modes/` | `06-coupled` ← 2.1 · `07-normal-modes` ← 2.2 + 2.3 |
 | III Waves | `waves/` | `08-wave-equation` ← 3.1 + 3.2 · `09-wave-energy` ← 3.3 · `10-impedance` ← 3.4 |
 | IV Fourier waves | `fourier-waves/` | `11-standing-waves` ← 4.1 + 4.2 · `12-wave-packets` ← 4.3 · `13-dispersion` ← 4.4 |
@@ -97,8 +97,8 @@ checks them across the folder.
    *proposal* for the translator, never applied directly.
 5. **Misconception registry** (`assessment/misconceptions.yml`) entries are design
    requirements: the assigned module must stage a falsifying experiment and a quiz
-   distractor built on the wrong model. Plans may add entries; re-pointing existing
-   pending ids happens only when the module is built (conflict log below).
+   distractor built on the wrong model. Plans may add entries; every pending entry's
+   `assigned_module` already names the module that will address it (conflict log below).
 6. **Artifact family per module** (join key `NN-slug`): content page + `-problems.md`,
    quiz banks `assessment/quizzes/NN-slug.{en,he}.yml` (every objective covered, per-choice
    feedback), lab `notebooks/{en,he}/labs/NN-slug.ipynb`, quiz JSON
@@ -107,7 +107,9 @@ checks them across the folder.
 
 ## `src/wavelab/` ownership
 
-Existing: `constants`, `units`, `phasors` (module 00), `oscillators` (01–02),
+Existing: `constants`, `units`, `phasors` (module 00), `oscillators` (01–02 — extended by
+02 with `steady_state_response`, `resonance_peak_omega`, `power_absorbed` and the three
+`q_from_*` estimators),
 `measurement` (shared: noise, fitting, uncertainty), `validation` (shared: conservation /
 analytic-limit / convergence / seed checks).
 
@@ -132,15 +134,18 @@ contract) in exactly one.
 
 ## Conflict log
 
-Known inconsistencies between the master plan, the repo, and this map. Each is resolved
-here on paper; the file edits happen when the affected module is built, not before.
+Inconsistencies between the master plan, the repo, and this map, with the resolution
+applied to each. All three groups below are **resolved in the files** — this log is the
+record of what changed and why, not a to-do list.
 
-**Pending registry `assigned_module` re-pointings** (`assessment/misconceptions.yml` —
-one-line edits, done when the target module is created):
+**Registry `assigned_module` re-pointings** — applied to `assessment/misconceptions.yml`.
+The pending entries had been forward-declared against module ids that this map never
+assigns; each now names the module whose plan actually stages its falsifying experiment.
+`status` stays `pending` until that module is built.
 
-| Misconception id | Currently | Re-point to |
+| Misconception id | Was | Now |
 |---|---|---|
-| `resonance-peak-at-omega0` | `02-damped-driven` | unchanged ✓ |
+| `resonance-peak-at-omega0` | `02-damped-driven` | unchanged — module built, now `addressed` |
 | `wave-carries-medium` | `04-waves` | `08-wave-equation` |
 | `packet-at-phase-velocity` | `05-fourier` | `12-wave-packets` |
 | `frequency-changes-in-medium` | `06-em-waves` | `16-light-in-matter` |
@@ -148,35 +153,60 @@ one-line edits, done when the target module is created):
 | `interference-destroys-energy` | `08-interference` | `23-interference` |
 | `narrow-slit-narrow-pattern` | `09-diffraction` | `29-fraunhofer` |
 
-**Prose drift in built modules** (fix when the referenced module exists, so links can be
-made real):
+**Prose drift in built modules** — applied to the content pages in both languages, with
+`en_source_hash` re-stamped for the three affected Hebrew mirrors. Forward references are
+plain prose (`module 23`), not links: the targets do not exist yet, and a link would break
+the build. Convert them to links as each module lands.
 
-- `content/en/foundations/00-phasors.md`: "module 8" → `23-interference` (interference,
-  energy bookkeeping) and `27-coherence` (the coherence bullet); "module 9" →
-  `29-fraunhofer`; "module 1.3" → `02-damped-driven`; "module 04" → already correct
-  (`04-fourier-transform`).
-- `content/en/oscillations/01-sho.md`: "module 02 makes this literal" and "modules 02–03"
-  (coupled oscillators) → `06-coupled` / `07-normal-modes`; "module 20" (nonlinear
-  optics) → `51-nonlinear-optics`.
+| Page | Was | Now |
+|---|---|---|
+| `00-phasors.md` | module 8 (interference law, energy bookkeeping) | module 23 |
+| `00-phasors.md` | module 8 (coherence bullet) | module 27 |
+| `00-phasors.md` | module 9 (diffraction bullet) | module 29 |
+| `00-phasors.md` | module 1.3 (driven oscillator) | module 02 |
+| `00-phasors-problems.md` | module 8 (speckle) | module 41 |
+| `00-phasors-problems.md` | module 9 (grating) | module 31 |
+| `01-sho.md` | module 02 (coupled oscillators) | module 06 |
+| `01-sho.md` | modules 02–03 (normal modes) | modules 06–07 |
+| `01-sho.md` | module 20 (nonlinear optics) | module 51 |
 
-**Master-plan internal inconsistencies** (plans follow the resolution, not the source):
+The last two rows of `00-phasors-problems.md` were not in the original log — speckle
+belongs to `41-imaging-coherence` and the phasor-polygon problem anticipates
+`31-gratings`, not the generic "diffraction" module. `00-phasors.md`'s "module 04"
+reference was already correct.
 
-- §6's part table (VI = Polarization, VII = Interference, …) contradicts the section
-  headings (§13 Part VI = interfaces, §14 Part VII = polarization, §15 Part VIII =
-  interference). The **section headings** are canonical.
-- §6 estimates "35–45 notebooks"; §7–§19 actually enumerate 60. The 60 are the inventory;
-  modules merge 1–2 of them each (precedent: `02-damped-driven` ← 1.2 + 1.3), giving 48
-  core modules.
-- §33 proposes underscore directory names (`00_foundations/`, `03_wave_equation/`); the
-  repo's established convention is plain hyphenated words (`foundations/`, `waves/`).
-  The repo convention wins.
+**Master-plan internal inconsistencies** — applied to
+`../waves_optics_interactive_course_master_plan.md`:
+
+- §6's part table contradicted the document's own section headings from Part V onward
+  (it merged electromagnetic waves with interfaces, shifting every later part by one).
+  The table now matches the headings, which are canonical.
+- §6 estimated "35–45 notebooks" while §7–§19 enumerate 60. The table now carries the
+  real per-part counts, summing to 60, and the surrounding prose states the 48-core-module
+  grouping (a module covers one or two notebooks; precedent: `02-damped-driven` ← 1.2 + 1.3).
+- §33's proposed repository layout (`00_foundations/`, `waves_optics/`) never matched the
+  built repo. It now documents the actual `physics_lab/wavelab/` tree with the hyphenated
+  part directories this map uses.
+
+**Cross-plan glossary-key ownership** (verification pass; owner = earliest depositing
+module in teaching order, all other plans cite):
+
+- `bandwidth` → `02-damped-driven` (04 cites).
+- `dispersion-relation` → `07-normal-modes` (13 cites; 13 still deposits `dispersion`).
+- `wavefront` → `14-em-waves` (17, 28 cite; part-03 never deposited it).
+- `optical-path-length` → `23-interference` (33 cites).
+- `numerical-aperture` → `36-instruments` (39 and 47 cite and extend the same key).
+- `adaptive-optics` → `37-aberrations` (53 cites).
+- `chirp` → `13-dispersion` (55 cites).
+- Part-13's nonlinear key renamed `nonlinear-phase-matching` — a concept distinct from
+  `17-refraction`'s kinematic `phase-matching`; both keys stand.
 
 ## Status
 
 | Part | Plan | Modules built |
 |---|---|---|
 | 00 Foundations | written | `00-phasors` (03, 04 pending) |
-| 01 Oscillations | written | `01-sho` (02, 05 pending) |
+| 01 Oscillations | written | `01-sho`, `02-damped-driven` (05 pending) |
 | 02 Normal modes | written | — |
 | 03 Waves | written | — |
 | 04 Fourier waves | written | — |

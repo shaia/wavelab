@@ -210,7 +210,7 @@ abbe_number(n_of_lam) -> V            # V_d = (n_d - 1)/(n_F - n_C) at 587.6/486
 X MP4s (shot lists in §5). **Glossary themes:** variational vocabulary (33), imaging
 vocabulary + the sign convention (34), matrix-optics vocabulary (35), instrument
 vocabulary (36), aberration vocabulary (37). `fermats-principle` (part-06), `wavefront`
-(part-03), `dispersion` (part-04) are cited, never re-deposited.
+(part-05), `dispersion` (part-04) are cited, never re-deposited.
 
 ## 5. Module specifications
 
@@ -344,7 +344,7 @@ vocabulary (36), aberration vocabulary (37). `fermats-principle` (part-06), `wav
   the minimum-time route". The *teleology* ("light chooses") is handled in predict/
   explain prose, as part-06 §8 ruled — the registry entry carries only the falsifiable
   minimality claim.
-- **Glossary terms:** `optical-path-length` (אורך דרך אופטי) · `stationary-phase`
+- **Glossary terms:** `optical-path-length` (cited, deposited by `23-interference`) · `stationary-phase`
   (פאזה סטציונרית — translator to confirm; `he_reject` candidate: פאזה נייחת) ·
   `variational-principle` (עקרון וריאציוני) · `ray` (קרן) · `eikonal` (איקונל —
   transliteration, translator to confirm). `fermats-principle` cited from part-06's
@@ -924,7 +924,9 @@ vocabulary (36), aberration vocabulary (37). `fermats-principle` (part-06), `wav
   `angular-magnification` (הגדלה זוויתית) · `near-point` (נקודה קרובה) ·
   `objective-lens` (עדשה עצמית — translator to decide vs אובייקטיב) · `eyepiece`
   (עינית) · `empty-magnification` (הגדלה ריקה — translator to confirm) ·
-  `light-gathering-power` (כושר איסוף אור) · `exit-pupil` (אישון יציאה).
+  `light-gathering-power` (כושר איסוף אור) · `exit-pupil` (אישון יציאה) ·
+  `numerical-aperture` (מפתח מספרי — deposited here; modules 39 and 47 cite and
+  extend the same key).
 - **Interactive controls and simulations:** instrument workbench (presets, stops,
   live badges and readouts); detail meter (target type: double star / line pairs;
   magnification and λ sliders; Airy-blur overlay toggle); exposure sandbox

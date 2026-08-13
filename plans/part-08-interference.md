@@ -962,7 +962,7 @@ vocabulary (25–26), coherence vocabulary (27) — per-module lists in §5.
   clickable, loading its spectrum into the explorer (numbers presented as
   order-of-magnitude, `empirical-law` box).
 - **Virtual lab outline** (`notebooks/en/labs/27-coherence.ipynb`): (1) explorer play,
-  lineshape ↔ decay matching; (2) *measurement* (the brief's centrepiece): generate
+  lineshape ↔ decay matching; (2) *measurement* (the lab's centrepiece): generate
   partially coherent light with `partial_coherence_source` (random-phase-drift model —
   phase diffusion yielding a Lorentzian line; built on the ensemble machinery
   precedent of `phasors.random_phasor_sum`), run it through a simulated Michelson,

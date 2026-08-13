@@ -440,8 +440,8 @@ kinematics (12), dispersion (13).
   and the chirp view shows where the energy went (sorted, not spent). Distractor: "the medium
   absorbs the high frequencies, so the peak decays".
 - **Glossary terms:** `dispersion` (נפיצה; `he_reject` candidate: דיספרסיה), `dispersion-relation`
-  (יחס נפיצה), `chirp` (צ'ירפ — translator to decide on a coinage), `group-velocity-dispersion`
-  (נפיצת מהירות חבורה).
+  (cited, deposited by `07-normal-modes`), `chirp` (צ'ירפ — translator to decide on a coinage),
+  `group-velocity-dispersion` (נפיצת מהירות חבורה).
 - **Interactive controls and simulations:** the museum (draggable $k_0$, chord-and-tangent
   overlay); the four-lane packet race; spreading explorer ($\sigma_0$, family, $k_0$; live
   $\sigma(t)$ vs law); chirp colormap view.

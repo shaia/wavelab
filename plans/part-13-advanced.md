@@ -223,7 +223,9 @@ render script per elective when scheduled (`media/render/render_<topic>.py`; sho
   $\Delta k \ne 0$ — output oscillates with period $2L_c$, never exceeding the first maximum; only
   $\Delta k = 0$ grows as $L^2$. Distractor: "doubling the length always quadruples SHG output."
 - **Glossary terms:** `nonlinear-susceptibility` (רגישות לא-ליניארית), `second-harmonic-generation`
-  (יצירת הרמוניה שנייה), `phase-matching` (תיאום מופע), `kerr-effect` (אפקט קר).
+  (יצירת הרמוניה שנייה), `nonlinear-phase-matching` (תיאום מופע — its own key: the $\Delta k = 0$
+  conversion condition, distinct from `17-refraction`'s kinematic `phase-matching`),
+  `kerr-effect` (אפקט קר).
 - **Lab outline:** (1) drive-scaling of the $2\omega$ line (log-log fit → slope 2); (2) growth vs
   $L$ at several $\Delta k$, extract $L_c$; (3) phase-matching search — sweep birefringent
   $n_e(\theta)$ against $n_o$; (4) *measurement:* $L_c$ ± uncertainty from noisy growth data.
@@ -345,7 +347,7 @@ render script per elective when scheduled (`media/render/render_<topic>.py`; sho
   fine detail."
 - **Glossary terms:** `deconvolution` (דה-קונבולוציה — translator to decide), `phase-retrieval`
   (שחזור מופע), `coded-aperture` (מפתח מקודד — translator to confirm), `adaptive-optics`
-  (אופטיקה אדפטיבית).
+  (cited, deposited by `37-aberrations`).
 - **Lab outline:** (1) blur-and-restore with module-40 machinery (by id), naive vs Wiener across
   noise levels; (2) sweep the SNR knob, find the error minimum; (3) GS on a letter-phase object,
   error curve; (4) *measurement:* restored two-point separation limit ± uncertainty vs
@@ -470,7 +472,7 @@ render script per elective when scheduled (`media/render/render_<topic>.py`; sho
 - **Misconceptions:** none NEW — the predict candidates re-stage `packet-at-phase-velocity` (12)
   and module 00's coherent-vs-random summation; both get quiz distractors without new registry
   entries.
-- **Glossary terms:** `mode-locking` (נעילת אופנים), `chirp` (צ'ירפ — translator to decide),
+- **Glossary terms:** `mode-locking` (נעילת אופנים), `chirp` (cited, deposited by `13-dispersion`),
   `group-delay-dispersion` (נפיצת השהיית חבורה — translator to confirm), `autocorrelation`
   (אוטוקורלציה), `femtosecond` (פמטו-שנייה).
 - **Lab outline:** (1) mode sandbox — peak scaling vs $N$ locked/random, log-log fits (module

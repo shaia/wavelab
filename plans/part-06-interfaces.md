@@ -247,7 +247,7 @@ and evanescence (19).
   distinct from the Fermat demonstration itself (logged in §8).
 - **Glossary terms:** `refraction` (he: שבירה), `snells-law` (חוק סנל),
   `angle-of-incidence` (זווית פגיעה), `surface-normal` (אנך; `he_reject` candidate:
-  נורמל), `wavefront` (חזית גל — dedupe if part-03 deposited it first),
+  נורמל), `wavefront` (cited, deposited by `14-em-waves`),
   `phase-matching` (התאמת פאזה), `fermats-principle` (עקרון פרמה), `apparent-depth`
   (עומק מדומה — translator to confirm).
 - **Interactive controls and simulations:** the refraction sandbox; wavefront animation
