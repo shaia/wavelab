@@ -311,4 +311,4 @@ $\cos\omega t = \tfrac12(e^{-\ii\omega t} + e^{+\ii\omega t})$
 — one clockwise, one counterclockwise. Keeping only the clockwise half (the "analytic
 signal") is what this module quietly did, and it is legitimate exactly because the physical
 signal is recovered by taking twice the real part. The full two-sided picture returns with
-the Fourier transform in module 04.
+the Fourier transform in [module 04](04-fourier-transform.md).

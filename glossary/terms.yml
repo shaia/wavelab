@@ -257,6 +257,50 @@ terms:
   - key: fourier-transform
     en: Fourier transform
     he: התמרת פורייה
+  # Harmonic-analysis vocabulary, deposited by modules 03 and 04 (plans/part-00-foundations.md
+  # section 5). `harmonic`, `bandwidth` and `fourier-transform` already exist above and are
+  # cited rather than re-deposited — a duplicate key is a hard error.
+  - key: fundamental-frequency
+    en: fundamental frequency
+    he: תדר יסוד
+  - key: spectrum
+    en: spectrum
+    he: ספקטרום
+  - key: partial-sum
+    en: partial sum
+    he: סכום חלקי
+  - key: gibbs-phenomenon
+    en: Gibbs phenomenon
+    he: תופעת גיבס
+  - key: orthogonality
+    en: orthogonality
+    he: אורתוגונליות
+    he_reject: [ניצבות]
+  - key: timbre
+    en: timbre
+    he: גוון צליל
+  - key: convolution
+    en: convolution
+    he: קונבולוציה
+    he_reject: [עירוב]
+  - key: sampling
+    en: sampling
+    he: דגימה
+  - key: nyquist-frequency
+    en: Nyquist frequency
+    he: תדר נייקוויסט
+  # The translator should settle this one: קיפול תדרים describes the mechanism, while the
+  # transliteration אליאסינג is common in Hebrew engineering usage. Neither is rejected here
+  # until that decision is made.
+  - key: aliasing
+    en: aliasing
+    he: קיפול תדרים
+  - key: spectral-leakage
+    en: spectral leakage
+    he: זליגה ספקטרלית
+  - key: analytic-signal
+    en: analytic signal
+    he: אות אנליטי
   - key: dispersion
     en: dispersion
     he: נפיצה

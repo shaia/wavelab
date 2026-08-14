@@ -1,0 +1,108 @@
+[
+  {
+    "question": "A periodic signal satisfies f(t + T/2) = -f(t): the second half of every period is the first half turned upside down. Which harmonics can it contain, and how do you know before computing any integral?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Odd harmonics only — every even coefficient vanishes, including the mean.",
+        "correct": true,
+        "feedback": "Right, and it takes one substitution. Shifting the coefficient integral by T/2 multiplies term n by (-1)^n, so the symmetry forces c_n = -(-1)^n c_n. For even n that reads c_n = -c_n, and only zero equals minus itself. The square and triangle waves are both of this kind, which is why neither has a second harmonic."
+      },
+      {
+        "answer": "Even harmonics only, because the waveform repeats twice within each period.",
+        "correct": false,
+        "feedback": "That describes the opposite condition, f(t + T/2) = +f(t), which really is a signal of period T/2 in disguise and really does have only even harmonics of the original fundamental. The minus sign here inverts rather than repeats, and it deletes exactly the harmonics your answer keeps."
+      },
+      {
+        "answer": "All harmonics — a symmetry can shift the phases of the terms but cannot remove any.",
+        "correct": false,
+        "feedback": "Evenness and oddness do only shift phases: they make the coefficients purely real or purely imaginary without deleting any. Half-wave symmetry is stronger, because it relates the signal to a shifted copy of itself rather than to a reflection, and that relation is what forces half the coefficients to zero."
+      },
+      {
+        "answer": "Nothing can be said without evaluating the integrals for the specific waveform.",
+        "correct": false,
+        "feedback": "It can, and cheaply. The substitution t -> t + T/2 inside the coefficient integral costs two lines and settles every even harmonic at once, for every waveform with this symmetry, whatever its shape. Symmetry arguments answer the question the integrals would eventually answer, before doing them."
+      }
+    ]
+  },
+  {
+    "question": "The partial sum of a square wave's Fourier series overshoots by about 9 percent just before the jump. What happens to that overshoot as more terms are added?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It narrows and slides toward the jump, but its height stays near 8.9 percent of the jump forever.",
+        "correct": true,
+        "feedback": "Right. Measured, the overshoot is 9.21 percent at 7 harmonics, 8.97 percent at 31, and 8.9491 percent at 511 — settling on a constant rather than heading for zero. What does improve is the error *energy*, which falls as N^(-1/2). Convergence in energy and convergence at the worst point are different promises, and only the first one is kept here."
+      },
+      {
+        "answer": "It shrinks steadily and vanishes in the limit — more terms make the approximation better everywhere.",
+        "correct": false,
+        "feedback": "This is the natural expectation and it is false, which is why the overshoot has a name. The series does converge at every point away from the jump, and converges to the midpoint at the jump itself, so nothing is broken. But the *largest* error anywhere near the jump does not shrink. An amplifier of finite bandwidth reproducing a square wave overshoots for exactly this reason, and more bandwidth only makes the overshoot briefer, never smaller."
+      },
+      {
+        "answer": "It grows without limit, because each new harmonic adds another wiggle.",
+        "correct": false,
+        "feedback": "The wiggles do multiply, but they also shrink in width and the sum of their contributions is bounded. The overshoot approaches a definite constant from above, and from the very first few harmonics it is already within half a percent of its final value."
+      },
+      {
+        "answer": "It is an artefact of plotting on a finite grid and disappears with enough resolution.",
+        "correct": false,
+        "feedback": "Refining the grid makes the measurement *more* accurate and the overshoot converges to 8.9491 percent rather than away from it. The opposite error is the real trap: because the overshoot moves toward the jump as terms are added, a measurement window that stays fixed eventually misses it and reports a comfortable, shrinking, wrong number."
+      }
+    ]
+  },
+  {
+    "question": "A periodic waveform is continuous everywhere, but its slope jumps — it has corners, like a triangle wave. Its coefficients fall off as 1/n^p for large n. What is p?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          1.9,
+          2.1
+        ],
+        "correct": true,
+        "feedback": "p = 2. Integrating the coefficient formula by parts trades a power of 1/n for a derivative, and the boundary terms cancel by periodicity as long as the function being differentiated is continuous. A signal that jumps gives p = 1; one that is continuous with a jumping slope gives p = 2; in general the first discontinuous derivative sets the rate. Smoother waveforms are cheaper to represent, and that is the whole content of the decay table."
+      }
+    ]
+  },
+  {
+    "question": "A square wave of peak amplitude 1 and repetition rate f0 drives a high-Q resonator tuned exactly to 3 f0. The same resonator is then driven instead by a pure sine wave of peak amplitude 1 at its own frequency 3 f0. By what factor is the steady-state amplitude in the first case smaller than in the second? Give the ratio (first case) / (second case).",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          0.40399999999999997,
+          0.444
+        ],
+        "correct": true,
+        "feedback": "The resonator responds only to what the drive carries at its own frequency. A unit square wave carries 4/(3 pi) = 0.4244 at its third harmonic, against the 1.0 the pure sine supplies, and since both drives sit on resonance the response curve multiplies both by the same gain. So the ratio is just the harmonic amplitude, 0.42. Tuned to 2 f0 instead there would be no resonant response at all, because half-wave symmetry deletes every even harmonic and the drive carries exactly nothing there — what little such a resonator does is the off-resonant tail of its neighbours, about a tenth of what it manages at 3 f0."
+      }
+    ]
+  },
+  {
+    "question": "Four spectra are measured. (i) all harmonics present, amplitudes falling as 1/n. (ii) odd harmonics only, falling as 1/n. (iii) odd harmonics only, falling as 1/n^2. (iv) all harmonics present, nearly equal in size out to very high n. Which is the sawtooth?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "(i) — a jump forces the slow 1/n decay, and the lack of half-wave symmetry keeps the even harmonics.",
+        "correct": true,
+        "feedback": "Right, and the pair of clues is what pins it. The 1/n decay says there is a jump somewhere in the period; the presence of even harmonics says the second half of the period is not the inverted first half. Only the sawtooth satisfies both. For the record: (ii) is the square wave, (iii) the triangle, and (iv) a narrow pulse train, whose sinc envelope is still wide at these harmonics."
+      },
+      {
+        "answer": "(ii) — the classic jump waveform, so odd harmonics decaying as 1/n.",
+        "correct": false,
+        "feedback": "The 1/n decay is right, and for the right reason, but a sawtooth has no half-wave symmetry: shifting it by half a period does not give you minus itself, it gives a differently offset ramp. So its even harmonics survive. Spectrum (ii) belongs to the square wave."
+      },
+      {
+        "answer": "(iii) — the ramp is continuous within the period, so its coefficients fall as 1/n^2.",
+        "correct": false,
+        "feedback": "The ramp is continuous *within* a period but the waveform is periodic, and at the end of every period it drops discontinuously back to its starting value. That jump is what the coefficients see, and it fixes the decay at 1/n. Spectrum (iii), with its 1/n^2 decay and odd harmonics only, is the triangle wave."
+      },
+      {
+        "answer": "(iv) — every harmonic present in comparable strength, since the ramp visits every value equally.",
+        "correct": false,
+        "feedback": "Visiting every value has nothing to do with the harmonic content; what matters is the sharpness of the features. A spectrum this flat belongs to something much sharper than a ramp — a narrow pulse train, whose sinc envelope has not yet turned over at these harmonics. The sawtooth's amplitudes fall steadily as 1/n."
+      }
+    ]
+  }
+]

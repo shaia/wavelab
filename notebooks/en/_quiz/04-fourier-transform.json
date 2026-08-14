@@ -1,0 +1,108 @@
+[
+  {
+    "question": "A signal switches on abruptly at t = 0 and then decays smoothly with time constant tau. Without integrating anything, which magnitude spectrum does it have?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A single hump centred on zero frequency, of half-width about 1/tau — a Lorentzian.",
+        "correct": true,
+        "feedback": "Right. The one-sided exponential transforms to 1/(1/tau + i omega), whose magnitude is a Lorentzian of half-width 1/tau. It is module 02's resonance curve arriving from the other direction, and it is the linewidth-lifetime relation: a state that decays fast shows a broad line. The same curve returns as a laser linewidth and as a cavity response later in the course."
+      },
+      {
+        "answer": "An oscillating sinc with regularly spaced zeros.",
+        "correct": false,
+        "feedback": "A sinc comes from a rectangle — something that switches on *and* off abruptly. This signal is sharp at one end only; the smooth decay at the other end is what removes the oscillation and leaves a single hump. Sharp edges make ringing spectra, and this signal has one edge, not two."
+      },
+      {
+        "answer": "A Gaussian, since a smooth decay is roughly bell-shaped.",
+        "correct": false,
+        "feedback": "The Gaussian is the one shape that transforms into itself, and this signal is not one: it is discontinuous at t = 0 and one-sided. That discontinuity is exactly what gives the spectrum its slowly falling Lorentzian tails, which decay as 1/omega rather than being cut off sharply as a Gaussian's are."
+      },
+      {
+        "answer": "Two narrow spikes at plus and minus 1/tau.",
+        "correct": false,
+        "feedback": "Spikes mean long-lived sinusoids — a signal that keeps oscillating at a definite frequency forever. A decay is the opposite case, and the shorter it is the broader its spectrum. Spikes would appear only in the limit tau to infinity, where the signal never decays at all."
+      }
+    ]
+  },
+  {
+    "question": "A pulse has an RMS duration of 2.0 milliseconds. What is the smallest RMS spectral width it can possibly have, in radians per second?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          245.0,
+          255.0
+        ],
+        "correct": true,
+        "feedback": "Delta t times Delta omega is at least 1/2, so the floor is 0.5 / 0.002 = 250 rad/s. Only a Gaussian pulse reaches it; every other shape is wider. Note the direction of the inequality: making the spectrum wider is easy — chirp the pulse, or square its edges — but nothing whatever makes it narrower at this duration. That is why a short laser pulse is necessarily broadband."
+      }
+    ]
+  },
+  {
+    "question": "A 60 Hz sine wave is sampled 100 times per second. At what frequency, in Hz, does the recorded data appear to show a tone?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          39.0,
+          41.0
+        ],
+        "correct": true,
+        "feedback": "The Nyquist frequency is half the sampling rate, 50 Hz, and content above it folds back down: the apparent frequency is 100 - 60 = 40 Hz. The point that matters more than the arithmetic is that the record contains no warning. A clean 40 Hz peak appears, and nothing in the data distinguishes it from a tone that was genuinely at 40 Hz. This is why Nyquist is a validity condition on the model rather than a quality setting."
+      }
+    ]
+  },
+  {
+    "question": "Two recordings are found to have identical magnitude spectra: |F(omega)| agrees at every frequency. What can you conclude about the two signals?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Very little — the timing information is carried by the phase, so the two signals can be radically different.",
+        "correct": true,
+        "feedback": "Right. A brief click and a long chirp can share a magnitude spectrum exactly, and look nothing like each other. The transform does not discard the timing; it moves it into arg F, which the magnitude simply does not show. Reconstruct from the full complex spectrum and you recover the signal exactly; keep the magnitudes and randomise the phases and you get noise."
+      },
+      {
+        "answer": "They are the same signal, possibly shifted in time.",
+        "correct": false,
+        "feedback": "A time shift does preserve the magnitude spectrum — it multiplies the transform by a pure phase ramp — so shifted copies are one example. They are far from the only one. A chirp and a pulse can be built with identical magnitudes and completely different shapes, which is the whole content of the phase-retrieval problem. The magnitude is half the description."
+      },
+      {
+        "answer": "They must be time-reversed copies of each other.",
+        "correct": false,
+        "feedback": "Time reversal is another operation that preserves the magnitude spectrum, so it is a second example rather than the general answer. The set of signals sharing one magnitude spectrum is very large, because every frequency's phase can be chosen independently."
+      },
+      {
+        "answer": "They differ at most by an overall amplitude factor.",
+        "correct": false,
+        "feedback": "An overall factor would scale the magnitude spectrum too, so it would not be identical. The signals here have exactly the same magnitude at every frequency and can still differ completely, because nothing has been said about their phases."
+      }
+    ]
+  },
+  {
+    "question": "The FFT of a real recording shows content at negative frequencies, mirroring the positive side. What is that half of the spectrum?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The other half of every real oscillation — reality forces F(-omega) to be the conjugate of F(omega), and under this course's convention the phasor of a cosine sits at -omega0.",
+        "correct": true,
+        "feedback": "Right, and the mirror symmetry is the signature. A real cosine is the sum of two counter-rotating exponentials, as module 00 showed, and the transform separates them: pi x_hat lands at -omega0 and its conjugate at +omega0. Deleting one half does not simplify the signal, it changes it — into the complex analytic signal, whose real part is half the original."
+      },
+      {
+        "answer": "Redundant numerical noise that a careful implementation would discard.",
+        "correct": false,
+        "feedback": "It is determined by the positive half rather than independent of it, which is not the same as being noise — it carries exactly half the signal's energy, and Parseval will not balance without it. Discarding it and inverting produces a different, complex signal. That object is useful and has a name, but it is not the recording you started with."
+      },
+      {
+        "answer": "Content that was above the Nyquist frequency, folded down into the negative axis.",
+        "correct": false,
+        "feedback": "That describes aliasing, which is a separate effect and folds content onto the *positive* axis as well. The negative half of a real signal's spectrum is present even when the sampling is perfectly adequate and nothing has aliased at all; it is required by the signal being real."
+      },
+      {
+        "answer": "An artefact of the finite record that shrinks as the recording gets longer.",
+        "correct": false,
+        "feedback": "That describes spectral leakage, which does narrow as the record lengthens. The negative-frequency half does not shrink with record length — it is exactly as large as the positive half no matter how long you record, because it is half of the signal."
+      }
+    ]
+  }
+]

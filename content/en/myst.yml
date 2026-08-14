@@ -25,6 +25,15 @@ project:
         - file: oscillations/01-sho-problems.md
         - file: oscillations/02-damped-driven.md
         - file: oscillations/02-damped-driven-problems.md
+    # Part 0 owns these two, but they are taught just in time, after the driven oscillator
+    # gives the mathematics a physical engine — see plans/README.md, "Teaching order". The
+    # sidebar follows teaching order, so they sit here rather than under Foundations.
+    - title: Fourier methods
+      children:
+        - file: foundations/03-fourier-series.md
+        - file: foundations/03-fourier-series-problems.md
+        - file: foundations/04-fourier-transform.md
+        - file: foundations/04-fourier-transform-problems.md
 site:
   template: book-theme
   options:

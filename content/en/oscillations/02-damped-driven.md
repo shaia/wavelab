@@ -367,7 +367,7 @@ paying the damper, exactly.
 
 - **A periodic but non-sinusoidal drive** — a square wave, a shove once per cycle — is a comb
   of harmonics, and this response curve weights each one. That is the whole content of
-  module `03-fourier-series`: the resonator is a filter, and the Fourier series is the
+  [module 03](../foundations/03-fourier-series.md): the resonator is a filter, and the Fourier series is the
   decomposition it filters.
 - **The atom as an oscillator.** Bind an electron with a spring and drive it with a light
   wave and you have the Lorentz model of a medium. Its absorption line is the

@@ -40,6 +40,15 @@ Currently available:
   produce silence, and the one complex-number idea the whole course runs on. Start here.
 - **[The simple harmonic oscillator](oscillations/01-sho.md)** — the single curve that clocks,
   molecules and circuits all follow, and why its period ignores its amplitude.
+- **[Damping, resonance, and the quality factor](oscillations/02-damped-driven.md)** — why one
+  sustained note shatters a glass and its neighbours do nothing, and where the response really
+  peaks (not where almost every textbook says).
+- **[Fourier series](foundations/03-fourier-series.md)** — where a 100 Hz square wave keeps its
+  300 Hz, why a violin and a flute playing one note sound nothing alike, and the 9% overshoot
+  that no number of terms removes.
+- **[The Fourier transform and convolution](foundations/04-fourier-transform.md)** — what
+  frequency a hand-clap is, why nothing can be both brief and pure, and the two ways sampled
+  data lies to you.
 
 One reference page sits outside the sequence and is meant to be returned to:
 [conventions](conventions.md).

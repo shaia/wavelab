@@ -31,6 +31,18 @@ misconceptions:
     statement: "Driving an oscillator at resonance makes its amplitude grow without limit."
     assigned_module: 02-damped-driven
     status: addressed
+  - id: more-terms-always-converge
+    statement: "Adding more Fourier terms makes the approximation better everywhere."
+    assigned_module: 03-fourier-series
+    status: addressed
+  - id: ft-discards-time
+    statement: "The Fourier transform throws away the time information in a signal."
+    assigned_module: 04-fourier-transform
+    status: addressed
+  - id: negative-frequency-unphysical
+    statement: "Negative frequencies are a mathematical artifact with no physical content."
+    assigned_module: 04-fourier-transform
+    status: addressed
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
     assigned_module: 08-wave-equation
