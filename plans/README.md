@@ -45,7 +45,7 @@ electives start at `50`.
 
 | Part | `content/en/` dir | Modules (id ← master-plan notebooks) |
 |---|---|---|
-| 0 Foundations | `foundations/` | `00-phasors` ← 0.1 **(built)** · `03-fourier-series` ← 0.2 · `04-fourier-transform` ← 0.3 |
+| 0 Foundations | `foundations/` | `00-phasors` ← 0.1 **(built)** · `03-fourier-series` ← 0.2 **(built)** · `04-fourier-transform` ← 0.3 **(built)** |
 | I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 **(built)** · `05-impulse-response` ← 1.4 |
 | II Normal modes | `normal-modes/` | `06-coupled` ← 2.1 · `07-normal-modes` ← 2.2 + 2.3 |
 | III Waves | `waves/` | `08-wave-equation` ← 3.1 + 3.2 · `09-wave-energy` ← 3.3 · `10-impedance` ← 3.4 |
@@ -107,7 +107,7 @@ checks them across the folder.
 
 ## `src/wavelab/` ownership
 
-Existing: `constants`, `units`, `phasors` (module 00), `oscillators` (01–02 — extended by
+Existing: `constants`, `units`, `phasors` (module 00), `fourier` (03–04), `oscillators` (01–02 — extended by
 02 with `steady_state_response`, `resonance_peak_omega`, `power_absorbed` and the three
 `q_from_*` estimators),
 `measurement` (shared: noise, fitting, uncertainty), `validation` (shared: conservation /
@@ -115,7 +115,7 @@ analytic-limit / convergence / seed checks).
 
 | New file | Introduced by | Extended by | Serves modules |
 |---|---|---|---|
-| `fourier.py` | part-00 | — | 03, 04 — and every later FFT-using lab |
+| `fourier.py` | part-00 | — | 03, 04 — and every later FFT-using lab **(built)** |
 | `coupled.py` | part-02 | — | 06, 07 |
 | `waves.py` | part-03 | part-04 | 08–13 |
 | `em.py` | part-05 | — | 14–16 |
@@ -131,6 +131,11 @@ analytic-limit / convergence / seed checks).
 "Introduced by" owns the file's docstring model spec; "extended by" plans spec only their
 own additional functions. A function referenced by several plans is *defined* (signature +
 contract) in exactly one.
+
+One cross-part extension has happened so far: part-00 added `oscillators.simulate_forced`
+(a sampled arbitrary drive) to part-01's file, because module 03 has to check its harmonic-sum
+prediction against an integration that knows nothing about harmonics and `simulate` drives with
+a cosine only. Recorded in `part-00-foundations.md` §5.4.
 
 ## Conflict log
 
@@ -205,7 +210,7 @@ module in teaching order, all other plans cite):
 
 | Part | Plan | Modules built |
 |---|---|---|
-| 00 Foundations | written | `00-phasors` (03, 04 pending) |
+| 00 Foundations | written | `00-phasors`, `03-fourier-series`, `04-fourier-transform` — **complete** |
 | 01 Oscillations | written | `01-sho`, `02-damped-driven` (05 pending) |
 | 02 Normal modes | written | — |
 | 03 Waves | written | — |

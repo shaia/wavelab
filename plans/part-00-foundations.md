@@ -1,6 +1,6 @@
 # Part 0 — Mathematical and Computational Foundations — Implementation Plan
 
-> **Master plan:** §7 (Part 0). **Modules:** `00-phasors`, `03-fourier-series`, `04-fourier-transform`. **Status:** partial — `00-phasors` built.
+> **Master plan:** §7 (Part 0). **Modules:** `00-phasors`, `03-fourier-series`, `04-fourier-transform`. **Status:** complete — all three built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -66,8 +66,8 @@ the analytic-signal idea previewed in 00's advanced section, and module 04 close
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
 | `00-phasors` | `content/en/foundations/00-phasors.md` | Phasors: the language of waves | 0.1 | Georgi, harmonic oscillation & complex notation; French, superposition | **built** |
-| `03-fourier-series` | `content/en/foundations/03-fourier-series.md` | Fourier series: periodic signals as harmonic sums | 0.2 | Georgi, Fourier series; MIT 8.03 Fourier lectures | planned |
-| `04-fourier-transform` | `content/en/foundations/04-fourier-transform.md` | The Fourier transform and convolution | 0.3 | Georgi, Fourier integrals; Goodman, Fourier analysis background (preview) | planned |
+| `03-fourier-series` | `content/en/foundations/03-fourier-series.md` | Fourier series: periodic signals as harmonic sums | 0.2 | Georgi, Fourier series; MIT 8.03 Fourier lectures | **built** |
+| `04-fourier-transform` | `content/en/foundations/04-fourier-transform.md` | The Fourier transform and convolution | 0.3 | Georgi, Fourier integrals; Goodman, Fourier analysis background (preview) | **built** |
 
 ## 4. Shared infrastructure for this part
 
@@ -142,7 +142,13 @@ section on energy bookkeeping, the rotating frame, and negative frequencies. Obj
 `OBJ-00-1..5` as in the frontmatter. Registry entries `superposition-always-adds` and
 `phase-is-unphysical` are assigned here with `status: addressed`.
 
-**Gap list (work this plan tracks; no content rewrite needed):**
+**Gap list — closed.** The five items below were written when `00-phasors` was the only built
+module and are recorded here as history, not as work. Items 1–4 (render script, laboratory,
+quiz banks, Hebrew mirror) were all closed by the Milestone 1 and module 02 sessions; item 5
+(prose drift) was fixed in commit `8fae078`. Landing 03 and 04 converted the page's two
+forward references to module 04 into real links, per the README's convention.
+
+**Gap list as originally written:**
 
 1. `media/render/render_phasors.py` does not exist — the page references
    `../media/phasor-superposition.mp4` and `../media/beats.mp4`. Shot list implied by the
@@ -424,6 +430,78 @@ section on energy bookkeeping, the rotating frame, and negative frequencies. Obj
   whether `spectrum()` should return two-sided (honest, matches the convention
   discussion) or fold to one-sided for display (recommendation: two-sided return,
   one-sided display helper in the lab only).
+
+## 5.4 As built — where the specification above did not survive contact
+
+Recorded in the style part-01 established: each deviation is forced by the numbers or by the
+repository, not by taste, and each is pinned by a test.
+
+**The sign convention was inconsistent in this plan, and the minus sign won.** §5.2's OBJ-03-1
+writes the analysis integral with $e^{+\ii n\omega_0 t}$, while this plan's own worked square
+wave ($c_n = 2/(\ii\pi n)$) and its advanced note ("the harmonic phasor is $2c_n^*$") both
+require the opposite. As built: analysis carries $e^{-\ii n\omega_0 t}$, synthesis carries
+$e^{+\ii n\omega_0 t}$. Three reasons. It is the only choice under which module 04's
+$T\to\infty$ limit lands on the transform without a sign appearing from nowhere — the limit is
+04's opening derivation, so the alternative was not survivable. It matches `numpy.fft`, so
+`fourier_coefficients` and `spectrum` share one kernel and no verify cell has to conjugate. And
+it reproduces this plan's own closed form. The objective text was written with the corrected
+sign.
+
+**`spectrum(rect_pulse)` cannot reach the §4 tolerance of `<1e-10`, at any grid.** A sampled
+rect is discontinuous, and zero-padding does not help — it interpolates the transform of the
+*sampled* rect rather than converting it into the continuous sinc. The measured error is first
+order in $\Delta t$ (2.4e-2, 1.2e-2, 5.9e-3 as the grid halves twice). It is now tested as the
+$O(\Delta t)$ convergence it is, beside a Gaussian pair that does reach 1e-10 — and the contrast
+between the two is the smoothness lesson both modules teach, so the honest test is also the
+better one. `exp_decay` → Lorentzian is discontinuous for the same reason and is tested on its
+half-width, to within one frequency bin, rather than pointwise.
+
+**`lorentzian_spectrum` is $1/(1/\tau + \ii\omega)$**, not §5.3's $1/(1/\tau - \ii\omega)$; the
+minus sign there belongs to the opposite forward convention.
+
+**`gibbs_overshoot` is normalised to the jump height** — 8.949%, not the 17.898% that
+normalising to the half-amplitude would give — and its measurement window shrinks with $N$,
+because the overshoot moves toward the discontinuity as $N^{-1}$ and a fixed window silently
+reports a comfortable, shrinking, wrong number. The constant is approached from above (9.21% at
+7 harmonics, 8.9491% at 511).
+
+**The phasor identity holds exactly only on a grid frequency.** §5.3's claim that the spectrum
+holds $\pi\hat{x}$ at $-\omega_0$ is right to fifteen digits when $\omega_0 = k\,\Delta\omega$;
+placed between bins the same cosine reads about a fifth low. The test constructs an on-bin tone,
+and the page teaches the off-bin case as leakage arriving uninvited.
+
+**`convolve` is circular**, on the DFT's periodic extension — the same fiction §4's boundary
+bullet names — so it differs from `numpy.convolve` by wraparound. The docstring says so and
+points at zero-padding rather than leaving a caller to discover it.
+
+**One function was added beyond §4: `oscillators.simulate_forced`.** §5.2's verify step needs
+the harmonic-sum prediction checked against an integration that knows nothing about harmonics,
+but `simulate` hardcodes a cosine drive, and summing separate `simulate` runs would assume
+exactly the superposition under test. The new function takes a sampled force. It extends a
+part-01-owned file, and is recorded in the README ownership table.
+
+**Open questions, as resolved when built.** The epicycle view went into *explore* as the page's
+first figure rather than ahead of the puzzle, following the house pattern in which both built
+siblings keep the puzzle prose-only — and one animation now serves both the epicycles and the
+build-up. The laboratory does carry an audio player (user decision): four waveforms at one
+pitch through `IPython.display.Audio`, which needs no new dependency because IPython ships with
+Pyodide. `normalize=False` is load-bearing there — the default peak-normalises and would undo
+the RMS matching that makes the comparison about timbre. For module 04, the comb/periodisation
+picture is in core and windows in advanced, as §5.3 recommended, but the leakage *mechanism*
+moved into core with them: it is one paragraph, it follows free from the convolution theorem
+plus rect ↔ sinc, and OBJ-04-5 requires diagnosing leakage. `spectrum` returns two-sided, as
+recommended.
+
+**Two module-04 sign-lint facts, measured against the actual regexes.** Module 03 needs no
+`<!-- sign-convention-exception -->` at all — the $n\omega_0$ between the $\ii$ and the $t$
+breaks the pattern — and must not acquire one. Module 04 needs exactly one, for the inverse
+transform. The marker is matched against the whole file, so it disables the sign lint for the
+entire 04 page; every other equation there is right by authorship rather than by lint.
+
+**TOC placement.** The two modules live in `content/*/foundations/` but are taught after 02, and
+the sidebar sets teaching order. Both `myst.yml` files carry a third group, "Fourier methods" /
+"שיטות פורייה", after Oscillations. Part 0 is therefore visibly split across two sidebar groups,
+which is what §8's just-in-time deviation actually looks like to a reader.
 
 ## 6. Part-level assessment and capstone hooks
 
