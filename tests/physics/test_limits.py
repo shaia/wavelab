@@ -245,6 +245,147 @@ def test_driven_simulation_reaches_the_predicted_steady_state():
     assert np.isclose(tail.max(), predicted, rtol=1e-2)
 
 
+def test_the_impulse_response_is_a_free_decay_launched_by_a_kick():
+    """G(t) IS `damped_position` started at x = 0 with v = 1/m, and is zero before the kick.
+
+    A spike of force changes the velocity and nothing else, so the Green function is not a
+    new solution of anything — it is the free decay of module 01 with a particular initial
+    condition. Checked in all three regimes because `impulse_response` delegates to
+    `damped_position` rather than writing out the underdamped closed form, which is what lets
+    it survive critical damping at all: the textbook expression divides by omega_d.
+    """
+    t = np.linspace(-2.0 * PERIOD, 6.0 * PERIOD, 1601)
+    after = t >= 0.0
+    for damping in (0.4, CRITICAL_DAMPING, 3.0 * CRITICAL_DAMPING):
+        green = oscillators.impulse_response(t, MASS, STIFFNESS, damping)
+        launched = oscillators.damped_position(
+            t[after], MASS, STIFFNESS, damping, 0.0, 1.0 / MASS
+        )
+        assert np.allclose(green[after], launched, rtol=0.0, atol=0.0)
+        assert np.all(green[~after] == 0.0)
+
+    # The kick sets a velocity, so G starts at zero and leaves the origin as t/m. Read off
+    # the closed form rather than differenced from it: the small-t limit is the statement,
+    # and a finite difference would only add its own truncation error to it.
+    # The window is short enough that the leading correction, a factor (1 - gamma t / 4), is
+    # itself below the tolerance; over a whole period it would not be.
+    early = np.linspace(0.0, PERIOD / 100_000.0, 5)
+    green = oscillators.impulse_response(early, MASS, STIFFNESS, 0.4)
+    assert green[0] == 0.0
+    assert np.allclose(green[1:], early[1:] / MASS, rtol=1e-5)
+
+
+def test_the_impulse_response_does_not_overflow_far_before_the_kick():
+    """The discarded branch of `damped_position` grows as e^{+gamma|t|/2}; clip it, don't run it.
+
+    A laboratory record that starts well before t = 0 is ordinary, and the causal gate has to
+    be applied to the argument rather than to the answer — evaluating the exponential first
+    and masking afterwards overflows and returns nan.
+    """
+    early = np.array([-1e4, -1e2, -1.0, 0.0, 1.0])
+    green = oscillators.impulse_response(early, MASS, STIFFNESS, 0.4)
+    assert np.all(np.isfinite(green))
+    assert np.all(green[:3] == 0.0)
+
+
+def test_the_step_response_settles_at_the_new_equilibrium():
+    """A constant force switched on at t = 0 ends at F0/k, having overshot on the way.
+
+    The closed form is written as F0/k times a free decay from unit displacement, so it needs
+    no regime analysis of its own; this pins it against the underdamped textbook expression
+    where that exists, and against the static limit everywhere.
+    """
+    late = np.array([200.0 * PERIOD])
+    for damping in (0.1, 0.4, CRITICAL_DAMPING, 3.0 * CRITICAL_DAMPING):
+        settled = oscillators.step_response(late, MASS, STIFFNESS, damping, 2.0)
+        assert np.isclose(settled[0], 2.0 / STIFFNESS, rtol=1e-9)
+
+    damping = 0.4
+    t = np.linspace(0.0, 8.0 * PERIOD, 2001)
+    gamma = oscillators.damping_rate(MASS, damping)
+    omega_d = np.sqrt(OMEGA0**2 - gamma**2 / 4.0)
+    textbook = (1.0 / STIFFNESS) * (
+        1.0
+        - np.exp(-gamma * t / 2.0)
+        * (np.cos(omega_d * t) + (gamma / (2.0 * omega_d)) * np.sin(omega_d * t))
+    )
+    assert np.allclose(
+        oscillators.step_response(t, MASS, STIFFNESS, damping, 1.0), textbook, rtol=0.0, atol=1e-15
+    )
+
+    # Overshoot grows with Q, and critical damping has none: the falsifier for
+    # `response-follows-force-shape`, since a featureless force produces a ringing answer.
+    overshoot = {
+        d: oscillators.step_response(t, MASS, STIFFNESS, d, 1.0).max() * STIFFNESS - 1.0
+        for d in (0.1, 1.0, CRITICAL_DAMPING)
+    }
+    assert overshoot[0.1] > overshoot[1.0] > overshoot[CRITICAL_DAMPING]
+    assert np.isclose(overshoot[CRITICAL_DAMPING], 0.0, atol=1e-12)
+
+
+def test_the_kick_spectrum_is_the_conjugate_of_the_swept_response():
+    """The LTI bridge: FFT one ringdown and you have module 02's entire resonance curve.
+
+    Under the course's e^{-i omega t} kernel the transform of G is
+    G-hat = (1/m)/(omega0^2 - omega^2 + i gamma omega), while `steady_state_response` carries
+    the opposite sign on the damping term — so the two are conjugates, not equals, and
+    reversing that would flip every phase lag in the module. Part XI's plan cites this test
+    as the guarantee behind G -> point spread function and G-hat -> optical transfer function.
+
+    Compared on the non-negative half only: `steady_state_response` rejects negative drive
+    frequencies, which is physically right for a sweep and simply not the question here.
+    The tolerance is set in the next file — the error is truncation of the ringdown or
+    discretisation of the grid, whichever is larger — so 1e-5 here is a floor with the record
+    chosen long enough (33 amplitude e-foldings) that only the grid is left.
+    """
+    damping = 0.4
+    dt = 0.005
+    n = 2**15
+    t = (np.arange(n) - n // 2) * dt
+    omega, kicked = fourier.spectrum(
+        oscillators.impulse_response(t, MASS, STIFFNESS, damping), dt
+    )
+    band = (omega >= 0.0) & (omega < 3.0 * OMEGA0)
+    swept = oscillators.steady_state_response(omega[band], MASS, STIFFNESS, damping, 1.0)
+
+    error = np.max(np.abs(kicked[band] - np.conj(swept))) / np.max(np.abs(swept))
+    assert error < 1e-5
+
+    # The conjugation is the content: taking the swept curve at face value fails loudly.
+    assert np.max(np.abs(kicked[band] - swept)) / np.max(np.abs(swept)) > 0.5
+
+
+def test_fitting_the_line_beats_crossing_it_on_an_under_resolved_ringdown():
+    """The trap module 05's laboratory is built to avoid, pinned so it cannot quietly return.
+
+    `q_from_bandwidth` and `q_from_linewidth` take the same arguments and answer the same
+    question, and on a swept resonance curve — where the experimenter chooses the grid — they
+    agree. On the spectrum of a ringdown nobody chooses the grid: bin spacing is 2 pi / T
+    while the linewidth is gamma, so a record of n amplitude e-foldings puts n / pi bins
+    across the full width whatever Q is. Here that is under two bins, and the crossing route
+    reads 18% low while the fit stays within 6%. A negative control, in the spirit of the
+    aliasing and biased-seed tests: an estimator that fails silently is worse than one that
+    raises, so its failure is written down.
+    """
+    damping = 0.1  # Q = 20
+    gamma = oscillators.damping_rate(MASS, damping)
+    dt = 0.01
+    n = 2 * int((3.0 * 2.0 / gamma) / dt)  # a record holding three amplitude e-foldings
+    t = (np.arange(n) - n // 2) * dt
+    omega, transform = fourier.spectrum(
+        oscillators.impulse_response(t, MASS, STIFFNESS, damping), dt
+    )
+    band = (omega > 0.5 * OMEGA0) & (omega < 1.5 * OMEGA0)
+    expected = oscillators.quality_factor(MASS, STIFFNESS, damping)
+
+    assert gamma / (omega[1] - omega[0]) < 2.0, "the line is meant to be under-resolved here"
+
+    crossings = oscillators.q_from_bandwidth(omega[band], np.abs(transform[band]))
+    fitted = oscillators.q_from_linewidth(omega[band], np.abs(transform[band]))
+    assert abs(crossings - expected) / expected > 0.15
+    assert abs(fitted - expected) / expected < 0.06
+
+
 def test_real_signal_reproduces_the_direct_cosine():
     """The phasor round trip Re[A e^{-i phi} e^{-i omega t}] IS A cos(omega t + phi).
 

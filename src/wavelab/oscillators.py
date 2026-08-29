@@ -3,8 +3,8 @@
 MODEL SPECIFICATION
     System:        a point mass on a massless linear spring, moving in one dimension; the
                    observables are position, velocity, and the kinetic/potential energies
-    Dynamics:      Newton's second law with force -k x - b v + F0 cos(omega t); closed-form
-                   solutions where they exist, velocity-Verlet integration elsewhere
+    Dynamics:      Newton's second law with force -k x - b v + F(t); closed-form solutions
+                   where they exist, velocity-Verlet integration or convolution elsewhere
     Boundary:      none — the mass moves on an infinite line and nothing is exchanged
     Ensemble:      a single deterministic trajectory per choice of initial conditions; no
                    randomness anywhere in this module
@@ -23,6 +23,13 @@ The `q_from_*` functions are the other direction: they extract Q from *data* —
 record, a swept amplitude curve, a swept phase curve — the way a laboratory does. All three
 estimate the same number by different routes, which is the point: agreement between them is
 an experimental result, not an identity, once noise is in the record.
+
+`impulse_response`, `step_response` and `convolution_response` view the same oscillator as a
+linear time-invariant system — a map from force history to displacement history. The Green
+function G(t) is the response to a unit kick, an arbitrary force is a train of kicks, and the
+answer is their superposition. Its transform is the complex frequency response,
+G-hat(omega) = (1/m) / (omega0^2 - omega^2 + i gamma omega), which is the conjugate of
+`steady_state_response`: the sweep and the kick are one fact told in two domains.
 """
 
 from __future__ import annotations
@@ -30,6 +37,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+
+from . import fourier
 
 
 @dataclass(frozen=True)
@@ -252,6 +261,114 @@ def power_absorbed(
     return 0.5 * gamma * mass * frequencies**2 * np.abs(response) ** 2
 
 
+def impulse_response(
+    t: np.ndarray, mass: float, stiffness: float, damping: float
+) -> np.ndarray:
+    """The Green function G(t): the motion after a unit impulse at t = 0 [m / (N s)].
+
+    A spike of force changes the velocity and nothing else — the mass has no time to move
+    while it acts — so a unit impulse leaves the oscillator at x = 0 with v = 1/m, and G is
+    the free decay launched from there. Underdamped that reads
+    e^{-gamma t/2} sin(omega_d t) / (m omega_d), but what is written below is
+    `damped_position` itself, so the critical and overdamped regimes come out right with no
+    second branch to keep in step. Hit anything and it rings at *its own* frequency: the kick
+    sets the amplitude, never the pitch.
+
+    Causality is imposed here rather than left to the caller. G = 0 for t < 0 because nothing
+    moves before the kick, and the gate is load-bearing rather than decorative:
+    `damped_position` solves the equation of motion on the whole line, and run backwards its
+    underdamped branch *grows* as e^{+gamma|t|/2}. The negative half is clipped before the
+    exponential is evaluated, so a record that starts well before the kick cannot overflow.
+    """
+    time = np.asarray(t, dtype=float)
+    causal = np.clip(time, 0.0, None)
+    launched = damped_position(causal, mass, stiffness, damping, 0.0, 1.0 / mass)
+    return np.where(time >= 0.0, launched, 0.0)
+
+
+def step_response(
+    t: np.ndarray,
+    mass: float,
+    stiffness: float,
+    damping: float,
+    force_amplitude: float = 1.0,
+) -> np.ndarray:
+    """Motion after a constant force F0 is switched on at t = 0, from rest [m].
+
+    The particular solution is the new equilibrium F0/k and the homogeneous part is whatever
+    takes the mass there from the old one, so the whole answer is F0/k times a free decay
+    started at unit displacement:
+
+        x(t) = (F0/k) [1 - damped_position(t, x0 = 1, v0 = 0)].
+
+    Written that way it needs no regime analysis of its own. Underdamped it is the familiar
+    (F0/k)[1 - e^{-gamma t/2}(cos omega_d t + (gamma/2 omega_d) sin omega_d t)], and the
+    agreement is exact rather than close, which a limits test pins.
+
+    A featureless force produces overshoot and ringing: 92% above the final value at Q = 20,
+    44% at Q = 2, and none at all at critical damping. That is the falsifier for the
+    `response-follows-force-shape` misconception — the response does not copy the shape of
+    what caused it.
+    """
+    time = np.asarray(t, dtype=float)
+    causal = np.clip(time, 0.0, None)
+    relaxation = damped_position(causal, mass, stiffness, damping, 1.0, 0.0)
+    return np.where(time >= 0.0, (force_amplitude / stiffness) * (1.0 - relaxation), 0.0)
+
+
+def convolution_response(
+    force: np.ndarray, dt: float, mass: float, stiffness: float, damping: float
+) -> np.ndarray:
+    """Displacement under an arbitrary sampled force, as the causal convolution (G * F) [m].
+
+    `force[i]` is F(i dt) [N] on the same grid `simulate_forced` uses, and the result has the
+    same length, so the two can be compared sample for sample. Every force is a train of
+    kicks and the oscillator answers each one identically, which is all linearity and time
+    invariance amount to; this function is that sentence evaluated.
+
+    Two details of the discrete version are not optional, and both are arithmetic rather than
+    taste:
+
+    `fourier.convolve` is circular on the DFT's periodic extension, so the record is padded
+    to the next power of two at or above twice its length before transforming. Without the
+    padding the tail of the response wraps around and reappears at t = 0, which reads as an
+    oscillator that started moving before it was pushed.
+
+    The force's first sample is given half weight. The FFT product is a rectangle-rule
+    quadrature of the convolution integral, whose leading error is -(dt/2) G(t) F(0) — first
+    order in dt, and visible: 4.4e-3 against the closed-form step response at dt = 0.02,
+    falling only to 5.6e-4 as dt is quartered. The half weight is the trapezoidal rule's
+    endpoint correction and restores second order (5.99e-5 to 9.37e-7 over the same
+    refinement). The upper endpoint needs no such correction because G(0) = 0.
+    """
+    _validate_oscillator(mass, stiffness)
+    if damping < 0:
+        raise ValueError("damping must be non-negative")
+    if dt <= 0:
+        raise ValueError("dt must be positive")
+
+    forces = np.asarray(force, dtype=float)
+    if forces.ndim != 1:
+        raise ValueError("force must be a one-dimensional record")
+    if forces.size < 2:
+        raise ValueError("force must hold at least two points — one interval needs both ends")
+
+    n = forces.size
+    padded_size = 1 << int(np.ceil(np.log2(2 * n)))
+    origin = padded_size // 2
+
+    # `convolve` and `spectrum` read their records on a grid centred on t = 0, while the
+    # caller's force starts there; the offset is what translates between the two.
+    centred_time = (np.arange(padded_size) - origin) * dt
+    green = impulse_response(centred_time, mass, stiffness, damping)
+
+    padded_force = np.zeros(padded_size)
+    padded_force[origin : origin + n] = forces
+    padded_force[origin] *= 0.5
+
+    return fourier.convolve(green, padded_force, dt)[origin : origin + n]
+
+
 def q_from_ringdown(
     times: np.ndarray, positions: np.ndarray, threshold: float = 0.1
 ) -> float:
@@ -357,6 +474,63 @@ def q_from_bandwidth(omega: np.ndarray, amplitude: np.ndarray) -> float:
     low = _crossing(w[: peak + 1], a[: peak + 1], half_power)
     high = _crossing(w[peak:][::-1], a[peak:][::-1], half_power)
     return float(w[peak] / (high - low))
+
+
+def q_from_linewidth(omega: np.ndarray, amplitude: np.ndarray) -> float:
+    """Q measured by *fitting* a Lorentzian line: Q = omega_c tau / 2 from A |L(omega - omega_c)|.
+
+    Same inputs as `q_from_bandwidth` and the same number out, obtained by fitting the whole
+    lineshape instead of interpolating two crossings on it. Use this one whenever the
+    frequency grid is not the experimenter's to choose — above all on the spectrum of a
+    ringdown, where `q_from_bandwidth` is a trap rather than a type error: it will accept FFT
+    bins without complaint and return a plausible wrong number.
+
+    The trap is arithmetic, not noise. A record holding n amplitude e-foldings has bin
+    spacing 2 pi / T and a linewidth gamma, so it puts gamma T / 2 pi = n / pi bins across the
+    full width *whatever Q is* — 1.6 bins at five e-foldings. Measured against a true Q = 10:
+    at three e-foldings (1.9 bins across the width) `q_from_bandwidth` reads 8.10 while this
+    reads 9.26; at five, 9.59 against 9.77. Recording for longer is not the escape it looks
+    like — ten bins needs thirty-one e-foldings, where the signal is 1e-14 of where it
+    started — and zero-padding only interpolates the lineshape, adding no information.
+
+    Fitting works where crossings do not because every point constrains the same three
+    numbers, so an under-resolved line is still a well-determined one. Note that
+    `fourier.lorentzian_spectrum` is centred on zero — it is the transform of a decay, a
+    low-pass curve, not a resonance — so the fitted model carries an explicit offset
+    omega_c, and it is that offset, not the largest bin, which becomes the peak frequency.
+
+    `amplitude` is |X| or |G-hat| on a band bracketing one resonance at positive frequency.
+    The band is a real choice, because the true response is only asymptotically a Lorentzian:
+    fitted over omega0 +/- 2 gamma this reads 0.26% low at Q = 20, over +/- 10 gamma 0.97%
+    low. Wide bands buy points and pay for them in bias; a few linewidths either side is the
+    sweet spot, and is what module 05's laboratory uses.
+    """
+    from scipy.optimize import curve_fit
+
+    w = np.asarray(omega, dtype=float)
+    a = np.asarray(amplitude, dtype=float)
+    if w.shape != a.shape:
+        raise ValueError("omega and amplitude must have the same shape")
+    if w.size < 5:
+        raise ValueError("need at least five points to fit a lineshape")
+    if np.any(w < 0):
+        raise ValueError("fit one resonance at positive frequency — pass the band, not both halves")
+
+    peak = int(np.argmax(a))
+    if peak == 0 or peak == a.size - 1:
+        raise ValueError("the band does not contain the peak — centre it on the resonance")
+
+    # A crude half-power width seeds tau; the fit is what actually determines it.
+    guess_width = max(float(np.ptp(w)) / 10.0, float(w[1] - w[0]))
+    guesses = (float(a[peak] * 2.0 / guess_width), float(w[peak]), float(2.0 / guess_width))
+
+    def lineshape(x: np.ndarray, scale: float, centre: float, tau: float) -> np.ndarray:
+        return scale * np.abs(fourier.lorentzian_spectrum(x - centre, tau))
+
+    (_, centre, tau), _ = curve_fit(lineshape, w, a, p0=guesses, maxfev=10_000)
+    if centre <= 0.0 or tau <= 0.0:
+        raise ValueError("the fit did not converge on a resonance — check the band")
+    return float(centre * tau / 2.0)
 
 
 def q_from_phase_slope(omega: np.ndarray, phase_lag: np.ndarray) -> float:

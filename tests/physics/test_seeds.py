@@ -120,6 +120,52 @@ def test_three_q_estimators_agree_on_noisy_data_within_one_percent():
     assert (max(measured) - min(measured)) / TRUE_Q < 0.01
 
 
+def test_one_kick_and_its_envelope_agree_on_q_across_seeds():
+    """Module 05's punchline as a test: a single ringdown yields Q twice, two different ways.
+
+    The same noisy record is read in the time domain, where Q comes from how fast the
+    envelope decays, and in the frequency domain, where it comes from how wide the line is.
+    Nothing is shared between the two routes but the data, so their agreement is the
+    experimental content of the module — a decay in time *is* a Lorentzian in frequency.
+
+    The linewidth route fits the lineshape rather than interpolating half-power crossings on
+    it. That is not a refinement: this record holds about eight amplitude e-foldings, which
+    puts under three bins across the full width no matter what Q is, and `q_from_bandwidth`
+    would happily read those bins and return a number several percent low. The band is kept
+    to a few linewidths either side, where the Lorentzian is still a good description of the
+    true response.
+
+    Tolerances are total uncertainties rather than statistical bands, for the reason the
+    module-02 test above sets out: each route carries a systematic larger than its scatter.
+    """
+    dt = 0.01
+    n = 2**14
+    centred = (np.arange(n) - n // 2) * dt
+    clean_kick = oscillators.impulse_response(centred, MASS, STIFFNESS, RINGDOWN_DAMPING)
+    gamma = oscillators.damping_rate(MASS, RINGDOWN_DAMPING)
+    noise = 2e-4 * float(np.max(np.abs(clean_kick)))
+
+    def q_from_kick_linewidth(rng: np.random.Generator) -> float:
+        omega, transform = fourier.spectrum(
+            measurement.add_noise(clean_kick, noise, rng), dt
+        )
+        band = (omega > OMEGA0 - 4.0 * gamma) & (omega < OMEGA0 + 4.0 * gamma)
+        return oscillators.q_from_linewidth(omega[band], np.abs(transform[band]))
+
+    def q_from_kick_envelope(rng: np.random.Generator) -> float:
+        noisy = measurement.add_noise(clean_kick, noise, rng)
+        return oscillators.q_from_ringdown(centred[n // 2 :], noisy[n // 2 :])
+
+    linewidth = seed_study(q_from_kick_linewidth, n_seeds=8, base_seed=5)
+    envelope = seed_study(q_from_kick_envelope, n_seeds=8, base_seed=5)
+
+    for name, study in (("linewidth", linewidth), ("envelope", envelope)):
+        assert abs(study.mean - TRUE_Q) / TRUE_Q < 0.02, f"{name} is off by more than 2%"
+        assert study.relative_spread < 0.02, f"{name} is not reproducible across seeds"
+
+    assert abs(linewidth.mean - envelope.mean) / TRUE_Q < 0.02
+
+
 def test_ringdown_q_scatter_shrinks_as_inverse_sqrt_of_seed_count():
     """More repeats, tighter answer: the standard error of measured Q falls as M^(-1/2).
 

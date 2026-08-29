@@ -167,6 +167,55 @@ def test_driven_oscillator_energy_stays_bounded():
     assert total.max() < energy_cap
 
 
+def test_a_kick_deposits_exactly_the_kinetic_energy_it_carries():
+    """An impulse J leaves J^2/2m in the oscillator, all of it kinetic, none of it potential.
+
+    This is the energy face of the Green function's initial condition. The kick changes the
+    velocity and nothing else, so at t = 0+ the spring is still slack: every joule is kinetic,
+    and the total is (1/2) m v^2 with v = J/m. Read off the response itself rather than
+    asserted about it, so that a mis-scaled G would fail here as well as in the limits file.
+    """
+    damping = 0.4
+    impulse = 3.0
+    dt = PERIOD / 20_000.0
+    t = np.arange(4) * dt
+
+    green = oscillators.impulse_response(t, MASS, STIFFNESS, damping)
+    velocity = float(np.gradient(green, dt)[0]) * impulse
+    assert np.isclose(velocity, impulse / MASS, rtol=1e-3)
+
+    kinetic, potential, total = oscillators.energies(
+        np.array([0.0]), np.array([impulse / MASS]), MASS, STIFFNESS
+    )
+    assert np.isclose(float(total[0]), impulse**2 / (2.0 * MASS), rtol=1e-12)
+    assert float(kinetic[0]) == float(total[0])
+    assert float(potential[0]) == 0.0
+
+
+def test_the_convolved_response_never_outlasts_the_energy_put_into_it():
+    """Damping only removes: a bounded force cannot leave the oscillator gaining energy.
+
+    A burst is applied and then switched off, and from that moment the mechanical energy of
+    the convolved response must decrease monotonically over whole half cycles. It is the
+    check that `convolution_response`'s zero padding really did stop the DFT's periodic
+    extension from wrapping the tail back onto the start, which would show up here as energy
+    reappearing after the force has gone.
+    """
+    damping = 0.4
+    dt = PERIOD / 400.0
+    n = 4000
+    t = np.arange(n) * dt
+    force = np.where(t < 3.0 * PERIOD, np.cos(OMEGA0 * t), 0.0)
+
+    x = oscillators.convolution_response(force, dt, MASS, STIFFNESS, damping)
+    v = np.gradient(x, dt)
+    _, _, total = oscillators.energies(x, v, MASS, STIFFNESS)
+
+    after = t > 3.5 * PERIOD
+    per_half_cycle = total[after][: (total[after].size // 200) * 200].reshape(-1, 200).max(axis=1)
+    assert np.all(np.diff(per_half_cycle) < 0.0)
+
+
 # Harmonic analysis conserves energy too: changing representation must not create or destroy
 # any. Parseval is that statement, and it holds in both the periodic and the sampled worlds.
 FOURIER_SAMPLES = 4096

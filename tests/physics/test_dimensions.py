@@ -98,6 +98,23 @@ def test_transient_takeover_time_is_a_time():
     assert ((2.0 / gamma) / (2.0 * np.pi / omega0)).check("[]")
 
 
+def test_the_green_function_turns_an_impulse_into_a_displacement():
+    """G carries [time]/[mass], so that (G * F) dt comes out in metres and nothing else.
+
+    The dimensions are the contract of the whole module: convolving a Green function with a
+    force history, integrating over time, must give a position. Written out, G is a length per
+    unit impulse — metres per newton-second — and this is the check that the 1/(m omega_d) in
+    front of the ringing is not a stray omega away from that.
+    """
+    omega_d = (STIFFNESS / MASS - (DAMPING / MASS) ** 2 / 4.0) ** 0.5
+    green = 1.0 / (MASS * omega_d)
+    assert green.check("[time] / [mass]")
+    assert (green * FORCE * Quantity(1.0, "s")).check("[length]")
+
+    # The step response is the same statement at zero frequency: F0/k is a length.
+    assert (FORCE / STIFFNESS).check("[length]")
+
+
 def test_light_speed_from_the_electromagnetic_constants():
     """c = 1/sqrt(mu0 eps0) — checked dimensionally and numerically, module 5's payoff."""
     c = (1.0 / (MU_0_Q * EPS_0_Q)) ** 0.5
@@ -126,6 +143,12 @@ def test_library_returns_plain_floats():
     assert oscillators.power_absorbed(sweep, 0.5, 8.0, 0.4, 1.0).dtype == np.float64
     assert isinstance(oscillators.q_from_bandwidth(sweep, np.abs(response)), float)
     assert isinstance(oscillators.q_from_phase_slope(sweep, np.angle(response)), float)
+    ramp = np.linspace(0.0, 4.0, 401)
+    assert oscillators.impulse_response(ramp, 0.5, 8.0, 0.4).dtype == np.float64
+    assert oscillators.step_response(ramp, 0.5, 8.0, 0.4, 1.0).dtype == np.float64
+    assert (
+        oscillators.convolution_response(np.ones(401), 0.01, 0.5, 8.0, 0.4).dtype == np.float64
+    )
     assert isinstance(fourier.gibbs_overshoot(31), float)
     times = (np.arange(512) - 256) * 0.01
     duration, bandwidth = fourier.rms_widths(fourier.gaussian_pulse(times, 0.3), 0.01)

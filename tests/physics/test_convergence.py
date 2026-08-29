@@ -112,6 +112,93 @@ def test_time_step_recommendation_sits_in_the_convergent_regime():
     assert error_at_dt / error_at_half == pytest.approx(4.0, rel=0.25)
 
 
+def _convolution_step_error(steps_per_period: int) -> float:
+    """Worst-case distance between the convolved step response and its closed form."""
+    dt = PERIOD / steps_per_period
+    n = 6 * steps_per_period
+    t = np.arange(n) * dt
+    convolved = oscillators.convolution_response(np.ones(n), dt, MASS, STIFFNESS, 0.4)
+    return float(np.max(np.abs(convolved - oscillators.step_response(t, MASS, STIFFNESS, 0.4))))
+
+
+def test_convolving_a_step_converges_on_the_closed_form_at_second_order():
+    """(G * F) against the analytic step response: halve the step, quarter the error.
+
+    Second order is not what the discrete convolution gives by default. The FFT product is a
+    rectangle-rule quadrature of the convolution integral, and its leading error term,
+    -(dt/2) G(t) F(0), is first order — measurably so, falling only from 4.4e-3 to 5.6e-4 as
+    the step is quartered. `convolution_response` gives the force's first sample the
+    trapezoidal rule's half weight, which cancels that term; what remains is the O(dt^2) this
+    test measures. The upper endpoint needs no matching correction because G(0) = 0.
+    """
+    errors = np.array([_convolution_step_error(n) for n in REFINEMENTS])
+    ratios = errors[:-1] / errors[1:]
+    assert np.all(np.abs(ratios - 4.0) < 1.0), f"error ratios {ratios} are not fourfold"
+
+
+def test_convolution_and_verlet_agree_on_a_burst_as_the_step_refines():
+    """Two unrelated routes to the same motion: superposition of kicks, and integration.
+
+    `simulate_forced` knows nothing about Green functions and `convolution_response` knows
+    nothing about time stepping, so their agreement is a real check on both — and it must
+    improve at second order, since that is the order each of them separately claims.
+    """
+    damping = 0.4
+    errors = []
+    for steps_per_period in REFINEMENTS:
+        dt = PERIOD / steps_per_period
+        n = 6 * steps_per_period
+        t = np.arange(n) * dt
+        force = np.where(t < 3.0 * PERIOD, np.cos(1.9 * t), 0.0)
+        integrated = oscillators.simulate_forced(
+            MASS, STIFFNESS, 0.0, 0.0, dt, force, damping=damping
+        )
+        convolved = oscillators.convolution_response(force, dt, MASS, STIFFNESS, damping)
+        errors.append(float(np.max(np.abs(convolved - integrated.positions))))
+
+    ratios = np.array(errors[:-1]) / np.array(errors[1:])
+    assert np.all(np.abs(ratios - 4.0) < 1.0), f"error ratios {ratios} are not fourfold"
+
+
+def test_the_lti_bridge_is_limited_by_the_record_before_it_is_limited_by_the_step():
+    """Two error sources sit under `spectrum(impulse_response)`, and the record wins first.
+
+    Refining the grid cannot fix a ringdown that has not finished ringing: the DFT's periodic
+    extension wraps whatever is left at the end of the record back onto the start. Measured at
+    Q = 20, holding dt fixed at 0.01 and doubling the record, the relative error against the
+    conjugate swept response tracks the surviving tail amplitude e^{-gamma T / 4} almost
+    exactly — 2.9e-4 at 8.2 amplitude e-foldings, 6.8e-6 at 16.4 — and then stops falling,
+    pinned at the 6.7e-6 the grid alone can support.
+
+    This is why the identity test in `test_limits.py` asserts a floor rather than an
+    algebraic equality, and why a laboratory reading a short record should expect the same.
+    """
+    damping = 0.1  # Q = 20
+    dt = 0.01
+    gamma = oscillators.damping_rate(MASS, damping)
+
+    errors = {}
+    for n in (2**14, 2**15, 2**16):
+        t = (np.arange(n) - n // 2) * dt
+        omega, kicked = fourier.spectrum(
+            oscillators.impulse_response(t, MASS, STIFFNESS, damping), dt
+        )
+        band = (omega >= 0.0) & (omega < 3.0 * OMEGA0)
+        swept = oscillators.steady_state_response(omega[band], MASS, STIFFNESS, damping, 1.0)
+        errors[n] = float(
+            np.max(np.abs(kicked[band] - np.conj(swept))) / np.max(np.abs(swept))
+        )
+
+    # Truncation-limited: the error is the tail the record failed to contain.
+    tail = np.exp(-gamma * (2**14 * dt) / 4.0)
+    assert errors[2**14] == pytest.approx(tail, rel=0.25)
+
+    # Doubling the record clears the tail; doubling it again changes nothing, because the
+    # grid is now what is left.
+    assert errors[2**15] < errors[2**14] / 10.0
+    assert errors[2**16] == pytest.approx(errors[2**15], rel=0.05)
+
+
 # Fourier series convergence. Orders are odd so a waveform built from odd harmonics always
 # includes its top term, and they double so the effective term count doubles with them. The
 # grid resolves the jump region at the highest order while keeping `partial_sum`'s dense
