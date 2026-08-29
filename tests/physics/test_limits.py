@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, oscillators, phasors
+from wavelab import coupled, fourier, oscillators, phasors
 from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.analytic_limit
@@ -384,6 +384,109 @@ def test_fitting_the_line_beats_crossing_it_on_an_under_resolved_ringdown():
     fitted = oscillators.q_from_linewidth(omega[band], np.abs(transform[band]))
     assert abs(crossings - expected) / expected > 0.15
     assert abs(fitted - expected) / expected < 0.06
+
+
+def test_the_coupled_pair_has_the_two_modes_solved_by_hand():
+    """omega_s = sqrt(k/m) and omega_a = sqrt((k + 2 k_c)/m), with shapes (1, 1) and (1, -1).
+
+    The module derives these from a 2x2 determinant with a pen; this holds the numerical
+    solver to the same answer, so the page and the library cannot drift apart. Agreement is at
+    the last bit — 1e-15 — because both are doing the same small piece of algebra.
+
+    The symmetric frequency is the interesting one: it equals the *uncoupled* natural
+    frequency for every coupling strength, because in that motion the two masses move together
+    and the spring between them never changes length. A spring that never stretches cannot
+    affect the period, and the page turns on exactly that sentence.
+    """
+    for coupling in (0.05, 0.4, 4.0, 40.0):
+        matrices = coupled.two_mass_matrices(MASS, STIFFNESS, coupling)
+        modes = coupled.normal_mode_solve(*matrices)
+        symmetric = np.sqrt(STIFFNESS / MASS)
+        antisymmetric = np.sqrt((STIFFNESS + 2.0 * coupling) / MASS)
+
+        assert np.allclose(modes.frequencies, [symmetric, antisymmetric], rtol=1e-12)
+        assert np.isclose(modes.frequencies[0], OMEGA0, rtol=1e-12)
+
+        expected = np.array([[1.0, 1.0], [1.0, -1.0]]) / np.sqrt(2.0 * MASS)
+        assert np.allclose(modes.shapes, expected, atol=1e-12)
+
+
+def test_starting_one_pendulum_empties_it_completely():
+    """The falsifier: start one mass and its energy does not stay there — it all leaves.
+
+    This is the experiment behind `energy-stays-in-excited-pendulum`. Released from rest with
+    only the first mass displaced, its share of the energy falls to 5.7e-4 of the total within
+    half an exchange period, then comes back. Nothing is lost anywhere; there is no damping in
+    the model at all. The energy is simply somewhere else.
+
+    Weak coupling is part of the claim, not a convenience. The transfer is complete only when
+    the two mode amplitudes are equal, and at k_c/k = 0.05 they are equal to a part in a
+    thousand. Push the coupling to k_c = k and 7.4% of the energy never leaves the first mass —
+    checked below, because a module that promised "all of it" at any coupling would be wrong.
+    """
+    coupling = 0.05 * STIFFNESS
+    matrices = coupled.two_mass_matrices(MASS, STIFFNESS, coupling)
+    modes = coupled.normal_mode_solve(*matrices)
+    period = coupled.exchange_time(*modes.frequencies)
+
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 200.0
+    trajectory = coupled.simulate_coupled(
+        *matrices, [1.0, 0.0], [0.0, 0.0], dt, int(period / dt)
+    )
+    energies = coupled.site_energies(
+        *matrices, trajectory.positions, trajectory.velocities
+    )
+    share = energies[:, 0] / energies.sum(axis=1)
+
+    # It starts with 97.6%, not 100%: the coupling spring is stretched at t = 0 and
+    # `site_energies` splits every spring's energy between the masses it joins, so the
+    # undisplaced mass is credited with half of that. The bookkeeping is a convention, and
+    # this is where it shows.
+    assert share[0] > 0.97
+    assert share.min() < 0.01  # and is emptied
+    assert share[-1] > 0.97  # and gets it all back one exchange period later
+
+    # The total never moves: this is a transfer, not a loss.
+    total = energies.sum(axis=1)
+    assert np.ptp(total) / total[0] < 1e-3
+
+    strong = coupled.two_mass_matrices(MASS, STIFFNESS, STIFFNESS)
+    strong_modes = coupled.normal_mode_solve(*strong)
+    strong_dt = (2.0 * np.pi / strong_modes.frequencies[-1]) / 200.0
+    strong_period = coupled.exchange_time(*strong_modes.frequencies)
+    strong_run = coupled.simulate_coupled(
+        *strong, [1.0, 0.0], [0.0, 0.0], strong_dt, int(strong_period / strong_dt)
+    )
+    strong_share = coupled.site_energies(
+        *strong, strong_run.positions, strong_run.velocities
+    )
+    fraction = strong_share[:, 0] / strong_share.sum(axis=1)
+    assert fraction.min() > 0.05  # strong coupling leaves a real remainder behind
+
+
+def test_the_exchange_is_the_beat_between_the_two_mode_frequencies():
+    """The sloshing is module 00's beat, carrying energy between two visible objects.
+
+    Started with one mass displaced, the first mass's motion is the sum of two equal-amplitude
+    cosines at the mode frequencies — which is exactly what `phasors.beat_signal` builds. The
+    integrator knows nothing of either fact, so the agreement is a real check rather than an
+    identity, and it is what licenses the module to reuse the beat envelope it already taught.
+    """
+    coupling = 0.05 * STIFFNESS
+    matrices = coupled.two_mass_matrices(MASS, STIFFNESS, coupling)
+    modes = coupled.normal_mode_solve(*matrices)
+    period = coupled.exchange_time(*modes.frequencies)
+
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 400.0
+    trajectory = coupled.simulate_coupled(
+        *matrices, [1.0, 0.0], [0.0, 0.0], dt, int(period / dt)
+    )
+    beat = phasors.beat_signal(0.5, 0.5, *modes.frequencies, trajectory.times)
+    assert np.max(np.abs(trajectory.positions[:, 0] - beat)) < 5e-3
+
+    # And the envelope's half-period is the moment of full transfer.
+    envelope_zero = np.pi / (modes.frequencies[1] - modes.frequencies[0])
+    assert np.isclose(envelope_zero, period / 2.0, rtol=1e-12)
 
 
 def test_real_signal_reproduces_the_direct_cosine():

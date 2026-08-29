@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, oscillators
+from wavelab import coupled, fourier, oscillators
 
 pytestmark = pytest.mark.conservation
 
@@ -214,6 +214,79 @@ def test_the_convolved_response_never_outlasts_the_energy_put_into_it():
     after = t > 3.5 * PERIOD
     per_half_cycle = total[after][: (total[after].size // 200) * 200].reshape(-1, 200).max(axis=1)
     assert np.all(np.diff(per_half_cycle) < 0.0)
+
+
+def test_modal_energies_hold_still_while_site_energies_slosh():
+    """The whole point of a normal mode, as one assertion pair.
+
+    Two identical oscillators are released with only the first displaced, and the same
+    trajectory is read twice. In the site picture the energy travels: mass 1's share runs the
+    full range from essentially all of it to essentially none. In the mode picture nothing
+    happens at all — each mode holds its energy to a part in 10^5, for as long as the
+    integration runs.
+
+    Neither statement is an identity being restated. `simulate_coupled` steps the coupled
+    equations and knows nothing about modes; the modal energies are computed afterwards, by
+    projection. That they come out constant is a fact about the physics.
+
+    The tolerance is set by the integrator, not by the physics. Velocity Verlet is symplectic,
+    so its modal-energy error is a bounded oscillation of order (omega dt)^2 rather than a
+    drift: 1.5e-5 at dt = T_fast/800, and 9.6e-7 at T_fast/3200 for anyone who wants it
+    tighter at four times the cost. The bound not growing with run length is checked below,
+    and matters more than its size.
+    """
+    coupling = 0.05 * STIFFNESS
+    matrices = coupled.two_mass_matrices(MASS, STIFFNESS, coupling)
+    modes = coupled.normal_mode_solve(*matrices)
+    period = coupled.exchange_time(*modes.frequencies)
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 800.0
+
+    trajectory = coupled.simulate_coupled(
+        *matrices, [1.0, 0.0], [0.0, 0.0], dt, int(3.0 * period / dt)
+    )
+    site = coupled.site_energies(*matrices, trajectory.positions, trajectory.velocities)
+    modal = np.array(
+        [
+            coupled.modal_energies(modes, x, v)
+            for x, v in zip(trajectory.positions, trajectory.velocities, strict=True)
+        ]
+    )
+
+    reference = modal[0].sum()
+    assert np.max(np.abs(modal - modal[0])) / reference < 1e-4
+
+    # ... while the site energies traverse essentially the whole total.
+    share = site[:, 0] / site.sum(axis=1)
+    assert share.max() - share.min() > 0.95
+
+
+def test_the_modal_energy_error_is_bounded_rather_than_drifting():
+    """Run four times as long and the error must not grow — the symplectic guarantee.
+
+    A non-symplectic integrator of the same order would look fine over one exchange period and
+    leak steadily over twenty. Measuring the bound at two run lengths is what tells the two
+    apart, and it is the reason this integrator can be trusted for the long exchange
+    experiments the module's laboratory asks for.
+    """
+    matrices = coupled.two_mass_matrices(MASS, STIFFNESS, 0.05 * STIFFNESS)
+    modes = coupled.normal_mode_solve(*matrices)
+    period = coupled.exchange_time(*modes.frequencies)
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 400.0
+
+    bounds = []
+    for periods in (2.0, 8.0):
+        run = coupled.simulate_coupled(
+            *matrices, [1.0, 0.0], [0.0, 0.0], dt, int(periods * period / dt)
+        )
+        modal = np.array(
+            [
+                coupled.modal_energies(modes, x, v)
+                for x, v in zip(run.positions, run.velocities, strict=True)
+            ]
+        )
+        bounds.append(float(np.max(np.abs(modal - modal[0])) / modal[0].sum()))
+
+    assert bounds[1] < 1.5 * bounds[0], f"error grows with run length: {bounds}"
 
 
 # Harmonic analysis conserves energy too: changing representation must not create or destroy

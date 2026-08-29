@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, measurement, oscillators, phasors
+from wavelab import coupled, fourier, measurement, oscillators, phasors
 from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.large_n
@@ -172,6 +172,55 @@ def test_reported_fit_error_shrinks_with_record_length():
         )
         errors.append(measurement.fit_cosine(t, noisy, OMEGA0).omega_err)
     assert errors[0] > errors[1] > errors[2]
+
+
+def test_exchange_time_falls_as_one_over_the_coupling():
+    """Stiffer coupling, faster trading: T_ex goes as 1/k_c while the coupling stays weak.
+
+    The chain of reasoning is the module's, and each link is checkable. Weak coupling splits
+    the two mode frequencies by roughly omega0 k_c / k; the exchange is the beat between them,
+    so its period is 2 pi over that splitting; therefore doubling the coupling halves the time.
+    The exponent is measured rather than assumed.
+
+    The range matters and is not decoration. Over k_c/k in [0.005, 0.05] the fitted exponent is
+    -0.991; widen it to 0.5 and it drifts to -0.965; run it over [0.2, 2] and it reaches -0.830,
+    because sqrt(k + 2 k_c) stops being linear in k_c once k_c is comparable with k. The law is
+    a weak-coupling law, and a test that swept the strong regime would be testing its failure.
+    """
+    couplings = np.geomspace(0.005 * STIFFNESS, 0.05 * STIFFNESS, 12)
+    times = []
+    for coupling in couplings:
+        matrices = coupled.two_mass_matrices(MASS, STIFFNESS, coupling)
+        modes = coupled.normal_mode_solve(*matrices)
+        times.append(coupled.exchange_time(*modes.frequencies))
+
+    assert abs(scaling_exponent(couplings, times) - (-1.0)) < 0.05
+
+    # The same statement without the fit: ten times the coupling, a tenth of the time.
+    weak = coupled.normal_mode_solve(*coupled.two_mass_matrices(MASS, STIFFNESS, 0.005 * STIFFNESS))
+    stiff = coupled.normal_mode_solve(*coupled.two_mass_matrices(MASS, STIFFNESS, 0.05 * STIFFNESS))
+    ratio = coupled.exchange_time(*weak.frequencies) / coupled.exchange_time(*stiff.frequencies)
+    assert np.isclose(ratio, 10.0, rtol=0.05)
+
+
+def test_the_mode_splitting_estimate_holds_only_while_the_coupling_is_weak():
+    """Delta omega approx omega0 k_c / k — good to a percent at k_c/k = 0.02, useless at 0.5.
+
+    A negative control for the module's own estimate. It is derived by expanding
+    sqrt(k + 2 k_c) to first order, so it must fail once k_c is not small, and the page says
+    so; this pins where. Measured: 1% low at k_c/k = 0.02, 5% at 0.1, 17% at 0.5.
+    """
+    errors = {}
+    for ratio in (0.02, 0.1, 0.5):
+        matrices = coupled.two_mass_matrices(MASS, STIFFNESS, ratio * STIFFNESS)
+        modes = coupled.normal_mode_solve(*matrices)
+        splitting = modes.frequencies[1] - modes.frequencies[0]
+        errors[ratio] = abs(splitting - OMEGA0 * ratio) / splitting
+
+    assert errors[0.02] < 0.02
+    assert errors[0.1] > 0.03
+    assert errors[0.5] > 0.15
+    assert errors[0.02] < errors[0.1] < errors[0.5]
 
 
 # The bandwidth theorem's scaling content: squeezing a signal in time stretches its spectrum
