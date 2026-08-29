@@ -1,0 +1,216 @@
+module: 05-impulse-response
+questions:
+  - id: Q-05-1
+    type: multiple-choice
+    objectives: [OBJ-05-1]
+    prompt: >-
+      A bell is struck with a felt beater, then with a steel hammer of the same mass moving
+      at the same speed. Compared with the felt strike, what does the steel strike change
+      about the sound?
+    choices:
+      - text: The amplitude, and the mixture of the bell's own modes it excites — but not the frequency of any mode.
+        correct: true
+        feedback: >-
+          Right. A kick sets a velocity and nothing else, so the motion afterwards is free
+          decay: it rings at omega_d, which belongs to the bell. A harder, shorter strike
+          delivers a larger impulse and its spectrum is flatter, so it feeds the higher modes
+          more strongly — brighter, louder, same pitches.
+      - text: The frequency of the ringing, because a stiffer impact drives the bell faster.
+        correct: false
+        feedback: >-
+          The impact drives nothing after it is over, and it is over almost immediately. Once
+          the hammer has left, the equation of motion has no force term at all, so the bell
+          solves its own free-decay problem at its own omega_d. Nothing about the mallet
+          appears in that frequency.
+      - text: The decay rate, because a harder strike puts in more energy and takes longer to dissipate.
+        correct: false
+        feedback: >-
+          Decay is exponential, so the time to fall by a given *factor* does not depend on
+          where it started: gamma/2 is a property of the bell. A harder strike is louder for
+          longer only in the sense that it starts higher up the same exponential.
+      - text: Nothing measurable — the impulse response is a fixed property of the bell.
+        correct: false
+        feedback: >-
+          G(t) is fixed, but the response is G scaled by the impulse J, so amplitude certainly
+          changes. The invariant claim is narrower and more interesting: the *shape* in time
+          is always the same, and only its size is yours to choose.
+
+  - id: Q-05-2
+    type: multiple-choice
+    objectives: [OBJ-05-2]
+    prompt: >-
+      An oscillator with Q = 10 is kicked twice with equal impulses, the second kick landing
+      exactly half a period after the first. What does the ringing look like afterwards?
+    choices:
+      - text: Almost cancelled, at about 15% of a single kick — but not exactly zero.
+        correct: true
+        feedback: >-
+          Right. Half a period puts the two contributions in antiphase, so they subtract, and
+          the amplitude ratio is 1 - e^(-pi/2Q) = 0.15 at Q = 10. It is not zero because the
+          first kick's ringing has already decayed a little by the time the second arrives, so
+          the two amplitudes being subtracted are not equal.
+      - text: Exactly cancelled — the two contributions are in antiphase and destroy each other completely.
+        correct: false
+        feedback: >-
+          They are in antiphase, but cancellation also needs equal amplitudes, and damping has
+          shrunk the first one by e^(-pi/2Q) before the second arrives. Exact cancellation
+          would require Q to be infinite, which is the undamped oscillator that never settles.
+      - text: Doubled — two kicks put in twice the impulse, so the response is twice as large.
+        correct: false
+        feedback: >-
+          Impulses add, but responses add *as signed functions of time*, and here the second
+          arrives when the first contribution is moving the other way. Doubling is what you
+          get from kicks spaced a whole period apart, and even then only 1 + e^(-pi/Q) = 1.73
+          times, not 2.
+      - text: Unchanged — the second kick arrives when the mass is at its turning point and does no work.
+        correct: false
+        feedback: >-
+          A kick changes the velocity regardless of where the mass happens to be, so it always
+          alters the motion. What the timing decides is the *sign* of that alteration relative
+          to the ringing already present.
+
+  - id: Q-05-3
+    type: multiple-choice
+    objectives: [OBJ-05-2, OBJ-05-4]
+    misconception: response-follows-force-shape
+    prompt: >-
+      A constant force is switched on at t = 0 and never changed again. The oscillator has
+      Q = 10 and starts at rest. Describe the displacement afterwards.
+    choices:
+      - text: It overshoots the new equilibrium by about 85% and rings at omega_d before settling at F0/k.
+        correct: true
+        feedback: >-
+          Right, and this is the module's central surprise. The force has exactly one feature
+          in its whole history, and the response has dozens. The system answers with its own
+          frequency whatever it is asked, and the overshoot exp(-pi gamma / 2 omega_d) depends
+          only on Q — 85% at Q = 10, 44% at Q = 2, zero at critical damping.
+      - text: It glides smoothly up to F0/k without ever passing it, because the force never decreases.
+        correct: false
+        feedback: >-
+          This is the misconception the module exists to break: a linear system's displacement
+          does not follow the shape of the force applied to it. Monotonic approach is what
+          happens at critical damping or heavier; at Q = 10 the mass arrives with a velocity
+          it has to lose, and losing it takes 2/gamma of ringing.
+      - text: It rises to F0/k and stays there immediately, since a constant force has a constant response.
+        correct: false
+        feedback: >-
+          F0/k is where it *ends*, and that is the steady-state answer to a zero-frequency
+          drive. Getting there is a transient, and the transient is the whole content of this
+          question. The mass has inertia, so it cannot acquire its new position instantly.
+      - text: It oscillates forever around F0/k, since the force keeps supplying energy.
+        correct: false
+        feedback: >-
+          A constant force supplies no net energy once the mass has stopped moving, and the
+          damper removes what is there. The ringing decays as e^(-gamma t/2) exactly as a
+          ringdown does — it *is* a ringdown, about the shifted equilibrium.
+
+  - id: Q-05-4
+    type: multiple-choice
+    objectives: [OBJ-05-3]
+    prompt: >-
+      You record a single ringdown of an unknown resonator and take the magnitude of its
+      Fourier transform. What have you got?
+    choices:
+      - text: The resonator's frequency-response magnitude — module 02's entire swept resonance curve, from one strike.
+        correct: true
+        feedback: >-
+          Right, and it is the reason engineers test structures with a hammer rather than a
+          shaker. The transform of the impulse response is the frequency response, and one
+          kick contains every frequency at once, so a single record carries the amplitude and
+          phase the sweep would have measured point by point.
+      - text: The spectrum of the hammer blow, since that is what put the energy in.
+        correct: false
+        feedback: >-
+          The spectra multiply — x-hat = G-hat F-hat — so what you see is the product. An
+          ideal kick has a flat spectrum, which is exactly why it is the useful probe: it
+          divides out, leaving the resonator's own response and nothing of the hammer's.
+      - text: A single sharp line at omega_d, because the ringdown is a decaying sinusoid at that frequency.
+        correct: false
+        feedback: >-
+          A line of zero width would need a sinusoid lasting forever. The decay is what gives
+          the line its width — gamma, full width at half maximum — and that width is precisely
+          the information you want, since Q = omega0/gamma. A decay in time is a Lorentzian in
+          frequency.
+      - text: Nothing useful without also recording the force, since a transfer function needs an input and an output.
+        correct: false
+        feedback: >-
+          True in general, and that is why the impulse is special: its transform is a known
+          constant, so the output alone determines the transfer function up to that constant.
+          It is the one input you do not have to measure.
+
+  - id: Q-05-5
+    type: multiple-choice
+    objectives: [OBJ-05-4]
+    prompt: >-
+      Which of these observations would be forbidden by causality alone, given that the
+      system is linear and time-invariant?
+    choices:
+      - text: The mass has already begun moving one second before the force is first applied.
+        correct: true
+        feedback: >-
+          Right. Causality is exactly the statement G(t) = 0 for t < 0, which puts the upper
+          limit t on the convolution integral and makes x(t) depend only on the force at times
+          up to t. Motion before the force is the one thing on this list that no choice of m,
+          b, k could produce.
+      - text: The mass is still moving ten seconds after the force has been switched off.
+        correct: false
+        feedback: >-
+          Perfectly allowed, and characteristic: the response outlives the force by about
+          2/gamma. Memory of the past is not a violation of causality — dependence on the
+          future is. This is the ringdown, and it is where you measure Q.
+      - text: The displacement is largest at a moment when the applied force is zero.
+        correct: false
+        feedback: >-
+          Allowed and routine. At resonance the displacement lags the force by a quarter
+          cycle, so the peak displacement lands exactly where the force passes through zero.
+          Nothing about that involves the future of the force.
+      - text: A brief force produces a motion lasting a thousand times longer than the force itself.
+        correct: false
+        feedback: >-
+          This is the impulse response itself, and it is the module's opening observation: the
+          kick lasts milliseconds and the bell rings for seconds. Causality restricts which
+          direction in time the influence runs, not how long it lasts.
+
+  - id: Q-05-6
+    type: numeric
+    objectives: [OBJ-05-5]
+    prompt: >-
+      A series RLC circuit has L = 10 mH, R = 2.0 ohm and C = 1.0 microfarad. Using the
+      dictionary m <-> L, b <-> R, k <-> 1/C, what is the quality factor Q of this circuit?
+    answer: 50.0
+    tolerance: 1.0
+    feedback: >-
+      Q = sqrt(L/C)/R = sqrt(0.010 / 1.0e-6) / 2.0 = sqrt(10000) / 2.0 = 100/2.0 = 50. The
+      same arithmetic as sqrt(mk)/b for the mechanical oscillator, because it is the same
+      equation with the symbols renamed. The resonant frequency is
+      omega0 = 1/sqrt(LC) = 10^4 rad/s, about 1.6 kHz.
+
+  - id: Q-05-7
+    type: short-answer
+    objectives: [OBJ-05-1, OBJ-05-3]
+    prompt: >-
+      You transform a measured ringdown and hand the spectrum to a colleague, who applies a
+      half-power bandwidth estimator to it and reports Q = 16 for a resonator you know to be
+      near Q = 20. The data are clean and the estimator is correctly implemented. What went
+      wrong, and what should they do instead?
+    discussion: >-
+      Nothing is wrong with either the data or the code — the trap is the frequency grid. A
+      record of duration T has bins spaced 2 pi / T, while the line it must resolve has width
+      gamma. Those two are not independent: a record holding n amplitude e-foldings has
+      T = 2n/gamma, so the number of bins across the full width is gamma T / 2 pi = n / pi,
+      independent of Q entirely. A realistic record of three to five e-foldings therefore
+      gives under two bins across the line, and interpolating half-power crossings between two
+      samples of a curve you have barely sampled reads systematically low.
+
+      Recording for longer is the obvious escape and a poor one: ten bins would need
+      thirty-one e-foldings, by which point the signal is 10^(-14) of where it started and
+      buried far below any noise floor. Zero-padding interpolates the lineshape more finely
+      but adds no information, so it improves the appearance more than the estimate.
+
+      The fix is to stop using two points and use them all: fit the whole Lorentzian
+      lineshape, with the peak frequency and the width as free parameters. That is what
+      oscillators.q_from_linewidth does, and it is why it exists alongside q_from_bandwidth,
+      which remains the right tool for a swept measurement where the experimenter chooses the
+      sampling. Note also that the envelope route, q_from_ringdown, is untouched by any of
+      this — it never leaves the time domain — which is why the laboratory measures Q both
+      ways and compares.

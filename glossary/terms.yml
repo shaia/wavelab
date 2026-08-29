@@ -316,3 +316,28 @@ terms:
   - key: critical-angle
     en: critical angle
     he: זווית קריטית
+  # Linear-systems vocabulary, deposited by module 05 (plans/part-01-oscillations.md section
+  # 5.3). `convolution` and `impulse` already exist above and are cited rather than
+  # re-deposited — a duplicate key is a hard error.
+  - key: impulse-response
+    en: impulse response
+    he: תגובת מתקף
+    he_reject: [תגובת אימפולס]
+  # The translator should weigh תגובת הלם, which is the standard term in Hebrew electrical
+  # engineering, against תגובת מתקף, which is consistent with the מתקף already deposited for
+  # `impulse` above. Consistency within the course wins for now; neither is rejected.
+  - key: green-function
+    en: Green function
+    he: פונקציית גרין
+  - key: causality
+    en: causality
+    he: סיבתיות
+  - key: linear-time-invariant
+    en: linear time-invariant
+    he: ליניארית קבועה בזמן
+  - key: step-response
+    en: step response
+    he: תגובת מדרגה
+  - key: frequency-response
+    en: frequency response
+    he: תגובת תדר

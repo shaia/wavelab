@@ -43,6 +43,10 @@ misconceptions:
     statement: "Negative frequencies are a mathematical artifact with no physical content."
     assigned_module: 04-fourier-transform
     status: addressed
+  - id: response-follows-force-shape
+    statement: "A linear system's displacement follows the shape of the force applied to it."
+    assigned_module: 05-impulse-response
+    status: addressed
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
     assigned_module: 08-wave-equation

@@ -34,6 +34,13 @@ project:
         - file: foundations/03-fourier-series-problems.md
         - file: foundations/04-fourier-transform.md
         - file: foundations/04-fourier-transform-problems.md
+    # Module 05 belongs to Part I and lives in oscillations/, but it consumes the transform,
+    # so teaching order puts it after the group above rather than back with 01 and 02. Part I
+    # is therefore split across two sidebar groups, exactly as Part 0 already is.
+    - title: Linear response
+      children:
+        - file: oscillations/05-impulse-response.md
+        - file: oscillations/05-impulse-response-problems.md
 site:
   template: book-theme
   options:
