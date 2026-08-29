@@ -46,7 +46,7 @@ electives start at `50`.
 | Part | `content/en/` dir | Modules (id ← master-plan notebooks) |
 |---|---|---|
 | 0 Foundations | `foundations/` | `00-phasors` ← 0.1 **(built)** · `03-fourier-series` ← 0.2 **(built)** · `04-fourier-transform` ← 0.3 **(built)** |
-| I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 **(built)** · `05-impulse-response` ← 1.4 |
+| I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 **(built)** · `05-impulse-response` ← 1.4 **(built)** |
 | II Normal modes | `normal-modes/` | `06-coupled` ← 2.1 · `07-normal-modes` ← 2.2 + 2.3 |
 | III Waves | `waves/` | `08-wave-equation` ← 3.1 + 3.2 · `09-wave-energy` ← 3.3 · `10-impedance` ← 3.4 |
 | IV Fourier waves | `fourier-waves/` | `11-standing-waves` ← 4.1 + 4.2 · `12-wave-packets` ← 4.3 · `13-dispersion` ← 4.4 |
@@ -107,9 +107,10 @@ checks them across the folder.
 
 ## `src/wavelab/` ownership
 
-Existing: `constants`, `units`, `phasors` (module 00), `fourier` (03–04), `oscillators` (01–02 — extended by
+Existing: `constants`, `units`, `phasors` (module 00), `fourier` (03–04), `oscillators` (01–02, 05 — extended by
 02 with `steady_state_response`, `resonance_peak_omega`, `power_absorbed` and the three
-`q_from_*` estimators),
+`q_from_*` estimators, and by 05 with `impulse_response`, `step_response`,
+`convolution_response` and a fourth estimator `q_from_linewidth`),
 `measurement` (shared: noise, fitting, uncertainty), `validation` (shared: conservation /
 analytic-limit / convergence / seed checks).
 
@@ -211,7 +212,7 @@ module in teaching order, all other plans cite):
 | Part | Plan | Modules built |
 |---|---|---|
 | 00 Foundations | written | `00-phasors`, `03-fourier-series`, `04-fourier-transform` — **complete** |
-| 01 Oscillations | written | `01-sho`, `02-damped-driven` (05 pending) |
+| 01 Oscillations | written | `01-sho`, `02-damped-driven`, `05-impulse-response` — **complete** |
 | 02 Normal modes | written | — |
 | 03 Waves | written | — |
 | 04 Fourier waves | written | — |

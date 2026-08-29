@@ -1,6 +1,6 @@
 # Part I — Oscillations — Implementation Plan
 
-> **Master plan:** §8 (Part I). **Modules:** `01-sho`, `02-damped-driven`, `05-impulse-response`. **Status:** partial — `01-sho` and `02-damped-driven` built.
+> **Master plan:** §8 (Part I). **Modules:** `01-sho`, `02-damped-driven`, `05-impulse-response`. **Status:** complete — all three modules built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -62,7 +62,7 @@ sequencing argument is owned by `part-00-foundations.md` §8.
 |---|---|---|---|---|---|
 | `01-sho` | `content/en/oscillations/01-sho.md` | The simple harmonic oscillator | 1.1 | Georgi, harmonic oscillation; French, SHM chapters | **built** |
 | `02-damped-driven` | `content/en/oscillations/02-damped-driven.md` | Damping, resonance, and the quality factor | 1.2 + 1.3 | French, damped & forced vibrations; Georgi; MIT 8.03 resonance lectures | **built** |
-| `05-impulse-response` | `content/en/oscillations/05-impulse-response.md` | Impulse response: the oscillator as a linear system | 1.4 | Georgi, LTI/Green-function treatment; MIT 8.03; Goodman, linear-systems preview | planned |
+| `05-impulse-response` | `content/en/oscillations/05-impulse-response.md` | Impulse response: the oscillator as a linear system | 1.4 | Georgi, LTI/Green-function treatment; MIT 8.03; Goodman, linear-systems preview | **built** |
 
 ## 4. Shared infrastructure for this part
 
@@ -95,6 +95,8 @@ q_from_ringdown(times, positions, threshold=0.1) -> float
                        # as built: Q = omega0/gamma, omega0 from omega_d^2 + gamma^2/4; envelope
                        # from RMS per half cycle, crossings hysteretic (see the as-built note)
 q_from_bandwidth(omega, amplitude) -> float    # Q = omega_peak / width between |X|max/sqrt(2) crossings
+q_from_linewidth(omega, amplitude) -> float    # Q = omega_c tau / 2 by fitting the whole lineshape;
+                       # added beyond this section, see 5.3 as-built (4)
 q_from_phase_slope(omega, phase_lag) -> float  # Q = (omega0/2) d(phase_lag)/d(omega) at the pi/2 crossing;
                        # as built, obtained by fitting omega tan(phi - pi/2) vs omega^2, not by differencing
 impulse_response(t, mass, stiffness, damping) -> np.ndarray  # G(t): damped_position(x0=0, v0=1/m), 0 for t<0
@@ -155,18 +157,17 @@ are `addressed` with real distractors in place, verifiable by `check_assessment.
 
 **Gap list (work this plan tracks; no content rewrite needed):**
 
-1. **HE mirror family missing entirely:** `content/he/oscillations/01-sho.md` and
-   `01-sho-problems.md` (parked in `translation-pending.txt`, which must be empty for
-   release), `assessment/quizzes/01-sho.he.yml`, `notebooks/he/labs/01-sho.ipynb`,
-   `notebooks/he/_quiz/01-sho.json`, plus the `en_source_hash` stamp. `check_parity`
-   gates a release until these land; the needed Hebrew terms are already in
-   `glossary/terms.yml`.
+1. ~~**HE mirror family missing entirely**~~ — **closed.** The whole family landed with
+   the milestone-1 Hebrew work: `content/he/oscillations/01-sho.md` and
+   `01-sho-problems.md`, `assessment/quizzes/01-sho.he.yml`,
+   `notebooks/he/labs/01-sho.ipynb`, `notebooks/he/_quiz/01-sho.json`, hashes stamped.
+   `translation-pending.txt` is comments-only and `check_parity` passes.
 2. **Prose drift** (README conflict log): "module 02 makes this literal" and
    "modules 02–03" → `06-coupled` / `07-normal-modes`; "module 20" →
    `51-nonlinear-optics`. Fix when those modules exist so the links can be made real.
+   Still open — none of those three modules is built.
 
-**Validation gates:** standard per-module set; passing for the EN family, release
-blocked on parity until gap 1 closes.
+**Validation gates:** standard per-module set; passing, in both languages.
 
 ### 5.2 `02-damped-driven` — Damping, resonance, and the quality factor
 
@@ -317,7 +318,7 @@ blocked on parity until gap 1 closes.
   numerically differentiating measured phase put a 17% scatter on $Q$. All three are
   documented in the function docstrings and pinned by tests.
 
-### 5.3 `05-impulse-response` — Impulse response: the oscillator as a linear system
+### 5.3 `05-impulse-response` — Impulse response: the oscillator as a linear system (as built)
 
 - **Identity and scope:** notebook 1.4, expanded (§8). Green function $G(t)$, arbitrary
   forcing as convolution, $\hat{G}$ as the complex frequency response, causality, the
@@ -490,10 +491,86 @@ blocked on parity until gap 1 closes.
 - **Validation gates:** standard set with `--module 05-impulse-response`; the
   $\hat{G} \leftrightarrow \hat{H}$ identity test (§4 *limits*) must land with this
   module — part-11's plan will cite it as the LTI-bridge guarantee.
-- **Open questions for the author:** whether the Green-function *name* leads or trails
-  (recommend physics first, name in advanced); deconvolution teaser in advanced or
-  deferred wholly to 53 (recommend one falling-apart demo, no theory); RLC toggle on
-  the live sandbox vs a static figure.
+- **Open questions, as resolved when built.** All three took this section's own
+  recommendation. The Green-function *name* trails: the physics is derived in *derive* and
+  the word appears first in *advanced*, alongside $\mathcal{L}G = \delta$ and the discarded
+  advanced solution. Deconvolution is one falling-apart demonstration in *advanced* and the
+  laboratory's last cell, with no theory — the numbers do the arguing, since naive spectral
+  division recovers a unit force as $1.0$ at zero noise and as $122$ at one part in a
+  hundred. The RLC is a static relabelling in prose rather than a live sandbox toggle; the
+  interactive budget went to the kick sandbox instead, which is the module's actual subject.
+- **As-built deviations from this section.** Six, each forced by the numbers or the
+  repository rather than by taste, each pinned by a test.
+
+  (1) **`impulse_response` and `step_response` delegate to `damped_position`** instead of
+  writing out the underdamped closed forms above. Those forms divide by $\omega_d$, which is
+  zero at critical damping; delegating covers all three regimes with one expression and
+  reproduces the textbook formula *exactly* — `0.00e+00`, not "to within tolerance" — where
+  the textbook formula exists. `G` is `damped_position(x0=0, v0=1/m)` and the step response
+  is $(F_0/k)\,[1 - \texttt{damped\_position}(x_0{=}1, v_0{=}0)]$. Causality is applied to
+  the *argument*, not the answer: `damped_position` grows as $e^{+\gamma|t|/2}$ run
+  backwards, so the negative half is clipped before the exponential is evaluated, following
+  `fourier.exp_decay`'s pattern. A record starting at $t = -10^4$ is ordinary and must not
+  overflow.
+
+  (2) **`convolution_response` gives the force's first sample half weight**, and this is not
+  a refinement. The FFT product is a rectangle-rule quadrature whose leading error term,
+  $-(\Delta t/2)\,G(t)\,F(0)$, is first order and plainly visible: 4.4e-3 against the closed
+  form at $\Delta t = 0.02$, falling only to 5.6e-4 as the step is quartered. The
+  trapezoidal endpoint correction cancels it and restores the $O(\Delta t^2)$ this section's
+  convergence gate demands — 5.99e-5 to 9.37e-7 over the same refinement. The upper endpoint
+  needs no matching correction because $G(0) = 0$. The record is also padded past twice its
+  length first, since `fourier.convolve` is circular and a wrapped tail reads as an
+  oscillator that moved before it was pushed.
+
+  (3) **The $\hat{G} \leftrightarrow \hat{H}$ identity has two error sources, and the record
+  beats the grid.** This section asked for the test; what it could not know is the tolerance.
+  The identity is `spectrum(impulse_response)` $=$ `conj(steady_state_response)` — conjugate,
+  since the forward kernel carries $+\ii\gamma\omega$ where the phasor carries
+  $-\ii\gamma\omega$ — and it holds only on $\omega \ge 0$, because `steady_state_response`
+  raises on negative frequencies, which is right for a sweep and simply not the question.
+  Refining the grid cannot fix a ringdown that has not finished ringing: at $Q = 20$ with
+  $\Delta t$ held fixed, the error tracks the surviving tail almost exactly — 2.9e-4 at 8.2
+  amplitude e-foldings, 6.8e-6 at 16.4 — and then stops falling, pinned at the 6.7e-6 the
+  grid alone supports. Asserting 1e-10 would have been part 0's `spectrum(rect_pulse)`
+  mistake a second time. Both branches are now tested.
+
+  (4) **A fourth library function was added beyond §4: `q_from_linewidth`.** §5.3 tells the
+  laboratory to *fit* `fourier.lorentzian_spectrum` rather than take half-power crossings,
+  and the no-physics-in-notebooks invariant then requires that fit to live in the library.
+  It takes the same arguments as `q_from_bandwidth`, so the notebook swaps one call for the
+  other and the trap disappears. Two things §5.3 did not anticipate: `lorentzian_spectrum` is
+  centred on zero — the transform of a decay, a low-pass curve, not a resonance — so the
+  fitted model needs an explicit offset $\omega_c$, and $Q = \omega_c\tau/2$ comes from that
+  offset rather than from the largest bin. And the band is a real choice, because the true
+  response is only asymptotically Lorentzian: fitted over $\wnat \pm 2\gamma$ it reads 0.26%
+  low at $Q = 20$, over $\pm 10\gamma$ 0.97% low. The precedent for exceeding §4 is part 0
+  adding `simulate_forced`; recorded in the README ownership table.
+
+  (5) **The trap is real but softer than §5.3's prose implies, and it was worth measuring.**
+  The arithmetic is right — $n/\pi$ bins across the full width for a record of $n$ amplitude
+  e-foldings, independent of $Q$ — but the failure is graceful rather than catastrophic. At a
+  true $Q = 20$ and three e-foldings (1.9 bins) `q_from_bandwidth` reads 16.3 against the
+  fit's 19.0; at five e-foldings, 18.7 against 19.8. An 18% error, not an order of magnitude.
+  That is still disqualifying for a module whose punchline is two estimators agreeing, and it
+  is now a negative-control test in the spirit of the aliasing and biased-seed tests: the
+  crossing route is asserted to be *more* than 15% wrong where the fit is under 6%.
+
+  (6) **TOC placement had no precedent.** Module 05 lives in `oscillations/` but consumes the
+  transform, so it cannot sit with 01 and 02 without rendering before its own prerequisites.
+  It gets its own sidebar group, "Linear response" / "תגובה ליניארית", after "Fourier
+  methods" — which splits Part I across two sidebar groups exactly as §8's just-in-time
+  resequencing already splits Part 0.
+
+  One near-miss worth recording for whoever writes module 06. **A YAML syntax error in a
+  page's frontmatter fails silently and disables the gates.** `check_modelspec` reported
+  "OK — no findings" on a first draft of the page whose `objectives` block would not parse,
+  because unparseable frontmatter yields no `module:` key and a page without `module:` is
+  exempt from the label, objective and epistemic checks entirely. The cause was an ASCII
+  objective containing "response: nothing" — a colon-space inside an unquoted plain scalar.
+  `check_assessment` caught it, by complaining that the problem set referenced objective ids
+  that did not exist. If a page passes `check_modelspec` suspiciously early, confirm its
+  frontmatter actually parses before believing it.
 
 ## 6. Part-level assessment and capstone hooks
 
