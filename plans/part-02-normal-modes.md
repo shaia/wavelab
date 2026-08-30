@@ -1,6 +1,6 @@
 # Part 2 — Coupled Oscillators and Normal Modes — Implementation Plan
 
-> **Master plan:** §9 (Part II). **Modules:** `06-coupled`, `07-normal-modes`. **Status:** planned.
+> **Master plan:** §9 (Part II). **Modules:** `06-coupled`, `07-normal-modes`. **Status:** partial — `06-coupled` built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -66,7 +66,7 @@ modern physics.
 
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
-| `06-coupled` | `content/en/normal-modes/06-coupled.md` | Coupled oscillators: the sympathy of pendulums | 2.1 | French, coupled oscillators; Georgi, coupled oscillations; MIT 8.03 coupled-oscillator lectures | planned |
+| `06-coupled` | `content/en/normal-modes/06-coupled.md` | Coupled oscillators: the sympathy of pendulums | 2.1 | French, coupled oscillators; Georgi, coupled oscillations; MIT 8.03 coupled-oscillator lectures | **built** |
 | `07-normal-modes` | `content/en/normal-modes/07-normal-modes.md` | Normal modes: the right basis, the N-mass chain, and the road to the continuum | 2.2 + 2.3 | Georgi, normal modes and the infinite chain; French, N coupled oscillators; MIT 8.03 | planned |
 
 ## 4. Shared infrastructure for this part
@@ -145,7 +145,7 @@ dispersion, and continuum vocabulary (07).
 
 ## 5. Module specifications
 
-### 5.1 `06-coupled` — Coupled oscillators: the sympathy of pendulums
+### 5.1 `06-coupled` — Coupled oscillators: the sympathy of pendulums (as built)
 
 - **Identity and scope:** master-plan notebook 2.1. Two coupled oscillators only; the general
   eigenvalue treatment, $N > 2$, and the continuum are deferred to `07-normal-modes`.
@@ -275,10 +275,67 @@ dispersion, and continuum vocabulary (07).
   $\le 2^{12}$; animations $\le 200$ frames. Trivial in Pyodide.
 - **Validation gates:** standard set (README) with `--module 06-coupled`; the
   conservation/limits/scaling test entries of §4 land with this module.
-- **Open questions for the author:** open with Huygens or the bare demo (Huygens for advanced?);
-  mode meter in the content page's explore section or lab-only; pendulums vs mass-spring pairs
-  as primary image (recommendation: pendulums for puzzle and media, mass-spring for the
-  derivation, equivalence stated once).
+- **Open questions, as resolved when built.** Huygens opens the puzzle as a historical hook and
+  the honest correction — that his clocks locked permanently, which no conservative linear
+  system can do — closes *advanced*, so the anecdote earns its place twice without misleading
+  in between. The mode meter is lab-only; the content page gets the site-versus-mode split
+  screen as an animation instead, which says the same thing without an interactive budget. And
+  the recommendation on imagery was taken: pendulums for the puzzle and the media, mass-and-
+  spring for the derivation, with the equivalence stated once in the model specification.
+- **As-built deviations from this section.** Six, each forced by the numbers or the repository
+  rather than by taste, each pinned by a test.
+
+  (1) **`normal_mode_solve` uses NumPy, not SciPy.** §4 specifies the Cholesky route without
+  naming a library; `numpy.linalg.cholesky` and `numpy.linalg.eigh` match `scipy.linalg` to
+  8.6e-14 at $N = 100$ and 8.9e-15 with unequal masses, with $M$-orthonormality to 1.6e-15.
+  Choosing NumPy keeps the package docstring's "plain vectorized NumPy" promise and removes any
+  question about `scipy.linalg` in the Pyodide kernel the laboratories run on. The reduced
+  matrix is symmetrised explicitly before the eigensolve, so rounding cannot make it asymmetric.
+
+  (2) **Mode-shape signs have to be fixed, and §4 does not say so.** `eigh` returns eigenvectors
+  up to sign, and for the identical pair it hands back $(-1,-1)$ and $(-1,1)$. Without a
+  convention the limits test comparing against $(1,\pm1)$ fails on sign alone, and the media
+  would draw the symmetric mode upside down. Each column is now normalised so its
+  largest-magnitude entry is positive, which reproduces exactly the shapes this section writes.
+
+  (3) **A near-zero eigenvalue does not give a zero frequency.** Eigenvalues are clipped at zero
+  before the square root — without the clip a free chain's translation mode, whose eigenvalue
+  lands within rounding of zero on either side, produces a nan. With it the frequency comes back
+  near $8\times10^{-8}$ rather than $0$, because a square root turns an eigenvalue's absolute
+  error into a much larger relative one. §5.2's free-chain test must use a tolerance, never
+  equality; the docstring says so.
+
+  (4) **The conservation test is scoped to the pair, not the chain.** §7 assigns "the
+  conservation/limits/scaling tests of §4" to this module, but §4 writes the conservation entry
+  against the $N = 20$ chain, which needs `chain_matrices` — a 07 function. The pair version
+  lands here and the chain version waits. That is fortunate as well as necessary: §4's
+  `<1e-6` tolerance is reachable for the pair (9.6e-7 at $\Delta t = T_{\text{fast}}/3200$) and
+  **not** for the chain, where the bounded symplectic error sits near 1.6e-3 at any step size a
+  test suite can afford. 07 will need an honest tolerance and a bounded-not-secular check
+  rather than a small number.
+
+  (5) **The falsifier is a weak-coupling claim, and the 1% figure needs its condition.** §5.1
+  says site 1's energy falls below 1% of the total. Measured: 0.06% at $k_c/k = 0.05$, 0.7% at
+  $0.2$, and **7.4% at $k_c = k$**, where the transfer is genuinely incomplete. The page pins
+  the weak case and states the strong one, and both are asserted in the tests — the second as a
+  negative control, since a module claiming complete transfer at any coupling would be wrong.
+  The same restriction applies to the $T_{\text{ex}} \propto 1/k_c$ law, whose fitted exponent
+  is $-0.991$ over $k_c/k \in [0.005, 0.05]$ and $-0.830$ over $[0.2, 2]$.
+
+  (6) **`site_energies` credits the undisplaced mass at $t = 0$.** Splitting each spring's
+  energy half and half between its ends is the only convention under which the site energies sum
+  to the true total, so it is a contract rather than a preference — but it has a visible
+  consequence this section did not anticipate. Released with mass 1 displaced, mass 2 already
+  holds 2.4% of the energy before anything has moved, because the coupling spring is stretched
+  and belongs to both. The page and the laboratory both say so rather than rounding it away.
+
+  One finding worth carrying into 07, from the laboratory's measurement step. **The two routes
+  to the splitting are not equally good, and the reason is worth more than the number.** Reading
+  two spectral peaks is good to 0.2% at 10% detector noise and barely degrades at 30%; timing
+  the exchange minimum is 25% high with a 25% spread at 10% noise and collapses beyond it. The
+  spectrum averages the whole record, while timing a minimum asks the data its weakest possible
+  question — where is the signal smallest — and noise is proportionally largest exactly there.
+  It is the same lesson as module 05's `q_from_bandwidth` trap in a new setting.
 
 ### 5.2 `07-normal-modes` — Normal modes: the right basis, the N-mass chain, and the road to the continuum
 
