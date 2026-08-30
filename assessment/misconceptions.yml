@@ -47,6 +47,14 @@ misconceptions:
     statement: "A linear system's displacement follows the shape of the force applied to it."
     assigned_module: 05-impulse-response
     status: addressed
+  - id: energy-stays-in-excited-pendulum
+    statement: "If you start one pendulum of a coupled pair, the energy stays mostly in that pendulum."
+    assigned_module: 06-coupled
+    status: addressed
+  - id: modes-exchange-energy
+    statement: "Normal modes trade energy with one another the way the coupled masses do."
+    assigned_module: 07-normal-modes
+    status: pending
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
     assigned_module: 08-wave-equation

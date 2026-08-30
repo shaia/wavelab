@@ -40,6 +40,12 @@ project:
       children:
         - file: oscillations/05-impulse-response.md
         - file: oscillations/05-impulse-response-problems.md
+    # Part II opens here — the first system with more than one moving part, and the last one
+    # small enough to solve by hand. Module 07 joins this group when it lands.
+    - title: אופני תנודה
+      children:
+        - file: normal-modes/06-coupled.md
+        - file: normal-modes/06-coupled-problems.md
 site:
   template: book-theme
   options:

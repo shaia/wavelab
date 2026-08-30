@@ -1,0 +1,82 @@
+[
+  {
+    "question": "Two identical pendulums hang from a shared support, weakly coupled. You start one swinging and leave the other still, then watch for several minutes. There is no friction. What happens to the energy?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It travels completely to the second pendulum, then completely back, over and over.",
+        "correct": true,
+        "feedback": "Right. Starting one pendulum excites both normal modes equally, and they run at slightly different frequencies, so they drift out of step and back into step. When they are out of step the motion has moved entirely to the other pendulum. At weak coupling the first pendulum's energy falls below 0.1% of the total before returning."
+      },
+      {
+        "answer": "Most of it stays in the first pendulum, with a small amount leaking back and forth.",
+        "correct": false,
+        "feedback": "This is the intuition to give up. Nothing limits the transfer: the two mode amplitudes are equal, so the beat between them goes all the way to zero for one pendulum and all the way to full for the other. Simulate it and watch the energy bars — the first pendulum stops completely, without any friction to stop it."
+      },
+      {
+        "answer": "It settles into an even split, with both pendulums swinging at half amplitude for ever.",
+        "correct": false,
+        "feedback": "An even split would need something to dissipate the difference and hold the state there, and the model is perfectly conservative. The motion is periodic: it passes through the even split twice per exchange period and keeps going."
+      },
+      {
+        "answer": "The first pendulum gradually stops and stays stopped, its energy lost to the support.",
+        "correct": false,
+        "feedback": "It does stop — that part is right and is the surprise. But nothing is lost: there is no damping term anywhere in the model, and the total energy is constant throughout. Wait one more half exchange period and the first pendulum is swinging as widely as when you released it."
+      }
+    ]
+  },
+  {
+    "question": "A coupled pair has normal-mode angular frequencies omega_s = 4.000 rad/s and omega_a = 4.195 rad/s. How long does it take, in seconds, for the energy to pass from one oscillator to the other and return?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          31.200000000000003,
+          33.2
+        ],
+        "correct": true,
+        "feedback": "T_ex = 2 pi / (omega_a - omega_s) = 2 pi / 0.195 = 32.2 s. Only the splitting matters; the mode frequencies themselves cancel out entirely, which is why timing a slow exchange is a way to measure a frequency difference far too small to resolve on a spectrum. Full transfer happens at half this, about 16 s."
+      }
+    ]
+  },
+  {
+    "question": "For two identical coupled oscillators, how many ways are there to start them from rest so that no energy is ever exchanged between them, and what are those starts?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Two — displace both equally in the same direction, or displace both equally in opposite directions.",
+        "correct": true,
+        "feedback": "Right, and the count is not a coincidence: two masses give two normal modes. In the first the coupling spring never changes length, so the pair swings at the uncoupled frequency omega0. In the second it is worked hardest, so the frequency is higher, sqrt((k + 2 k_c)/m). Every other start is a mixture of these two, and mixtures slosh."
+      },
+      {
+        "answer": "One — displace both equally in the same direction, so the coupling spring does nothing.",
+        "correct": false,
+        "feedback": "That is one of them, and it is the easier one to guess. But the opposite start — equal displacements in opposite directions — also oscillates at a single frequency and never trades. It is the mode in which the coupling spring works hardest, which is why its frequency is the higher of the two."
+      },
+      {
+        "answer": "Infinitely many — any start with x1 = x2 in some fixed ratio will do.",
+        "correct": false,
+        "feedback": "Only two ratios work, +1 and -1. Try any other in simulation and the energy sloshes. The reason is that the determinant condition has exactly two roots, and each root fixes its shape completely."
+      },
+      {
+        "answer": "None — any start at all will eventually exchange energy, given enough time.",
+        "correct": false,
+        "feedback": "The two special starts genuinely never exchange, for ever. That is what makes them worth a name, and finding them is the point of the module: they are the motions in which the coupled system behaves like a single simple oscillator."
+      }
+    ]
+  },
+  {
+    "question": "Two identical oscillators with natural frequency omega0 = 10.0 rad/s are weakly coupled with k_c/k = 0.040. Using the weak-coupling estimate, what is the mode splitting omega_a - omega_s, in rad/s?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          0.36000000000000004,
+          0.44
+        ],
+        "correct": true,
+        "feedback": "Delta omega approx omega0 k_c / k = 10.0 * 0.040 = 0.40 rad/s. The exact value is slightly smaller, 0.398, because sqrt(1 + 2 k_c/k) is a little below 1 + k_c/k; at k_c/k = 0.04 that is a 0.5% correction. The exchange time is 2 pi / 0.40 = 16 s, about 25 oscillation periods, so the pair swings many clean times while its amplitude drifts — the signature of weak coupling."
+      }
+    ]
+  }
+]

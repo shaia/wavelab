@@ -341,3 +341,22 @@ terms:
   - key: frequency-response
     en: frequency response
     he: תגובת תדר
+  # Coupling and modal vocabulary, deposited by module 06 (plans/part-02-normal-modes.md
+  # section 5.1). The eigen-vocabulary — eigenvalue, eigenvector, mode shape, dispersion
+  # relation — belongs to module 07 and is deposited there.
+  - key: coupled-oscillators
+    en: coupled oscillators
+    he: מתנדים מצומדים
+  # `normal-mode` already exists above and is cited rather than re-deposited — a duplicate key
+  # is a hard error. Note that part-02 section 5.1 proposed אופן תנודה עצמי where the existing
+  # entry has אופן נורמלי; the entry is left as deposited, and the translator should settle
+  # which reading the course uses before Part II is released.
+  - key: normal-coordinates
+    en: normal coordinates
+    he: קואורדינטות נורמליות
+  - key: coupling-strength
+    en: coupling strength
+    he: חוזק צימוד
+  - key: mode-splitting
+    en: mode splitting
+    he: פיצול אופנים
