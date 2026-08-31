@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, oscillators
+from wavelab import coupled, fourier, oscillators
 from wavelab.units import C_LIGHT_Q, EPS_0_Q, MU_0_Q, Quantity
 
 pytestmark = pytest.mark.dimensional
@@ -129,6 +129,60 @@ def test_intensity_formula_is_a_power_per_area():
     assert intensity.check("[power] / [area]")
 
 
+def test_a_stiffness_matrix_is_a_matrix_of_stiffnesses():
+    """Every entry of K is in newtons per metre, on and off the diagonal alike.
+
+    Worth stating because the off-diagonal entries do not look like spring constants — they
+    are negative, and they belong to no single mass. They are still stiffnesses: K x is a
+    vector of forces, so every entry must turn a displacement into one. The diagonal is the
+    total stiffness felt by a mass, which for an interior mass of a chain is 2 k_s and not
+    k_s, and that factor of two is the difference between a correct chain and a chain whose
+    every frequency is 30% low.
+    """
+    spring = Quantity(8.0, "N/m")
+    displacement = Quantity(0.01, "m")
+    assert (2.0 * spring * displacement).check("[force]")
+    assert (spring * displacement**2).check("[energy]")
+
+    _, stiffness_matrix = coupled.chain_matrices(4, 0.5, 8.0)
+    assert np.allclose(np.diag(stiffness_matrix), 2.0 * 8.0)
+    assert np.allclose(np.diag(stiffness_matrix, 1), -8.0)
+
+
+def test_the_dispersion_relation_maps_an_inverse_length_to_an_inverse_time():
+    """omega(k): a wavenumber in rad/m goes in, an angular frequency in rad/s comes out.
+
+    The argument of the sine is k a / 2, which must be dimensionless or the formula is
+    meaningless — that is the constraint that makes the spacing `a` appear at all, and it is
+    why a dispersion relation cannot be written for a chain without saying how far apart the
+    masses are. The prefactor 2 sqrt(k_s/m) is separately an inverse time, so the whole thing
+    is one too, and the small-k slope a sqrt(k_s/m) comes out as a velocity.
+    """
+    spring = Quantity(8.0, "N/m")
+    mass = Quantity(0.5, "kg")
+    spacing = Quantity(0.02, "m")
+    wavenumber = Quantity(30.0, "1/m")
+
+    assert (wavenumber * spacing).check("[]")
+    assert (2.0 * (spring / mass) ** 0.5).check("1/[time]")
+    assert (spacing * (spring / mass) ** 0.5).check("[velocity]")
+
+    # And the cutoff wavenumber pi/a is an inverse length, so the band edge is a real place.
+    assert (np.pi / spacing).check("1/[length]")
+
+
+def test_the_exchange_time_is_a_time():
+    """T_ex = 2 pi / |Delta omega| inverts a frequency difference, so it had better be seconds.
+
+    Trivial as arithmetic and not as physics: it says the exchange period is set by a
+    *difference* of frequencies and by nothing else, so two oscillators near 1 Hz and two near
+    1 GHz trade energy at the same rate if their splittings match.
+    """
+    splitting = Quantity(0.2, "rad/s")
+    assert (2.0 * np.pi / splitting).check("[time]")
+    assert isinstance(coupled.exchange_time(4.0, 4.2), float)
+
+
 def test_library_returns_plain_floats():
     """The course promise: numerical code works in plain SI floats, units live in tests."""
     omega0 = oscillators.natural_frequency(0.5, 8.0)
@@ -154,6 +208,13 @@ def test_library_returns_plain_floats():
     duration, bandwidth = fourier.rms_widths(fourier.gaussian_pulse(times, 0.3), 0.01)
     assert isinstance(duration, float) and isinstance(bandwidth, float)
     assert fourier.spectrum(fourier.gaussian_pulse(times, 0.3), 0.01)[1].dtype == np.complex128
+    assert coupled.chain_mode_frequencies(5, 0.5, 8.0).dtype == np.float64
+    assert coupled.chain_mode_shapes(5).dtype == np.float64
+    assert coupled.chain_dispersion(np.linspace(0.0, 3.0, 11), 0.02, 0.5, 8.0).dtype == np.float64
+    assert coupled.chain_continuum_frequencies(5, 0.5, 8.0).dtype == np.float64
+    chain_modes = coupled.normal_mode_solve(*coupled.chain_matrices(5, 0.5, 8.0))
+    assert coupled.evolve(chain_modes, np.ones(5), np.zeros(5), 0.3).shape == (5,)
+    assert coupled.evolve(chain_modes, np.ones(5), np.zeros(5), np.zeros(7)).shape == (7, 5)
 
 
 def test_the_spectrum_axis_is_an_angular_frequency():

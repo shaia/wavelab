@@ -223,6 +223,59 @@ def test_the_mode_splitting_estimate_holds_only_while_the_coupling_is_weak():
     assert errors[0.02] < errors[0.1] < errors[0.5]
 
 
+def test_chains_of_every_size_collapse_onto_one_dispersion_curve():
+    """omega(k) = 2 sqrt(k_s/m) |sin(k a / 2)| — the course's first dispersion relation.
+
+    Five masses, twenty, a hundred: three different systems with three different spectra, and
+    every one of their modes lands on the same curve to 1.1e-16. That collapse is what makes
+    the relation worth naming. It is not a fit to a chain of some particular length; it is a
+    property of the medium, and the length only decides which points on it are allowed.
+
+    Two features are then checked because the module's quiz asks about both. At small ka the
+    curve is straight, with slope c = a sqrt(k_s/m) — the wave speed, and the reason long
+    waves on a chain behave like waves on a string. At k = pi/a it flattens onto
+    2 sqrt(k_s/m), a hard ceiling: neighbouring masses in exact antiphase is the fastest
+    arrangement a chain of springs has, and adding masses does not raise it.
+
+    The slope is read from the lowest mode alone rather than fitted over a range. The curve
+    bends downwards, so a straight-line fit over ka < 0.5 comes out 1.0% low and would be
+    measuring the curvature as much as the slope. Even the lowest mode only approaches the
+    slope as the chain lengthens, by (k_1 a)^2/24 = (pi/(N+1))^2/24 — 1.1% at N = 5 and
+    4.0e-5 at N = 100 — and that shortfall is asserted rather than tolerated, because it is
+    the same expansion the continuum limit runs on.
+    """
+    length = 1.0
+    for n in (5, 20, 100):
+        spacing = length / (n + 1)
+        wavenumbers = np.arange(1, n + 1) * np.pi / length
+        frequencies = coupled.chain_mode_frequencies(n, MASS, STIFFNESS)
+        curve = coupled.chain_dispersion(wavenumbers, spacing, MASS, STIFFNESS)
+
+        assert np.allclose(frequencies, curve, atol=1e-12)
+
+        speed = spacing * np.sqrt(STIFFNESS / MASS)
+        measured = frequencies[0] / wavenumbers[0]
+        shortfall = (speed - measured) / speed
+        assert np.isclose(shortfall, (np.pi / (n + 1)) ** 2 / 24.0, rtol=0.02)
+
+    # The ceiling: the band edge value, approached from below and never passed.
+    ceiling = 2.0 * np.sqrt(STIFFNESS / MASS)
+    assert np.isclose(coupled.chain_dispersion(np.pi, 1.0, MASS, STIFFNESS), ceiling, rtol=1e-12)
+    for n in (5, 20, 100, 1000):
+        assert coupled.chain_mode_frequencies(n, MASS, STIFFNESS)[-1] < ceiling
+
+    # Beyond the band edge the formula repeats rather than continuing to climb: k and
+    # k + 2 pi/a displace the masses identically, so a chain cannot tell them apart.
+    spacing = 0.05
+    k = np.linspace(0.0, np.pi / spacing, 41)
+    aliased = k + 2.0 * np.pi / spacing
+    assert np.allclose(
+        coupled.chain_dispersion(k, spacing, MASS, STIFFNESS),
+        coupled.chain_dispersion(aliased, spacing, MASS, STIFFNESS),
+        atol=1e-12,
+    )
+
+
 # The bandwidth theorem's scaling content: squeezing a signal in time stretches its spectrum
 # by exactly the reciprocal factor, so their product is a scale-invariant number with a floor.
 FOURIER_SAMPLES = 4096

@@ -464,6 +464,120 @@ def test_starting_one_pendulum_empties_it_completely():
     assert fraction.min() > 0.05  # strong coupling leaves a real remainder behind
 
 
+def test_the_fixed_chain_reproduces_its_closed_form_at_every_size():
+    """omega_p = 2 sqrt(k_s/m) sin(p pi / (2(N+1))), and shapes that are sampled sine waves.
+
+    The whole of module 07 rests on a formula nobody solves a determinant for. It is verified
+    instead, against the same general eigensolver that handled module 06's pair, at sizes from
+    one mass to a hundred — agreement at 3.5e-15 relative, which is the eigensolver's own
+    precision and not a physics tolerance.
+
+    The single fixed mass is included because it catches a builder error nothing else would.
+    One mass between two walls has *two* springs on it, so it oscillates at sqrt(2 k_s/m), not
+    sqrt(k_s/m); a chain assembled by writing 2 k_s down the diagonal and forgetting why gets
+    every other size right and this one wrong.
+
+    Shapes are compared up to sign. Eigenvectors are only defined up to one, the solver's
+    convention (largest entry positive) and the closed form's (the sine's own) genuinely
+    disagree for some modes, and a mode drawn upside down is the same motion.
+    """
+    for n in (1, 2, 3, 5, 20, 100):
+        matrices = coupled.chain_matrices(n, MASS, STIFFNESS)
+        modes = coupled.normal_mode_solve(*matrices)
+        closed_form = coupled.chain_mode_frequencies(n, MASS, STIFFNESS)
+
+        assert np.allclose(modes.frequencies, closed_form, rtol=1e-12)
+        assert np.allclose(
+            np.abs(modes.shapes),
+            np.abs(coupled.chain_mode_shapes(n)) / np.sqrt(MASS),
+            atol=1e-12,
+        )
+
+    single = coupled.normal_mode_solve(*coupled.chain_matrices(1, MASS, STIFFNESS))
+    assert np.isclose(single.frequencies[0], np.sqrt(2.0 * STIFFNESS / MASS), rtol=1e-12)
+
+    # And the top of the band saturates: a hundred masses are no faster than five.
+    top = [
+        coupled.chain_mode_frequencies(n, MASS, STIFFNESS)[-1] for n in (5, 20, 100)
+    ]
+    assert np.all(np.diff(top) > 0.0)
+    assert np.all(np.array(top) < 2.0 * np.sqrt(STIFFNESS / MASS))
+
+
+def test_a_free_chain_has_one_zero_mode_and_it_is_a_rigid_translation():
+    """Momentum conservation, arriving as an eigenvalue rather than as a theorem.
+
+    Take the walls away and the chain can drift bodily without stretching any spring, so one
+    motion costs no energy at all. Its shape is uniform — every mass moving together — and its
+    frequency is zero.
+
+    The frequency is tested against a tolerance and never against equality. The eigenvalue
+    lands within rounding of zero on either side and `normal_mode_solve` clips it before the
+    square root, so what comes back is somewhere below 1e-7 rather than at 0 — a square root
+    turns an eigenvalue's absolute error into a much larger relative one. Measured here: 8.5e-8
+    at N = 5 and exactly 0.0 at N = 20, which is precisely why equality is the wrong test.
+    """
+    for n in (5, 20):
+        matrices = coupled.chain_matrices(n, MASS, STIFFNESS, boundary="free")
+        modes = coupled.normal_mode_solve(*matrices)
+
+        assert modes.frequencies[0] < 1e-6 * modes.frequencies[-1]
+
+        uniform = np.full(n, 1.0 / np.sqrt(n * MASS))
+        assert np.allclose(np.abs(modes.shapes[:, 0]), uniform, atol=1e-12)
+
+        # Exactly one zero mode, and the rest are the free chain's own closed form —
+        # cos-shaped rather than sin-shaped, so N in the denominator where the fixed chain
+        # has N + 1, and the count runs p = 0 .. N-1 with p = 0 being the drift itself.
+        # The drift itself is excluded from the comparison rather than compared against zero,
+        # for the reason above: 8.5e-8 is not close to 0.0 in any relative sense.
+        p = np.arange(1, n)
+        free_form = 2.0 * np.sqrt(STIFFNESS / MASS) * np.sin(p * np.pi / (2.0 * n))
+        assert np.allclose(modes.frequencies[1:], free_form, rtol=1e-12)
+
+    # A ring has the same zero mode, and pairs above it: rotational symmetry means a wave
+    # running one way round and the same wave running the other way must cost the same.
+    ring = coupled.normal_mode_solve(*coupled.chain_matrices(6, MASS, STIFFNESS, "periodic"))
+    assert ring.frequencies[0] < 1e-6 * ring.frequencies[-1]
+    assert np.isclose(ring.frequencies[1], ring.frequencies[2], rtol=1e-12)
+    assert np.isclose(ring.frequencies[3], ring.frequencies[4], rtol=1e-12)
+
+
+def test_evolving_the_modes_reproduces_the_integrated_motion():
+    """Two routes to the same trajectory: solve once and sum, or step ten thousand times.
+
+    `evolve` assembles the motion from the eigensolution and never integrates; the trajectory
+    it is compared against is the reverse. They agree to 6.5e-6 of the amplitude over three
+    slow periods of a twelve-mass chain, which is the integrator's error and not `evolve`'s —
+    `evolve` has none to accumulate.
+
+    The starting state is random rather than a mode, because starting on a mode would test
+    only the one term that is easy. A random state spreads itself over every mode, so the
+    projection, the twelve independent evolutions and the resummation all have to be right.
+    """
+    n = 12
+    matrices = coupled.chain_matrices(n, MASS, STIFFNESS)
+    modes = coupled.normal_mode_solve(*matrices)
+    generator = np.random.default_rng(7)
+    x0 = generator.normal(0.0, 0.02, n)
+    v0 = generator.normal(0.0, 0.05, n)
+
+    # Round trip at t = 0: projecting a state onto the modes and rebuilding it loses nothing.
+    assert np.max(np.abs(coupled.evolve(modes, x0, v0, 0.0) - x0)) < 1e-14
+
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 400.0
+    run = coupled.simulate_coupled(*matrices, x0, v0, dt, 4000)
+    exact = coupled.evolve(modes, x0, v0, run.times)
+    assert np.max(np.abs(exact - run.positions)) < 1e-4 * np.max(np.abs(run.positions))
+
+    # A free chain's zero mode drifts instead of oscillating: the centre of mass travels at
+    # constant speed for ever, and nothing internal happens at all.
+    free = coupled.normal_mode_solve(*coupled.chain_matrices(6, MASS, STIFFNESS, "free"))
+    drifting = coupled.evolve(free, np.zeros(6), np.full(6, 0.3), np.linspace(0.0, 5.0, 51))
+    assert np.isclose(drifting[-1].mean(), 0.3 * 5.0, rtol=1e-12)
+    assert np.ptp(drifting[-1]) < 1e-12
+
+
 def test_the_exchange_is_the_beat_between_the_two_mode_frequencies():
     """The sloshing is module 00's beat, carrying energy between two visible objects.
 
