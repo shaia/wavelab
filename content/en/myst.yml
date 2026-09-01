@@ -41,12 +41,15 @@ project:
       children:
         - file: oscillations/05-impulse-response.md
         - file: oscillations/05-impulse-response-problems.md
-    # Part II opens here — the first system with more than one moving part, and the last one
-    # small enough to solve by hand. Module 07 joins this group when it lands.
+    # Part II — the first system with more than one moving part, and the last one small enough
+    # to solve by hand. It ends at the point where the chain becomes a string, which is where
+    # Part III will open.
     - title: Normal modes
       children:
         - file: normal-modes/06-coupled.md
         - file: normal-modes/06-coupled-problems.md
+        - file: normal-modes/07-normal-modes.md
+        - file: normal-modes/07-normal-modes-problems.md
 site:
   template: book-theme
   options:

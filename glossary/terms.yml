@@ -360,3 +360,37 @@ terms:
   - key: mode-splitting
     en: mode splitting
     he: פיצול אופנים
+  # Eigen-, dispersion and continuum vocabulary, deposited by module 07
+  # (plans/part-02-normal-modes.md section 5.2). `dispersion` already exists above and is a
+  # different key from `dispersion-relation` — the phenomenon against the function that
+  # describes it; module 13 cites this one and deposits the other. `normal-mode` and
+  # `mode-splitting` likewise already exist and are cited, not re-deposited: a duplicate key
+  # is a hard error.
+  - key: eigenvalue
+    en: eigenvalue
+    he: ערך עצמי
+  - key: eigenvector
+    en: eigenvector
+    he: וקטור עצמי
+  - key: mode-shape
+    en: mode shape
+    he: צורת אופן
+  - key: dispersion-relation
+    en: dispersion relation
+    he: יחס נפיצה
+    he_reject: [יחס דיספרסיה]
+  - key: continuum-limit
+    en: continuum limit
+    he: גבול הרצף
+  - key: cutoff-frequency
+    en: cutoff frequency
+    he: תדר קטעון
+  # The translator should weigh תדר חיתוך, which is common in Hebrew signal-processing usage,
+  # against תדר קטעון, which is the physics reading and the one used for a waveguide cutoff in
+  # module 46. Neither is rejected until that decision is made.
+  - key: degeneracy
+    en: degeneracy
+    he: ניוון
+  - key: band-edge
+    en: band edge
+    he: קצה הסרט

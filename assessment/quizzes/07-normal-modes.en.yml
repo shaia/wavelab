@@ -1,0 +1,213 @@
+module: 07-normal-modes
+questions:
+  - id: Q-07-1
+    type: multiple-choice
+    objectives: [OBJ-07-3]
+    prompt: >-
+      A chain of 12 equal masses is held between two fixed walls by 13 identical springs. How
+      many distinct normal-mode frequencies does it have?
+    choices:
+      - text: Twelve — one per mass.
+        correct: true
+        feedback: >-
+          Right, and the count is forced rather than observed. Each mass has one degree of
+          freedom, the modes form a basis for all possible motions, and a basis for a
+          12-dimensional space has 12 members. The closed form says the same thing: p runs
+          from 1 to N, and p = N + 1 gives sin(pi j) = 0 at every mass, which is no motion.
+      - text: Thirteen — one per spring.
+        correct: false
+        feedback: >-
+          The springs set the stiffness, not the number of modes. What can move is the masses,
+          and a system with 12 things that can move has 12 independent ways of moving. Add a
+          spring without adding a mass — stiffen the walls, say — and the frequencies change
+          while the count does not.
+      - text: Infinitely many, since the chain can be started in infinitely many ways.
+        correct: false
+        feedback: >-
+          Infinitely many starts, yes — and every one of them is a sum of the same 12 modes.
+          That is exactly what makes the modes worth finding: an infinite set of motions
+          described by 12 numbers and 12 frequencies.
+      - text: Six — the modes come in equal-frequency pairs.
+        correct: false
+        feedback: >-
+          Degenerate pairs are real, but they need a symmetry to produce them, and a chain
+          between two walls has none of the right kind. Join the ends into a ring and the modes
+          above the zero mode do pair up, because a wave running one way round the ring costs
+          the same as the same wave running the other way.
+
+  - id: Q-07-2
+    type: numeric
+    objectives: [OBJ-07-3]
+    prompt: >-
+      A fixed-end chain has N = 4 masses of m = 0.5 kg joined by springs of k_s = 8.0 N/m.
+      What is the frequency of its second mode, omega_2, in rad/s?
+    answer: 4.702
+    tolerance: 0.05
+    feedback: >-
+      omega_p = 2 sqrt(k_s/m) sin(p pi / (2(N+1))). Here 2 sqrt(8.0/0.5) = 8.0 rad/s, and
+      p = 2, N = 4 gives sin(2 pi / 10) = sin(36 deg) = 0.5878, so omega_2 = 4.702 rad/s. Two
+      checks worth making: it is below the ceiling 2 sqrt(k_s/m) = 8.0 rad/s, as every mode of
+      every chain must be; and it is less than twice omega_1 = 2.472, because the sine bends
+      below its tangent and the overtones of a short chain are flat compared with a string's.
+
+  - id: Q-07-3
+    type: multiple-choice
+    objectives: [OBJ-07-4]
+    prompt: >-
+      The dispersion relation of a chain is omega(k) = 2 sqrt(k_s/m) |sin(k a / 2)|, where a is
+      the spacing. Which statement about it is correct?
+    choices:
+      - text: >-
+          The curve is straight near k = 0 with slope a sqrt(k_s/m), and flattens at the band
+          edge k = pi/a, so no vibration of the chain exceeds 2 sqrt(k_s/m).
+        correct: true
+        feedback: >-
+          Both halves right. Straight near the origin means every long wave travels at the same
+          speed, so a pulse built from them keeps its shape — that is the regime in which the
+          chain behaves like a string. Flat at the band edge means neighbouring masses are in
+          exact antiphase, which is the most violent motion a chain of springs has, and there
+          is nothing faster to be had.
+      - text: >-
+          The top frequency grows without bound as masses are added, since a longer chain has
+          more modes packed into it.
+        correct: false
+        feedback: >-
+          Adding masses adds modes, but it adds them *underneath* the ceiling, packing the same
+          arch more densely. The sine cannot exceed one, so 2 sqrt(k_s/m) bounds every chain of
+          every length. Raising the ceiling needs stiffer springs or lighter masses — a
+          different medium, not more of the same one.
+      - text: >-
+          The relation depends on the number of masses, so a 5-chain and a 100-chain have
+          different dispersion curves.
+        correct: false
+        feedback: >-
+          They have the same curve to a part in 10^16, which is the reason it is worth naming.
+          A dispersion relation is a property of the medium; the length of a particular chain
+          decides only which points of the curve are allowed, k_p = p pi / L.
+      - text: >-
+          Beyond the band edge the frequency keeps climbing, so short enough waves oscillate
+          arbitrarily fast.
+        correct: false
+        feedback: >-
+          There is nothing beyond the band edge to climb into. Wavenumbers k and k + 2 pi/a
+          displace the masses identically, so the chain cannot tell them apart and the formula
+          repeats. This is aliasing: a row of discrete samplers cannot distinguish a short wave
+          from a long one.
+
+  - id: Q-07-4
+    type: multiple-choice
+    objectives: [OBJ-07-6]
+    misconception: modes-exchange-energy
+    prompt: >-
+      A chain of 20 masses is plucked into a triangle and released, with no damping anywhere in
+      the model. You compute the energy in each normal mode and watch it for hundreds of
+      oscillation periods. What do the modal energies do?
+    choices:
+      - text: Each one stays exactly constant, while the energy of each individual mass varies continuously.
+        correct: true
+        feedback: >-
+          Right, and this is the definition of a normal mode doing its job. Each modal
+          coordinate obeys its own independent oscillator equation with no reference to any
+          other, so its energy has nothing to exchange with. Measured on an integrator that has
+          never heard of a mode, the twenty modal energies hold to 2.5e-4 of their own values —
+          and that residual is the integrator's, falling fourfold when the step is halved.
+      - text: They slowly equalize as the chain rings, until all twenty modes hold the same energy.
+        correct: false
+        feedback: >-
+          This is the intuition to give up, and module 06 is what plants it. Two pendulums
+          really did trade their energy completely — but between *sites*, between the two
+          objects you could see. Between modes, nothing was traded then either: the symmetric
+          and antisymmetric modes each held their energy the whole time. Equalization would
+          need a coupling between modes, and in a linear system there is none. Add a nonlinear
+          spring and the story changes, which is the FPUT experiment.
+      - text: They oscillate in antiphase, exactly as the two pendulums of module 06 did.
+        correct: false
+        feedback: >-
+          The antiphase pulsing in module 06 was the two *masses'* energies, not the two modes'.
+          Read that same trajectory in the mode picture and you get two flat lines. It is worth
+          re-running: one motion, two pictures, and only one of them has anything moving in it.
+      - text: They all decay together, since a plucked chain eventually comes to rest.
+        correct: false
+        feedback: >-
+          A real string does come to rest, and this model has no mechanism for it — no damping
+          term appears anywhere in M x'' + K x = 0. The total energy is conserved to the
+          integrator's precision throughout. Decay is a separate physical effect that module 02
+          adds deliberately, and adding it carelessly to a coupled system destroys the modal
+          independence as well.
+
+  - id: Q-07-5
+    type: numeric
+    objectives: [OBJ-07-5]
+    prompt: >-
+      The lowest mode of a chain of N = 10 masses sits 0.34% below the string frequency it
+      approaches. Holding the total length fixed, roughly what is that relative error at
+      N = 100, as a percentage?
+    answer: 0.0040
+    tolerance: 0.0012
+    feedback: >-
+      The error falls as 1/(N+1)^2, so ten times the masses is about a hundred times less
+      error: 0.34% becomes about 0.0034%. Being exact about it, the ratio is (11/101)^2 = 1/84,
+      giving 0.0040% — and the measured value is 0.0040%. Either estimate is fine; what
+      matters is recognising a second-order law and not a linear one. The same expansion also
+      carries a p^2, so mode 16 of that same 100-chain is 250 times worse than mode 1, and the
+      topmost mode never converges at all.
+
+  - id: Q-07-6
+    type: short-answer
+    objectives: [OBJ-07-1]
+    prompt: >-
+      A student hands you the mass and stiffness matrices M and K of some coupled system and
+      asks how to find its normal modes. Write down the problem to be solved, say what the two
+      parts of the answer mean physically, and explain why the solver used is the one for
+      symmetric matrices rather than a general-purpose eigenvalue routine.
+    discussion: >-
+      The problem is the generalized eigenvalue problem K a = omega^2 M a. It comes from
+      assuming a motion in which everything oscillates at one frequency with a fixed pattern of
+      relative amplitudes, x = a cos(omega t): two derivatives bring down -omega^2, the cosine
+      divides out, and what is left is that equation.
+
+      The eigenvalues are squared frequencies and the eigenvectors are mode shapes. So an
+      eigenvalue of 16 s^-2 means a mode at 4 rad/s, and its eigenvector (1, 0, -1) means a
+      motion in which the first and third masses move oppositely and the second does not move
+      at all. The shape carries only ratios; the overall scale is the amplitude, which is set
+      by how hard the system was started and not by the matrices.
+
+      As for the routine: M is positive definite, so it factors as M = L L^T (Cholesky), and
+      substituting a = L^-T b turns the problem into (L^-1 K L^-T) b = omega^2 b. That matrix
+      is symmetric, because K is. A symmetric eigenproblem is guaranteed to have real
+      eigenvalues and orthogonal eigenvectors, which is exactly what the physics requires —
+      real frequencies, and modes that do not interfere with one another. A general routine
+      would return complex numbers with tiny imaginary parts and leave you to decide whether
+      they mean anything, and it would not deliver orthogonality at all.
+
+      Two details worth stating. Orthogonality is with respect to M, not the ordinary dot
+      product: a_p^T M a_q = delta_pq, and the projection that extracts modal coordinates
+      carries M with it for the same reason. And a zero eigenvalue is not an error — a free or
+      floating system has one, and it is momentum conservation showing up as a mode that drifts
+      instead of oscillating.
+
+  - id: Q-07-7
+    type: numeric
+    objectives: [OBJ-07-2]
+    prompt: >-
+      Two identical masses m are coupled so that their normal modes are the familiar
+      (1, 1)/sqrt(2) at omega_s = 4.0 rad/s and (1, -1)/sqrt(2) at omega_a = 5.0 rad/s. The
+      pair is released from rest with x1 = 0.10 m and x2 = 0. What is x1, in metres, at
+      t = 1.0 s?
+    answer: -0.0185
+    tolerance: 0.002
+    feedback: >-
+      Project, evolve, resum — the three steps, on the smallest system that needs them.
+
+      Project: the start (0.10, 0) has q_s = a_s . x = 0.10/sqrt(2) and q_a = 0.10/sqrt(2),
+      equal amounts of both modes, with both released from rest so every qdot is zero.
+
+      Evolve: each modal coordinate is an independent oscillator, so
+      q_s(t) = (0.10/sqrt2) cos(4t) and q_a(t) = (0.10/sqrt2) cos(5t).
+
+      Resum: x1 = [q_s + q_a]/sqrt(2) = 0.05 [cos(4t) + cos(5t)]. At t = 1.0 s, in radians,
+      cos(4.0) = -0.6536 and cos(5.0) = 0.2837, so x1 = 0.05 * (-0.3700) = -0.0185 m.
+
+      The first mass has swung past zero and is now on the far side, which is the beginning of
+      the energy handover module 06 timed. Nothing here is special to two masses: the same
+      three steps run unchanged for twenty, which is the whole point of the machinery.
