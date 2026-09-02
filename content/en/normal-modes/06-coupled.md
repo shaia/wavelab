@@ -310,8 +310,8 @@ symplectic, so its error oscillates instead of accumulating.
 ## Transfer the idea
 
 - **More of everything.** Two masses gave two modes. Twenty give twenty, and the counting is
-  not a coincidence; module `07-normal-modes` does the general case and then lets the number of
-  masses run away to infinity, which is where waves come from.
+  not a coincidence; [module 07](07-normal-modes.md) does the general case and then lets the
+  number of masses run away to infinity, which is where waves come from.
 - **Two coupled LC circuits.** Two identical resonant circuits sharing a capacitor obey these
   matrices with the module-05 dictionary applied twice. Energy sloshes between the circuits at
   a rate set by the splitting, and the design of band-pass filters is the art of choosing it.

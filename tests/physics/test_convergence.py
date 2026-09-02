@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, oscillators
+from wavelab import coupled, fourier, oscillators
 from wavelab.validation import convergence_study, scaling_exponent
 
 pytestmark = pytest.mark.convergence
@@ -197,6 +197,69 @@ def test_the_lti_bridge_is_limited_by_the_record_before_it_is_limited_by_the_ste
     # grid is now what is left.
     assert errors[2**15] < errors[2**14] / 10.0
     assert errors[2**16] == pytest.approx(errors[2**15], rel=0.05)
+
+
+# A chain of masses becoming a string. This is the only convergence in the file that is not
+# about an integrator: the refinement is physical — more masses, closer together — and what
+# converges is the model rather than the arithmetic. Refinement is counted in springs, N + 1,
+# because that is the mesh: N + 1 springs span the length L = (N + 1) a, and fitting against N
+# instead reports 1.95 where the mathematics says 2.
+CHAIN_SIZES = [10, 20, 40, 80, 160]
+
+
+def _continuum_ratio(springs: int, mode: int) -> float:
+    """Mode `mode` of a chain with `springs` springs, over the string frequency it tends to."""
+    n = springs - 1
+    return float(
+        coupled.chain_mode_frequencies(n, MASS, STIFFNESS)[mode - 1]
+        / coupled.chain_continuum_frequencies(n, MASS, STIFFNESS)[mode - 1]
+    )
+
+
+def test_the_chains_low_modes_converge_on_the_string_at_second_order():
+    """omega_p -> p pi c / L, with the error falling as 1/N^2 — the module's headline number.
+
+    The continuum limit is a claim about a model, so the honest way to state it is with a
+    rate. Expanding sin x = x - x^3/6 in the closed form predicts a relative error of
+    (p pi)^2 / (24 (N+1)^2): second order, and the measurement returns 2.000, 1.999, 1.997 for
+    the first three modes. The prediction is not merely of the right order — it is right to
+    three figures in the errors themselves, 3.40e-3 against 3.40e-3 at N = 10.
+
+    Independence of the physical constants is worth noting: the *relative* error is
+    sin(x)/x - 1 with x = p pi / (2(N+1)), so it carries no mass and no stiffness at all. A
+    chain of any material converges at the same rate.
+    """
+    for mode in (1, 2, 3):
+        study = convergence_study(
+            lambda springs, p=mode: _continuum_ratio(springs, p),
+            [n + 1 for n in CHAIN_SIZES],
+            1.0,
+        )
+        assert abs(study.observed_order - 2.0) < 0.05
+
+        predicted = (mode * np.pi) ** 2 / (24.0 * study.refinements**2)
+        assert np.allclose(study.errors, predicted, rtol=0.02)
+
+
+def test_the_continuum_error_grows_as_the_square_of_the_mode_number():
+    """Which is why "N masses represent a string" has an upper edge, not just a rate.
+
+    The same expansion that gives the 1/N^2 also gives a p^2, so the accuracy runs out from
+    the top of the band downwards. At N = 100 mode 1 is right to 4.0e-5 and mode 16 to 1.0e-2,
+    a factor of 256 for a factor of 16 in p — fitted exponent 1.999. The band edge never
+    converges at all: mode 100 of a 100-chain sits 36% below the string frequency it is
+    supposed to be approaching, however large N grows, because there the chain's discreteness
+    is the whole story.
+    """
+    n = 100
+    chain = coupled.chain_mode_frequencies(n, MASS, STIFFNESS)
+    string = coupled.chain_continuum_frequencies(n, MASS, STIFFNESS)
+    modes = np.array([1, 2, 4, 8, 16])
+    errors = np.abs(chain[modes - 1] - string[modes - 1]) / string[modes - 1]
+
+    assert abs(scaling_exponent(modes, errors) - 2.0) < 0.05
+    assert errors[0] < 1e-4
+    assert abs(chain[-1] - string[-1]) / string[-1] > 0.3
 
 
 # Fourier series convergence. Orders are odd so a waveform built from odd harmonics always

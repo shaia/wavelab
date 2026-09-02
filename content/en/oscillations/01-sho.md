@@ -306,6 +306,7 @@ subject of nonlinear optics (module 51) live in those discarded terms.
 
 **Two conserved pictures.** The energy ellipse of this module is the $N = 1$ case of a deep
 pattern: phase-space orbits of conservative systems foliate into nested invariant curves.
-When modules 06–07 couple many oscillators, the ellipse becomes a torus and the normal-mode
+When [modules 06](../normal-modes/06-coupled.md)–[07](../normal-modes/07-normal-modes.md)
+couple many oscillators, the ellipse becomes a torus and the normal-mode
 transformation is the change of coordinates that untangles it — the classical shadow of what
 quantum mechanics will call diagonalising the Hamiltonian.

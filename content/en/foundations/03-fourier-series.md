@@ -166,7 +166,7 @@ The language is worth pausing on. "Multiply and average" is an inner product; th
 an orthonormal *basis*; $c_n$ is the component of $f$ along the $n$th basis direction. The
 picture is the familiar one of resolving a vector into perpendicular components, with functions
 in place of arrows and an integral in place of a dot product. You will meet the same move again
-in module `07-normal-modes` and again in quantum mechanics.
+in [module 07](../normal-modes/07-normal-modes.md) and again in quantum mechanics.
 
 :::{admonition} The spectrum
 :class: definition

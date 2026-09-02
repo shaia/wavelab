@@ -54,7 +54,7 @@ misconceptions:
   - id: modes-exchange-energy
     statement: "Normal modes trade energy with one another the way the coupled masses do."
     assigned_module: 07-normal-modes
-    status: pending
+    status: addressed
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
     assigned_module: 08-wave-equation

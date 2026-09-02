@@ -37,6 +37,15 @@ from dataclasses import dataclass
 
 import numpy as np
 
+# A frequency below this fraction of the fastest one is a zero mode rather than a slow
+# oscillation, and has to be evolved as `q0 + qdot0 t` instead of as a cosine. Free and
+# periodic chains have genuine zero modes — the whole system translating, costing nothing —
+# and `normal_mode_solve` hands them back near 1e-8 rather than at 0, because a square root
+# turns an eigenvalue's rounding error into a much larger relative one. The slowest *real*
+# mode of an N-mass chain sits near pi/N of the fastest, so any threshold between those two
+# does; 1e-6 is far from both.
+ZERO_MODE_RELATIVE_TOLERANCE = 1e-6
+
 
 @dataclass(frozen=True)
 class CoupledTrajectory:
@@ -100,6 +109,63 @@ def two_mass_matrices(
         ]
     )
     return mass_matrix, stiffness_matrix
+
+
+def chain_matrices(
+    n: int, mass: float, stiffness: float, boundary: str = "fixed"
+) -> tuple[np.ndarray, np.ndarray]:
+    """Mass and stiffness matrices of `n` equal masses in a row on identical springs.
+
+    This is the two-mass system with the "two" taken out. Every mass is pulled back towards
+    its neighbours and nothing else, so `K` is tridiagonal: a mass can only feel what it is
+    tied to, and the width of the band is the range of the interaction. That single fact —
+    each row of `K` reading `-k, 2k, -k` — is what turns into a second derivative when the
+    masses are packed close enough together, and with it into the wave equation.
+
+    `boundary` chooses what happens at the ends, and the choice changes the physics rather
+    than merely tidying an edge case:
+
+    - `"fixed"` puts a wall beyond each end mass, so there are `n + 1` springs holding `n`
+      masses. Every mode costs energy, and the spectrum is the closed form
+      `chain_mode_frequencies` gives.
+    - `"free"` removes those two walls, leaving `n - 1` springs. The chain can now drift
+      bodily without stretching anything, which is a genuine zero-frequency mode — momentum
+      conservation showing up as an eigenvalue.
+    - `"periodic"` joins the last mass back to the first, making a ring of `n` masses and `n`
+      springs. It also has the translation zero mode, and its other modes come in
+      equal-frequency pairs, because a ring has no preferred direction to travel round.
+
+    The single fixed mass is the smallest useful case: two walls, two springs, and a
+    frequency of `sqrt(2 k_s / m)` rather than `sqrt(k_s / m)`, because both springs resist.
+    """
+    if n < 1:
+        raise ValueError("a chain needs at least one mass")
+    if mass <= 0:
+        raise ValueError("mass must be positive")
+    if stiffness <= 0:
+        raise ValueError("stiffness must be positive")
+    if boundary not in ("fixed", "free", "periodic"):
+        raise ValueError(f"boundary must be 'fixed', 'free' or 'periodic', not {boundary!r}")
+    if boundary != "fixed" and n < 2:
+        raise ValueError(f"a {boundary} chain needs at least two masses")
+
+    stiffness_matrix = np.zeros((n, n))
+    neighbours = np.arange(n - 1)
+    stiffness_matrix[neighbours, neighbours + 1] = -stiffness
+    stiffness_matrix[neighbours + 1, neighbours] = -stiffness
+    if boundary == "periodic":
+        stiffness_matrix[0, -1] -= stiffness
+        stiffness_matrix[-1, 0] -= stiffness
+
+    # Each diagonal entry is the total stiffness felt by that mass, which is the sum of the
+    # springs attached to it. Reading it off the off-diagonals means the two end conventions
+    # need no separate arithmetic: a wall is simply a bond whose other end never moves.
+    stiffness_matrix[np.diag_indices(n)] = -stiffness_matrix.sum(axis=1)
+    if boundary == "fixed":
+        stiffness_matrix[0, 0] += stiffness
+        stiffness_matrix[-1, -1] += stiffness
+
+    return mass * np.eye(n), stiffness_matrix
 
 
 def normal_mode_solve(mass_matrix: np.ndarray, stiffness_matrix: np.ndarray) -> Modes:
@@ -166,14 +232,60 @@ def mode_coordinates(
     the projection carries the mass matrix with it: q = shapes^T M x. Physically, this is the
     question "how much of each independent motion is present?", and the answer is what turns a
     tangle of coupled coordinates into a list of separate oscillators.
+
+    `x0` and `v0` may be single state vectors or whole trajectories of shape (n_samples, N),
+    exactly as `site_energies` accepts; the result carries the same leading shape. Watching
+    the modal coordinates along a trajectory is how a page shows that they do not move.
     """
     shapes = modes.shapes
     weighted = shapes.T @ modes.mass_matrix
-    positions = np.asarray(x0, dtype=float)
-    velocities = np.asarray(v0, dtype=float)
-    if positions.shape != (shapes.shape[0],) or velocities.shape != positions.shape:
-        raise ValueError("x0 and v0 must be vectors matching the number of masses")
-    return weighted @ positions, weighted @ velocities
+    single = np.ndim(x0) == 1
+    positions = np.atleast_2d(np.asarray(x0, dtype=float))
+    velocities = np.atleast_2d(np.asarray(v0, dtype=float))
+    if positions.shape != velocities.shape:
+        raise ValueError("x0 and v0 must have the same shape")
+    if positions.ndim != 2 or positions.shape[-1] != shapes.shape[0]:
+        raise ValueError("x0 and v0 must be state vectors matching the number of masses")
+    q = positions @ weighted.T
+    qdot = velocities @ weighted.T
+    return (q[0], qdot[0]) if single else (q, qdot)
+
+
+def evolve(modes: Modes, x0: np.ndarray, v0: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """The exact motion at time(s) `t`, assembled mode by mode rather than stepped.
+
+    Project the starting state onto the modes, let each modal coordinate run as the
+    independent module-01 oscillator it is, and add the results back up:
+
+        x_j(t) = sum_p a_p(j) [ q_p(0) cos(omega_p t) + (qdot_p(0) / omega_p) sin(omega_p t) ].
+
+    Nothing here is an approximation and nothing accumulates: the state at t = 10^6 seconds
+    costs exactly what the state at t = 1 costs, and is exactly as accurate. That is the
+    practical dividend of the whole change of basis, and the reason a hundred-mass chain can
+    be animated without integrating anything. `simulate_coupled` remains the honest check —
+    it steps the coupled equations and has never heard of a mode — and the two agreeing to
+    integrator tolerance is what licenses this shortcut.
+
+    A zero mode has no frequency to oscillate at and drifts instead: `q_p(0) + qdot_p(0) t`,
+    the free chain sliding along at constant speed. Taking the cosine formula's limit would
+    divide by zero; this branch is that limit taken by hand.
+
+    `t` may be a scalar or an array; the result is a state vector or an array of shape
+    (len(t), N) to match.
+    """
+    q0, qdot0 = mode_coordinates(modes, x0, v0)
+    times = np.atleast_1d(np.asarray(t, dtype=float))
+    omega = modes.frequencies
+
+    fastest = float(np.max(omega)) if omega.size else 0.0
+    moving = omega > ZERO_MODE_RELATIVE_TOLERANCE * fastest
+    q = np.empty((times.size, omega.size))
+    phase = np.outer(times, omega[moving])
+    q[:, moving] = q0[moving] * np.cos(phase) + (qdot0[moving] / omega[moving]) * np.sin(phase)
+    q[:, ~moving] = q0[~moving] + np.outer(times, qdot0[~moving])
+
+    positions = q @ modes.shapes.T
+    return positions[0] if np.ndim(t) == 0 else positions
 
 
 def modal_energies(modes: Modes, x0: np.ndarray, v0: np.ndarray) -> np.ndarray:
@@ -186,6 +298,10 @@ def modal_energies(modes: Modes, x0: np.ndarray, v0: np.ndarray) -> np.ndarray:
 
     A zero mode contributes only its kinetic term, which is correct: a freely translating
     system stores no potential energy in doing so.
+
+    Like `site_energies`, this accepts single state vectors or whole trajectories of shape
+    (n_samples, N) and returns the matching leading shape — which is what lets a page put the
+    two pictures side by side over the same run: bars that slosh, and bars that do not.
     """
     q, qdot = mode_coordinates(modes, x0, v0)
     return 0.5 * (qdot**2 + modes.frequencies**2 * q**2)
@@ -304,3 +420,110 @@ def simulate_coupled(
     return CoupledTrajectory(
         times=np.arange(n_steps + 1) * dt, positions=positions, velocities=velocities
     )
+
+
+def chain_mode_frequencies(n: int, mass: float, stiffness: float) -> np.ndarray:
+    """The `n` mode frequencies of a fixed-end chain in closed form [rad/s], ascending.
+
+        omega_p = 2 sqrt(k_s / m) sin( p pi / (2(N + 1)) ),   p = 1 .. N.
+
+    This is the reference the numerical solver is held against, and it says three things at
+    once. There are exactly `n` of them, one per mass, so the mode count is the degree-of-
+    freedom count and not a coincidence. They are bounded: the sine cannot exceed one, so no
+    chain of any length oscillates faster than `2 sqrt(k_s/m)`, which is the arrangement with
+    every mass in antiphase with both its neighbours — there is nothing faster available.
+    And the low ones are nearly evenly spaced, `omega_p ~ p`, which is what a plucked string
+    sounding one note with harmonic overtones requires.
+    """
+    if n < 1:
+        raise ValueError("a chain needs at least one mass")
+    if mass <= 0 or stiffness <= 0:
+        raise ValueError("mass and stiffness must be positive")
+    p = np.arange(1, n + 1)
+    return 2.0 * np.sqrt(stiffness / mass) * np.sin(p * np.pi / (2.0 * (n + 1)))
+
+
+def chain_mode_shapes(n: int) -> np.ndarray:
+    """The `n` mode shapes of a fixed-end chain, as orthonormal columns.
+
+        a_p(j) ~ sin( p pi j / (N + 1) ),   j = 1 .. N,
+
+    which is a sine wave sampled at the masses' positions — the standing wave a string will
+    have in the continuum limit, read off at N points. Mode `p` has `p - 1` interior nodes,
+    so the shapes can be sketched before anything is computed: more zero crossings, higher
+    frequency, always in that order.
+
+    Columns are normalised to unit length, which is `M`-orthonormality for unit masses;
+    `normal_mode_solve` on a chain of mass `m` returns these divided by `sqrt(m)`, since its
+    normalisation carries the mass matrix.
+
+    Signs are the sine's own — `a_p(1) = sin(p pi/(N + 1))` is positive for every `p`, so no
+    convention has to be imposed here. `normal_mode_solve` imposes a different one, making the
+    *largest* entry positive, so its columns agree with these up to an overall sign per column
+    and sometimes differ (mode 3 of a 3-chain, for one). That is not a disagreement about
+    physics: a mode shape reversed is the same motion started half a period later, and nothing
+    observable distinguishes them. Compare shapes up to sign, or compare `|a|`.
+
+    The shapes do not depend on the mass or the stiffness at all, only on `n`. Changing
+    either rescales every frequency together and leaves the patterns untouched, because the
+    pattern is fixed by the geometry of the chain and the two ends holding it.
+    """
+    if n < 1:
+        raise ValueError("a chain needs at least one mass")
+    site = np.arange(1, n + 1)
+    mode = np.arange(1, n + 1)
+    return np.sqrt(2.0 / (n + 1)) * np.sin(np.outer(site, mode) * np.pi / (n + 1))
+
+
+def chain_dispersion(
+    wavenumber: np.ndarray, spacing: float, mass: float, stiffness: float
+) -> np.ndarray:
+    """The chain's dispersion relation [rad/s] — the course's first, and the model for the rest.
+
+        omega(k) = 2 sqrt(k_s / m) |sin(k a / 2)|.
+
+    A dispersion relation answers "how fast does a wave of this wavelength oscillate?", and
+    every wave-carrying system in the rest of the course has one. This one has the two
+    features to recognise elsewhere. At long wavelengths, `k a << 1`, the sine is its own
+    argument and `omega = (a sqrt(k_s/m)) k`: strictly proportional, so every long wave
+    travels at the same speed `c = a sqrt(k_s/m)` and a pulse built from them keeps its shape.
+    That regime is where the chain behaves like a string. Approaching `k = pi/a` the curve
+    flattens onto its maximum, neighbouring masses reach exact antiphase, and the chain
+    refuses to carry anything faster — a cutoff imposed by the fact that the medium is made
+    of discrete pieces at all.
+
+    `wavenumber` beyond the band edge is not an error and not new physics: `k` and
+    `k + 2 pi/a` sample the masses at identical displacements, so the formula repeats. There
+    is no way to tell the two waves apart by looking at the chain, which is aliasing arriving
+    a course ahead of schedule.
+    """
+    if spacing <= 0:
+        raise ValueError("spacing must be positive")
+    if mass <= 0 or stiffness <= 0:
+        raise ValueError("mass and stiffness must be positive")
+    k = np.asarray(wavenumber, dtype=float)
+    return 2.0 * np.sqrt(stiffness / mass) * np.abs(np.sin(0.5 * k * spacing))
+
+
+def chain_continuum_frequencies(n: int, mass: float, stiffness: float) -> np.ndarray:
+    """The string frequencies the chain's low modes converge to [rad/s], ascending.
+
+        omega_p^inf = p pi sqrt(k_s / m) / (N + 1) = p pi c / L,
+
+    holding the total length `L = (N + 1) a` fixed while the masses are made smaller and more
+    numerous. These are evenly spaced, `omega_p` exactly proportional to `p`, which is what a
+    musical instrument needs and what the discrete chain only approximately delivers.
+
+    The comparison is the point of the function, so its limits matter. Expanding
+    `sin x = x - x^3/6` in `chain_mode_frequencies` gives a relative error of about
+    `(p pi)^2 / (24 (N + 1)^2)`: second order in `1/N`, and growing as `p^2`. The continuum
+    is therefore reached from the bottom of the band upwards — mode 1 is accurate long before
+    mode 20 is — and the modes near `p = N` never converge at all, however large `N` grows.
+    A string is what a chain looks like to a long wave, not what a chain is.
+    """
+    if n < 1:
+        raise ValueError("a chain needs at least one mass")
+    if mass <= 0 or stiffness <= 0:
+        raise ValueError("mass and stiffness must be positive")
+    p = np.arange(1, n + 1)
+    return p * np.pi * np.sqrt(stiffness / mass) / (n + 1)

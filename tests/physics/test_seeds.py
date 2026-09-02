@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import fourier, measurement, oscillators, phasors
+from wavelab import coupled, fourier, measurement, oscillators, phasors
 from wavelab.validation import scaling_exponent, seed_study
 
 pytestmark = pytest.mark.seed_independence
@@ -192,6 +192,126 @@ def test_seed_study_detects_a_genuinely_biased_measurement():
 
     study = seed_study(biased_measure, n_seeds=8, base_seed=0)
     assert not study.agrees_with(OMEGA0, n_sigma=3.0)
+
+
+# Reading a chain's modes out of one noisy record. CHAIN_* mirror the module's own numbers:
+# five masses between fixed walls, one of them pulled aside and released, and the motion of
+# that same mass watched for five and a half minutes.
+CHAIN_SIZE = 5
+CHAIN_DT = 0.02
+CHAIN_SAMPLES = 8192
+CHAIN_MATRICES = coupled.chain_matrices(CHAIN_SIZE, MASS, STIFFNESS)
+CHAIN_MODES = coupled.normal_mode_solve(*CHAIN_MATRICES)
+CHAIN_EXACT = coupled.chain_mode_frequencies(CHAIN_SIZE, MASS, STIFFNESS)
+# `spectrum` reads a record centred on t = 0, and a chain released from rest moves evenly in
+# time, so evaluating `evolve` on the centred grid gives a genuinely even record with no
+# mirroring trick anywhere.
+CHAIN_TIMES = (np.arange(CHAIN_SAMPLES) - CHAIN_SAMPLES // 2) * CHAIN_DT
+CHAIN_CLEAN = coupled.evolve(
+    CHAIN_MODES, np.array([1.0, 0.0, 0.0, 0.0, 0.0]), np.zeros(CHAIN_SIZE), CHAIN_TIMES
+)[:, 0]
+
+
+def _read_chain_modes(record: np.ndarray) -> np.ndarray:
+    """The five strongest spectral peaks of a record, in ascending frequency.
+
+    Peaks are located to sub-bin precision by the usual three-point vertex, which matters:
+    the bins here are 0.038 rad/s apart and the answers are wanted to a part in a thousand.
+    """
+    omega, transform = fourier.spectrum(record, CHAIN_DT)
+    band = (omega > 0.0) & (omega < 1.3 * CHAIN_EXACT[-1])
+    magnitude, frequencies = np.abs(transform[band]), omega[band]
+    peaks = [
+        i
+        for i in range(1, magnitude.size - 1)
+        if magnitude[i] > magnitude[i - 1] and magnitude[i] > magnitude[i + 1]
+    ]
+    peaks.sort(key=lambda i: magnitude[i], reverse=True)
+    vertex = [
+        frequencies[i]
+        + 0.5
+        * (magnitude[i - 1] - magnitude[i + 1])
+        / (magnitude[i - 1] - 2.0 * magnitude[i] + magnitude[i + 1])
+        * (frequencies[1] - frequencies[0])
+        for i in peaks[:CHAIN_SIZE]
+    ]
+    return np.array(sorted(vertex))
+
+
+def test_a_random_state_decomposes_and_reassembles_whatever_the_seed():
+    """Project onto the modes, evolve each one, add them up — and get the state back exactly.
+
+    Modal decomposition is an identity, not an approximation, and the way to test an identity
+    is to throw arbitrary input at it. Eight seeded random states on a twelve-mass chain round
+    trip to 1e-14, and every one of them then agrees with an independent velocity-Verlet run
+    to the integrator's own accuracy. A projection that dropped the mass matrix, or shapes
+    normalised in the ordinary dot product rather than under M, would pass neither.
+    """
+    n = 12
+    matrices = coupled.chain_matrices(n, MASS, STIFFNESS)
+    modes = coupled.normal_mode_solve(*matrices)
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / 400.0
+
+    def round_trip_error(rng: np.random.Generator) -> float:
+        x0 = rng.normal(0.0, 0.02, n)
+        v0 = rng.normal(0.0, 0.05, n)
+        return float(np.max(np.abs(coupled.evolve(modes, x0, v0, 0.0) - x0)))
+
+    def integration_error(rng: np.random.Generator) -> float:
+        x0 = rng.normal(0.0, 0.02, n)
+        v0 = rng.normal(0.0, 0.05, n)
+        run = coupled.simulate_coupled(*matrices, x0, v0, dt, 2000)
+        exact = coupled.evolve(modes, x0, v0, run.times)
+        return float(np.max(np.abs(exact - run.positions)) / np.max(np.abs(run.positions)))
+
+    assert seed_study(round_trip_error, n_seeds=8, base_seed=4).values.max() < 1e-14
+    assert seed_study(integration_error, n_seeds=8, base_seed=4).values.max() < 5e-4
+
+
+def test_chain_frequencies_read_from_a_noisy_record_are_limited_by_its_length():
+    """All five modes recovered to 0.21% — the same 0.21% at 2% noise and at 30%.
+
+    This is the module's measurement lesson, and it is the opposite of module 06's. There,
+    timing an energy minimum asked the data its weakest question and fell apart as the noise
+    grew. Here the spectrum averages the whole record, so noise moves a peak barely at all:
+    the statistical error grows twentyfold across this range and remains four times smaller
+    than the bias that does not move.
+
+    That bias is the record's, not the noise's. A finite record has a finite resolution, and
+    the three-point vertex that interpolates between bins is exact only for a parabola. Halve
+    the record and the error doubles; double it and the error halves — 1.65% at 20 s, 0.21% at
+    164 s, 0.11% at 328 s. A student who quoted the +/- from the seed scatter alone would be
+    claiming four significant figures on a number good to three, which is the honest reason
+    this test asserts against a total error and checks the scatter separately.
+    """
+    for sigma in (0.02, 0.30):
+        studies = [
+            seed_study(
+                lambda rng, p=mode, s=sigma: float(
+                    _read_chain_modes(measurement.add_noise(CHAIN_CLEAN, s, rng))[p]
+                ),
+                n_seeds=8,
+                base_seed=11,
+            )
+            for mode in range(CHAIN_SIZE)
+        ]
+        measured = np.array([study.mean for study in studies])
+        assert np.max(np.abs(measured - CHAIN_EXACT) / CHAIN_EXACT) < 0.005
+        assert max(study.relative_spread for study in studies) < 0.01
+
+    # The bias is set by the record and shrinks with it, while the noise level does not enter.
+    # Noiseless records, so what is left is only what the finite record costs.
+    biases = []
+    for samples in (2048, 16384):
+        times = (np.arange(samples) - samples // 2) * CHAIN_DT
+        clean = coupled.evolve(
+            CHAIN_MODES, np.array([1.0, 0.0, 0.0, 0.0, 0.0]), np.zeros(CHAIN_SIZE), times
+        )[:, 0]
+        found = _read_chain_modes(clean)
+        biases.append(float(np.max(np.abs(found - CHAIN_EXACT) / CHAIN_EXACT)))
+
+    assert biases[0] < 0.02
+    assert biases[1] < biases[0] / 3.0
 
 
 # Averaging spectra: a single periodogram of noise is a famously bad estimator — its scatter

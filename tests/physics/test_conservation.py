@@ -260,6 +260,76 @@ def test_modal_energies_hold_still_while_site_energies_slosh():
     assert share.max() - share.min() > 0.95
 
 
+# The same statement on a chain, where there are twenty modes rather than two and no pair of
+# them is in any privileged relationship. CHAIN_STIFFNESS is the spring between neighbours;
+# the fastest mode of a fixed chain runs at 2 sqrt(k_s/m) whatever its length.
+CHAIN_SIZE = 20
+CHAIN_STIFFNESS = 8.0
+
+
+def _chain_run(steps_per_fast_period: int, slow_periods: float):
+    """A seeded random start on the N = 20 chain, integrated and read both ways.
+
+    The start is random rather than a pluck on purpose. A plucked shape is symmetric, so
+    every even mode gets exactly zero energy, and "this mode's energy is unchanged" then says
+    nothing about half the spectrum — worse, the relative drift of a mode holding 1e-31 of the
+    total is meaningless and enormous. A random state gives every mode a real share (the
+    smallest here is 0.2% of the total), which is what makes a *per-mode* claim checkable.
+    """
+    matrices = coupled.chain_matrices(CHAIN_SIZE, MASS, CHAIN_STIFFNESS)
+    modes = coupled.normal_mode_solve(*matrices)
+    generator = np.random.default_rng(11)
+    x0 = generator.normal(0.0, 0.02, CHAIN_SIZE)
+    v0 = generator.normal(0.0, 0.05, CHAIN_SIZE)
+
+    dt = (2.0 * np.pi / modes.frequencies[-1]) / steps_per_fast_period
+    slowest = 2.0 * np.pi / modes.frequencies[0]
+    run = coupled.simulate_coupled(*matrices, x0, v0, dt, int(slow_periods * slowest / dt))
+    modal = coupled.modal_energies(modes, run.positions, run.velocities)
+    site = coupled.site_energies(*matrices, run.positions, run.velocities)
+    return modal, site
+
+
+def test_every_mode_of_the_chain_keeps_its_energy_while_the_masses_trade_theirs():
+    """Twenty modes, twenty constants — and twenty masses that share nothing of the kind.
+
+    Module 06 showed this for two oscillators, where "the modes do not exchange" could still
+    be read as a curiosity of a small system. It is not: `simulate_coupled` steps twenty
+    coupled equations with no notion of a mode in it, and every one of the twenty modal
+    energies computed afterwards by projection comes back unchanged.
+
+    The tolerance is the integrator's and is quoted per mode rather than against the total,
+    which is the stricter of the two readings: 2.5e-4 of each mode's own energy at
+    dt = T_fast/200, falling fourfold with the step, against 8.5e-5 of the total. The total's
+    own wobble is 1.6e-4, larger than either, because it is the sum of twenty contributions
+    that do not conspire to cancel. Meanwhile the site energies swing across a third of the
+    total, so the two pictures are being read off one and the same trajectory and disagreeing
+    completely about what is constant.
+    """
+    modal, site = _chain_run(steps_per_fast_period=200, slow_periods=3.0)
+    initial = modal[0]
+
+    assert np.max(np.abs(modal - initial) / initial) < 1e-3
+
+    shares = site / site.sum(axis=1, keepdims=True)
+    assert np.max(np.ptp(shares, axis=0)) > 0.2
+    assert np.ptp(site.sum(axis=1)) / site.sum(axis=1)[0] < 1e-3
+
+
+def test_the_chains_modal_energy_error_is_bounded_rather_than_drifting():
+    """Four times the run, the same bound — the symplectic guarantee at twenty degrees of freedom.
+
+    This is the check that licenses the module's long experiments. A drifting integrator would
+    turn the module's central claim into an artefact that merely takes a while to appear, and
+    the only way to tell the two apart is to run longer and look again.
+    """
+    bounds = [
+        float(np.max(np.abs(modal - modal[0])) / modal[0].sum())
+        for modal, _ in (_chain_run(200, periods) for periods in (2.0, 8.0))
+    ]
+    assert bounds[1] < 1.5 * bounds[0], f"error grows with run length: {bounds}"
+
+
 def test_the_modal_energy_error_is_bounded_rather_than_drifting():
     """Run four times as long and the error must not grow — the symplectic guarantee.
 
