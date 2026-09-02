@@ -1,6 +1,6 @@
 # Part 2 — Coupled Oscillators and Normal Modes — Implementation Plan
 
-> **Master plan:** §9 (Part II). **Modules:** `06-coupled`, `07-normal-modes`. **Status:** partial — `06-coupled` built.
+> **Master plan:** §9 (Part II). **Modules:** `06-coupled`, `07-normal-modes`. **Status:** complete — both built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -67,7 +67,7 @@ modern physics.
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
 | `06-coupled` | `content/en/normal-modes/06-coupled.md` | Coupled oscillators: the sympathy of pendulums | 2.1 | French, coupled oscillators; Georgi, coupled oscillations; MIT 8.03 coupled-oscillator lectures | **built** |
-| `07-normal-modes` | `content/en/normal-modes/07-normal-modes.md` | Normal modes: the right basis, the N-mass chain, and the road to the continuum | 2.2 + 2.3 | Georgi, normal modes and the infinite chain; French, N coupled oscillators; MIT 8.03 | planned |
+| `07-normal-modes` | `content/en/normal-modes/07-normal-modes.md` | Normal modes: the right basis, the N-mass chain, and the road to the continuum | 2.2 + 2.3 | Georgi, normal modes and the infinite chain; French, N coupled oscillators; MIT 8.03 | **built** |
 
 ## 4. Shared infrastructure for this part
 
@@ -504,6 +504,79 @@ dispersion, and continuum vocabulary (07).
   `08-wave-equation` take the limit); notation handshake — stiffness is $k$ in 06 (matching
   `01-sho`) and renamed $k_s$ at the top of 07 when wavenumber $k$ enters, one explicit
   sentence marking the handover.
+- **Open questions, as resolved when built.** All four recommendations were taken. The spectral
+  theorem is stated in a `theorem` box and proved only for $2\times2$ — which is module 06's
+  determinant, so the proof costs a sentence rather than a section — and verified against the
+  chain's closed form to $3.5\times10^{-15}$ at $N = 100$. The ring lives in *advanced*, though
+  `chain_matrices` carries its builder in the core library, because the laboratory's boundary
+  toggle needs it and a student who reaches for `periodic` should find it working. The
+  second-difference → second-derivative step is shown in full and the module stops on it. And
+  the notation handshake is a single `note` admonition at the top of the page, before the
+  puzzle, rather than a remark inside the derivation where it would be missed.
+- **As-built deviations from this section.** Seven, each forced by the numbers or the repository
+  rather than by taste, each pinned by a test.
+
+  (1) **Mode shapes agree with the closed form only up to a sign, and §4 does not say so.**
+  Module 06's deviation (2) fixed `normal_mode_solve` to make each column's largest-magnitude
+  entry positive. `chain_mode_shapes` returns the sine's own sign, positive at $j = 1$. Those
+  are different conventions and they genuinely disagree — modes 2 and 3 of a 3-chain, mode 3 of
+  a 5-chain, modes 4 and 5 of a 6-chain — so every shape comparison in the tests and on the page
+  is made up to sign. This is not a defect to fix: an eigenvector is defined up to sign, and a
+  mode shape reversed is the same motion released half a period later. Worth recording that the
+  solver's rule *ties* on chain shapes such as $(0.707, 0, -0.707)$, where its choice therefore
+  rests on rounding; that was left alone rather than changed underneath a built module, and a
+  sign-agnostic comparison is immune to it either way.
+
+  (2) **`chain_mode_shapes(n)` cannot be $M$-orthonormal, because it is not given $M$.** §4
+  writes the signature with `n` alone and simultaneously asks for $M$-orthonormal columns. With
+  only `n` the best available is orthonormality in the ordinary dot product, which *is*
+  $M$-orthonormality for unit masses; `normal_mode_solve` on a chain of mass $m$ returns these
+  divided by $\sqrt{m}$, and the docstring says so. The normalisation is exact rather than
+  computed: $\sum_j \sin^2(p\pi j/(N+1)) = (N+1)/2$ for every $p$, so the constant is
+  $\sqrt{2/(N+1)}$.
+
+  (3) **The conservation tolerance depends entirely on the excitation, and 06's forecast was
+  pessimistic.** §5.1's deviation (4) predicted the chain's bounded symplectic error would sit
+  near $1.6\times10^{-3}$ "at any step size a test suite can afford". Measured on the $N = 20$
+  chain it is $3.4\times10^{-4}$ of the total at 100 steps per fast period, $8.5\times10^{-5}$
+  at 200 and $2.1\times10^{-5}$ at 400, and identical at 2 and at 8 slow periods — bounded, as
+  promised, and two orders of magnitude better than forecast. The real trap is the one 06 did
+  not anticipate: **normalisation, not step size**. A symmetric pluck is orthogonal to every
+  even mode, so twelve of the twenty hold exactly zero, and asking how far a mode holding
+  $10^{-31}$ of the energy has drifted *relative to itself* returns $\approx 200$. The test
+  therefore starts from a seeded random state, where every mode carries something and the
+  per-mode claim of $2.5\times10^{-4}$ means what it says.
+
+  (4) **The convergence refinement parameter is $N+1$, not $N$.** §5.2 asks for "observed order
+  $\approx 2$ in $N$". Fitted against $N$ the answer is 1.95, which no honest window around a
+  second-order law admits; against $N+1$ it is 2.000, 1.999 and 1.997 for the first three modes.
+  The mesh has $N+1$ cells because $N+1$ springs span the length, so this is a mislabelled axis
+  rather than a tolerance question. The measured errors match $(p\pi)^2/(24(N+1)^2)$ to better
+  than 2%, which pins the coefficient and not merely the order. Problem 6(b) asks the student to
+  make the same argument.
+
+  (5) **The small-$k$ slope is not $a\sqrt{k_s/m}$, and the shortfall is worth asserting.** §4's
+  scaling entry says the slope "equals" it. It falls short by exactly $(\pi/(N+1))^2/24$ — 1.1%
+  at $N = 5$, $4\times10^{-5}$ at $N = 100$ — because the lowest mode already sits a little way
+  up the sine. That is the same $\sin x / x$ expansion the continuum limit runs on, showing up
+  in an unrelated measurement, so the test asserts the shortfall rather than tolerating it.
+
+  (6) **The laboratory's measurement lesson is the opposite of module 06's, and both are kept.**
+  §5.1 carried forward the finding that spectral peak-reading is robust where timing a minimum
+  is not. Reading five mode frequencies out of one noisy record of a single mass is good to
+  0.21% at 2% detector noise and to the *same* 0.21% at 30%: the error is set by the DFT's bin
+  width, which is the record's length, and the noise never becomes the limiting term. The error
+  bar shrinks with more seeds while the error itself does not move — a bias, not a variance, and
+  the one situation where averaging harder is precisely the wrong response. The laboratory's
+  closing question asks what the student would change about the apparatus rather than about the
+  analysis.
+
+  (7) **`mode_coordinates` and `modal_energies` grew trajectory support, which §4 did not ask
+  for.** Both were specified on a single state, as `site_energies` was not. Three call sites —
+  two in the laboratory, one in `render_normal_modes.py` — were about to stack a Python loop
+  over states to put the two energy pictures side by side, which is the single thing this module
+  exists to show. They now accept whole trajectories and carry the leading shape through,
+  exactly as `site_energies` already did.
 
 ## 6. Part-level assessment and capstone hooks
 

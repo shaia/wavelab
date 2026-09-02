@@ -47,7 +47,7 @@ electives start at `50`.
 |---|---|---|
 | 0 Foundations | `foundations/` | `00-phasors` ← 0.1 **(built)** · `03-fourier-series` ← 0.2 **(built)** · `04-fourier-transform` ← 0.3 **(built)** |
 | I Oscillations | `oscillations/` | `01-sho` ← 1.1 **(built)** · `02-damped-driven` ← 1.2 + 1.3 **(built)** · `05-impulse-response` ← 1.4 **(built)** |
-| II Normal modes | `normal-modes/` | `06-coupled` ← 2.1 **(built)** · `07-normal-modes` ← 2.2 + 2.3 |
+| II Normal modes | `normal-modes/` | `06-coupled` ← 2.1 **(built)** · `07-normal-modes` ← 2.2 + 2.3 **(built)** |
 | III Waves | `waves/` | `08-wave-equation` ← 3.1 + 3.2 · `09-wave-energy` ← 3.3 · `10-impedance` ← 3.4 |
 | IV Fourier waves | `fourier-waves/` | `11-standing-waves` ← 4.1 + 4.2 · `12-wave-packets` ← 4.3 · `13-dispersion` ← 4.4 |
 | V EM waves | `em-waves/` | `14-em-waves` ← 5.1 + 5.2 · `15-em-energy` ← 5.3 · `16-light-in-matter` ← 5.4 |
@@ -117,7 +117,7 @@ analytic-limit / convergence / seed checks).
 | New file | Introduced by | Extended by | Serves modules |
 |---|---|---|---|
 | `fourier.py` | part-00 | — | 03, 04 — and every later FFT-using lab **(built)** |
-| `coupled.py` | part-02 | — | 06, 07 — **06's half built**: two-mass builder, integrator, mode solver, projections, site energies, exchange time |
+| `coupled.py` | part-02 | — | 06, 07 — **(built)** both halves: two-mass and chain builders, integrator, mode solver, projections, exact modal evolution, site/modal energies, exchange time, and the four chain closed forms |
 | `waves.py` | part-03 | part-04 | 08–13 |
 | `em.py` | part-05 | — | 14–16 |
 | `interfaces.py` | part-06 | — | 17–19 |
@@ -213,7 +213,7 @@ module in teaching order, all other plans cite):
 |---|---|---|
 | 00 Foundations | written | `00-phasors`, `03-fourier-series`, `04-fourier-transform` — **complete** |
 | 01 Oscillations | written | `01-sho`, `02-damped-driven`, `05-impulse-response` — **complete** |
-| 02 Normal modes | written | `06-coupled` (07 pending) |
+| 02 Normal modes | written | `06-coupled`, `07-normal-modes` — **complete** |
 | 03 Waves | written | — |
 | 04 Fourier waves | written | — |
 | 05 EM waves | written | — |
