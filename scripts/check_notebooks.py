@@ -11,10 +11,18 @@ bootstrap was typed from memory rather than copied installed `wavelab` *with* it
 graph, which sends micropip to PyPI for NumPy and matplotlib, neither of which has a
 WebAssembly wheel.
 
+The opposite mistake shipped in every laboratory before this file looked for it: with the
+dependency graph switched off, nothing asked for SciPy at all. The kernel loads a Pyodide
+package unprompted only when the text of the cell being run imports it. A notebook's own
+`import numpy` is seen; the `import scipy` inside `wavelab.measurement` is not, so
+`from wavelab import ...` died in the browser with "No module named 'scipy'" while nbmake
+stayed green.
+
 The check is on *requirements*, not on bytes. Comparing against `00-phasors.ipynb` verbatim
 would fail on a reformat and would have to be rewritten every time a dependency is added; what
-actually matters is that the pure-Python libraries are installed and that `wavelab` is
-installed without its dependency graph.
+actually matters is that every dependency of `wavelab` is requested by name, the compiled ones
+Pyodide ships and the pure-Python ones it does not, and that `wavelab` itself is installed
+without its dependency graph.
 
 Run standalone (`python scripts/check_notebooks.py`) or import `check()`.
 """
@@ -31,6 +39,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _findings import Finding, report  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# Compiled packages `wavelab` imports. Pyodide ships them but loads one only when the text of
+# the cell being run imports it, and it cannot see imports inside `wavelab`. matplotlib is not
+# listed because `wavelab` never imports it; the notebooks that plot import it themselves.
+REQUIRED_FROM_PYODIDE = ("numpy", "scipy")
 
 # Pure-Python packages Pyodide does not ship. `wavelab` itself is handled separately,
 # because the thing that matters about it is the absence of its dependency graph.
@@ -75,6 +88,19 @@ def check_bootstrap(path: Path, source: str | None) -> list[Finding]:
         ]
 
     findings: list[Finding] = []
+
+    unrequested = [name for name in REQUIRED_FROM_PYODIDE if f'"{name}"' not in source]
+    if unrequested:
+        findings.append(
+            Finding(
+                path,
+                None,
+                "error",
+                f"bootstrap does not request {', '.join(unrequested)} — Pyodide loads a package "
+                "only when the running cell's own text imports it, so the imports inside "
+                f"{PACKAGE} fail in the browser with ModuleNotFoundError",
+            )
+        )
 
     missing = [name for name in REQUIRED_PURE_PYTHON if f'"{name}"' not in source]
     if missing:
