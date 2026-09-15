@@ -750,6 +750,7 @@ CANONICAL_BOOTSTRAP = (
     "except ImportError:\n"
     "    pass\n"
     "else:\n"
+    '    await piplite.install(["numpy", "scipy"])\n'
     '    await piplite.install(["pint", "ipywidgets", "jupyterquiz"])\n'
     '    await piplite.install("wavelab", deps=False)\n'
 )
@@ -793,6 +794,16 @@ class TestCheckNotebooks:
         )
         findings = check_notebooks.check(tmp_path)
         assert has_error(findings, "does not install jupyterquiz")
+
+    def test_fails_when_scipy_is_left_to_the_import_scanner(self, tmp_path):
+        """The shipped defect: no cell names scipy, so Pyodide never loads it for wavelab."""
+        write_notebook(
+            tmp_path / "notebooks" / "en" / "labs" / "04-demo.ipynb",
+            [CANONICAL_BOOTSTRAP.replace('["numpy", "scipy"]', '["numpy"]'), "import numpy"],
+        )
+        findings = check_notebooks.check(tmp_path)
+        assert has_error(findings, "does not request scipy")
+        assert len(findings) == 1
 
     def test_checks_both_languages(self, tmp_path):
         write_notebook(

@@ -71,8 +71,10 @@ Two things make the browser laboratories work once published, and both are easy 
 - Pyodide has no access to this repository, so `scripts/build_site.py` builds the `wavelab`
   wheel into `dist/` and JupyterLite's `PipliteAddon` indexes it into the bundle. The first
   cell of every laboratory notebook installs it — with `deps=False`, because Pyodide supplies
-  its own older builds of NumPy, SciPy and matplotlib. The wheel's `requires-python` upper
-  bound must admit the CPython that Pyodide runs (3.14 today).
+  its own older builds of NumPy, SciPy and matplotlib. Those builds must still be requested by
+  name in that cell: the kernel only loads a Pyodide package that the running cell's own text
+  imports, so SciPy, imported only inside `wavelab`, would otherwise never load. The wheel's
+  `requires-python` upper bound must admit the CPython that Pyodide runs (3.14 today).
 - MyST rewrites the `/lite/…` laboratory links into `<prefix>/<lang>/lite/…`, where no bundle
   exists. The build writes a relative redirect at that address rather than duplicating the
   70 MB bundle per language. `verify_lite` fails the build if a laboratory link, its notebook
