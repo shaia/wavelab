@@ -1,0 +1,216 @@
+module: 08-wave-equation
+questions:
+  - id: Q-08-1
+    type: multiple-choice
+    objectives: [OBJ-08-4]
+    misconception: speed-set-by-source
+    prompt: >-
+      Two pulses are sent along the same stretched rope, one after the other. The second is made
+      by flicking the end twice as hard, so it is twice as tall, and twice as fast, so it is half
+      as wide. How does its speed along the rope compare with the first pulse's?
+    choices:
+      - text: The same. The rope's tension and mass per length set the speed; the flick sets only the shape.
+        correct: true
+        feedback: >-
+          Right. The wave equation mu y_tt = T y_xx contains T and mu and nothing else, so every
+          solution travels at v = sqrt(T/mu) whatever shape it has. Height cannot matter
+          because the equation is linear: a taller pulse is the same motion scaled. Width cannot
+          matter because d'Alembert's solution f(x - vt) moves any f at all, sharp or broad.
+          Measured on the simulated string, nine pulses of three heights and three widths
+          arrive at the same speed to one part in ten million.
+      - text: Faster. The taller, sharper pulse carries more energy and so outruns the first.
+        correct: false
+        feedback: >-
+          It does carry more energy, and that energy arrives sooner only because more of it is
+          sent, not because it travels faster. Energy and speed are separate questions here: the
+          speed is fixed by the medium, and module 09 shows that the energy then rides along at
+          exactly that same speed. Harder flicks change what arrives, never when.
+      - text: Slower. A sharper pulse stretches the rope more, and the extra stretch has to be pulled back.
+        correct: false
+        feedback: >-
+          The extra stretch is real, but it is second order in the slope, and the model that
+          gives v = sqrt(T/mu) has already thrown it away by assuming the slope is small. Within
+          that model the tension is the same everywhere and so is the speed. A pulse steep enough
+          for the stretch to matter is one the ideal string no longer describes.
+      - text: Faster, by a factor of two, since the hand moved twice as fast.
+        correct: false
+        feedback: >-
+          The hand's speed sets how fast each piece of rope moves up and down — the transverse
+          velocity — not how fast the disturbance moves along. The two are independent: a
+          simulated pulse on a 20 m/s string moved its pieces at 1.1 m/s. Speed up the hand and
+          the pieces move faster sideways while the pulse travels at exactly the same 20 m/s.
+
+  - id: Q-08-2
+    type: multiple-choice
+    objectives: [OBJ-08-6]
+    misconception: wave-carries-medium
+    prompt: >-
+      A small speck of dust rests on a long horizontal string. A single hump-shaped pulse travels
+      along the string, passes the speck, and continues on. Where is the speck once the pulse has
+      gone?
+    choices:
+      - text: Exactly where it started. It rose and fell as the pulse passed, and nothing carried it along.
+        correct: true
+        feedback: >-
+          Right. At the speck's position the displacement is y = f(x0 - vt): it follows the
+          shape of the pulse in time, rising and falling, and returns to f = 0 once the pulse
+          has gone. The pulse is a pattern handed from each piece of string to the next, and the
+          pieces stay home. In the simulation the speck rose 10 mm and finished within a
+          millionth of that of zero.
+      - text: A little way along, in the direction the pulse was travelling.
+        correct: false
+        feedback: >-
+          This is the picture to give up: that a wave is stuff moving. The speck is attached to
+          one piece of string, and that piece is pulled up by its neighbour on one side and back
+          down by its neighbour on the other. Nothing in either pull points along the string, and
+          the ideal string has no along-the-string motion at all. What travels is the shape — the
+          same way a stadium wave travels round the stadium while every fan keeps their seat.
+      - text: Raised slightly, since the pulse lifted it and nothing pushed it back down.
+        correct: false
+        feedback: >-
+          Something did push it back down: the back half of the pulse. As the trailing edge
+          passes, the string's slope reverses and its neighbours pull it toward the line. A string
+          left permanently displaced does exist — a strike leaves a plateau — but that needs a
+          starting velocity, and a pulse that simply passes by delivers none net.
+      - text: Carried along with the pulse all the way to the end of the string.
+        correct: false
+        feedback: >-
+          If the pulse carried the string with it, a pulse sent down a rope would pile rope up at
+          the far wall, and the rope would be shorter after every flick. What reaches the wall is
+          a disturbance and its energy. The rope stays where it is.
+
+  - id: Q-08-3
+    type: multiple-choice
+    objectives: [OBJ-08-3]
+    prompt: >-
+      A long taut string is pulled into a triangle 12 mm tall at its middle, held still, and
+      released. Once the motion has had time to separate, what does the string look like?
+    choices:
+      - text: Two triangles, each 6 mm tall, travelling away from each other at the wave speed.
+        correct: true
+        feedback: >-
+          Right. d'Alembert's solution for a shape released from rest is
+          y = [y0(x - vt) + y0(x + vt)]/2: half the shape running right, half running left. At
+          t = 0 the two halves lie on top of each other and add up to the original. It must
+          split, because a string released from rest has no velocity to prefer either direction,
+          and it must split evenly for the same reason.
+      - text: One 12 mm triangle, travelling in one direction at the wave speed.
+        correct: false
+        feedback: >-
+          A single right-moving triangle needs y_t = -v y_x from the very first instant: the
+          front of the triangle already rising, the back already falling. A string held still
+          and let go has y_t = 0 everywhere, so it cannot be a single travelling shape. Starting
+          velocity picks the direction; with none, both directions get half.
+      - text: A 12 mm triangle that stays in the middle and oscillates up and down in place.
+        correct: false
+        feedback: >-
+          That is what a single mass on a spring would do, and it is the right picture for the
+          whole string only when both ends are close enough to reflect the halves straight back —
+          standing waves, module 11. On a long string the two halves simply leave.
+      - text: Two 12 mm triangles, travelling away from each other.
+        correct: false
+        feedback: >-
+          The direction is right and the height is not. Two full-height triangles would contain
+          twice the displacement the string started with, and the equation is linear: at t = 0
+          the two travelling pieces must add up to exactly the original shape, so each is half.
+
+  - id: Q-08-4
+    type: numeric
+    objectives: [OBJ-08-2]
+    prompt: >-
+      A rope 12 m long with a total mass of 0.60 kg is held under a tension of 80 N. How long
+      does a pulse take to travel from one end to the other, in seconds?
+    answer: 0.30
+    tolerance: 0.01
+    feedback: >-
+      The mass per unit length is mu = 0.60 kg / 12 m = 0.050 kg/m, so v = sqrt(T/mu) =
+      sqrt(80 / 0.050) = sqrt(1600) = 40 m/s, and the crossing takes 12 m / 40 m/s = 0.30 s.
+      The total mass enters only through mu: double the rope's length at the same mu and the
+      speed is unchanged while the trip takes twice as long. Check the units as you go —
+      N/(kg/m) is (kg m/s^2)(m/kg) = m^2/s^2, whose square root is a speed.
+
+  - id: Q-08-5
+    type: numeric
+    objectives: [OBJ-08-5]
+    prompt: >-
+      A string with tension 50 N and linear density 5.0 g/m is simulated with the leapfrog scheme
+      on a grid of spacing 2.0 mm. What is the largest time step, in microseconds, for which the
+      scheme is stable?
+    answer: 20.0
+    tolerance: 0.5
+    feedback: >-
+      First the wave speed, in SI units: mu = 5.0 g/m = 0.0050 kg/m, so v = sqrt(50 / 0.0050) =
+      100 m/s. The Courant condition S = v dt / dx <= 1 then gives dt <= dx / v =
+      0.0020 m / 100 m/s = 2.0e-5 s = 20 microseconds. Physically: in one step, nothing may
+      travel further than one grid spacing, because each point is updated only from its
+      immediate neighbours. Run at 1% over this and the shortest wave the grid holds grows by
+      a factor of 1.33 every step, from rounding error, until it swamps everything.
+
+  - id: Q-08-6
+    type: multiple-choice
+    objectives: [OBJ-08-2]
+    prompt: >-
+      Two snapshots of a string taken 0.10 s apart show the same hump, unchanged in shape, whose
+      peak has moved from x = 3.0 m to x = 2.4 m. Which description fits?
+    choices:
+      - text: y = g(x + vt) with v = 6.0 m/s — a left-mover.
+        correct: true
+        feedback: >-
+          Right. The peak moved 0.6 m toward -x in 0.10 s, so the pattern travels at 6.0 m/s in
+          the -x direction. A function of x + vt keeps its value when x decreases as t increases,
+          which is exactly that motion: the peak sits where x + vt is constant. With v positive,
+          the sign inside the argument carries the direction and v carries only the speed.
+      - text: y = f(x - vt) with v = 6.0 m/s — a right-mover.
+        correct: false
+        feedback: >-
+          A function of x - vt keeps its value where x - vt is constant, so its peak moves to
+          larger x as t grows. This peak moved to smaller x. The sign inside the argument is the
+          direction; get it backwards and every reflection problem in module 10 comes out upside
+          down.
+      - text: y = f(x - vt) with v = -6.0 m/s.
+        correct: false
+        feedback: >-
+          Algebraically that is the same function as g(x + vt) with v = 6.0 m/s, so this is not
+          wrong so much as a bookkeeping hazard. The course keeps v = sqrt(T/mu) positive, as a
+          property of the medium, and writes the direction into the argument. A negative
+          "speed" means a quantity that is sometimes a speed and sometimes not.
+      - text: y = g(x + vt) with v = 0.6 m/s.
+        correct: false
+        feedback: >-
+          The direction is right and the speed is off by the time interval. Speed is distance
+          over time: 0.6 m in 0.10 s is 6.0 m/s. A distance of 0.6 m would have taken a whole
+          second at 0.6 m/s.
+
+  - id: Q-08-7
+    type: short-answer
+    objectives: [OBJ-08-1]
+    prompt: >-
+      The wave equation d^2y/dt^2 = v^2 d^2y/dx^2 can be reached from module 07's chain of
+      masses and from Newton's law for a small piece of string. Describe both routes in words,
+      say where they meet, and name the approximation both of them need.
+    discussion: >-
+      The chain route starts from N beads of mass m, spacing a, on a thread under tension T.
+      Each bead is pulled toward its neighbours, and for small slopes the transverse pull of each
+      stretch of thread is T times the height difference over a: a spring of stiffness T/a. That
+      gives module 07's equation m y_n'' = (T/a)(y_{n+1} - 2 y_n + y_{n-1}). Now let the beads
+      crowd together: write y_n = y(na, t) and Taylor-expand the neighbours about x = na. The
+      combination y_{n+1} - 2 y_n + y_{n-1} becomes a^2 times the second derivative in x, so
+      y_tt = (T a/m) y_xx, and with mu = m/a that is y_tt = (T/mu) y_xx. The chain's dispersion
+      relation says the same thing independently: at small ka its slope is a sqrt(k_s/m), which
+      is sqrt(T/mu).
+
+      The string route never mentions beads. Take a piece of string between x and x + dx. The
+      tension pulls along the string at each end, and if the string is tilted differently at
+      the two ends the vertical parts of those pulls do not cancel. For small slopes the sine of
+      the tilt angle is the slope itself, so the net vertical force is T times the change in
+      slope across the piece, T y_xx dx. Newton's law for its mass mu dx gives mu y_tt = T y_xx.
+
+      They meet at the same equation with the same speed, v = sqrt(T/mu). That agreement is the
+      point: the wave equation is not about beads or about strings, but about any medium whose
+      pieces are pulled back toward the line by their neighbours in proportion to how far out of
+      line they are.
+
+      Both routes need small slopes, |dy/dx| << 1. In the chain route it hides in the bead's
+      pull, where sin(theta) was replaced by the height difference over a; in the string route
+      it replaces sin(theta) by the slope, lets the length of the piece be dx, and keeps the
+      tension the same at both ends. A steep pulse breaks the model, not the mathematics.
