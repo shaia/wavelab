@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import coupled, fourier, measurement, oscillators, phasors
+from wavelab import coupled, fourier, measurement, oscillators, phasors, waves
 from wavelab.validation import scaling_exponent, seed_study
 
 pytestmark = pytest.mark.seed_independence
@@ -345,3 +345,79 @@ def test_averaging_periodograms_shrinks_the_noise_floor_as_one_over_root_m():
     scatters = [_periodogram_scatter(m) for m in counts]
     assert abs(scaling_exponent(counts, scatters) - (-0.5)) < 0.2
     assert scatters[0] > scatters[-1]
+
+
+# Module 08's measurement: two photogates 0.4 m apart on a 2 m string at v = 20 m/s, a pluck
+# sending a pulse of height 5 mm past both, and detector noise of 5% of that height added to
+# each gate's record independently. The string is computed once; only the noise is redrawn.
+GATE_TENSION = 4.0
+GATE_MU = 0.01
+GATE_SPEED = waves.wave_speed(GATE_TENSION, GATE_MU)
+GATE_DX = 2.0 / 800
+GATE_WIDTH = 0.05
+GATE_NOISE = 0.05 * 0.005
+
+
+def _gate_records() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x = np.arange(801) * GATE_DX
+    dt = 0.5 * GATE_DX / GATE_SPEED
+    n_steps = int(np.ceil((0.8 + 8.0 * GATE_WIDTH) / GATE_SPEED / dt))
+    pluck = 0.01 * np.exp(-(((x - 0.8) / GATE_WIDTH) ** 2))
+    run = waves.simulate_string(
+        pluck, np.zeros_like(x), GATE_DX, dt, GATE_TENSION, GATE_MU, n_steps
+    )
+    return run.times, run.y[:, 480], run.y[:, 640]
+
+
+GATE_TIMES, GATE_FIRST, GATE_SECOND = _gate_records()
+GATE_DISTANCE = 160 * GATE_DX
+
+
+def _speed_by_centroid(rng: np.random.Generator) -> float:
+    half_window = 4.0 * GATE_WIDTH / GATE_SPEED
+    first = measurement.add_noise(GATE_FIRST, GATE_NOISE, rng)
+    second = measurement.add_noise(GATE_SECOND, GATE_NOISE, rng)
+    return GATE_DISTANCE / (
+        measurement.pulse_arrival_time(GATE_TIMES, second, half_window)
+        - measurement.pulse_arrival_time(GATE_TIMES, first, half_window)
+    )
+
+
+def _speed_by_peak(rng: np.random.Generator) -> float:
+    def peak_time(record: np.ndarray) -> float:
+        i = int(np.argmax(record))
+        before, top, after = record[i - 1 : i + 2]
+        step = GATE_TIMES[1] - GATE_TIMES[0]
+        return float(GATE_TIMES[i] + 0.5 * (before - after) / (before - 2.0 * top + after) * step)
+
+    first = measurement.add_noise(GATE_FIRST, GATE_NOISE, rng)
+    second = measurement.add_noise(GATE_SECOND, GATE_NOISE, rng)
+    return GATE_DISTANCE / (peak_time(second) - peak_time(first))
+
+
+def test_a_noisy_photogate_pair_recovers_the_wave_speed_whatever_the_seed():
+    """v +/- sigma_v from two noisy gates agrees with sqrt(T/mu) — the laboratory's last cell.
+
+    Timed by centroid, eight seeds give a scatter of 0.6% and a mean within one standard error
+    of 20 m/s, and a second, independent family of seeds agrees with the first. There is no
+    systematic to budget for here, unlike the module-02 estimators: the centroid of a pulse on
+    this grid travels at exactly v (test_convergence), so the only error left is the noise, and
+    a statistical band is the honest tolerance.
+
+    Timing the peak of the same records instead scatters about three times as much, 1.35%
+    against 0.49% over 32 seeds. The peak is decided by the three highest samples, the centroid
+    by every sample of the pulse, and that is the whole difference — which is why the
+    laboratory asks the student to use the whole pulse.
+    """
+    family_a = seed_study(_speed_by_centroid, n_seeds=8, base_seed=0)
+    family_b = seed_study(_speed_by_centroid, n_seeds=8, base_seed=10_000)
+    assert family_a.agrees_with(GATE_SPEED, n_sigma=3.0)
+    assert family_b.agrees_with(GATE_SPEED, n_sigma=3.0)
+    assert family_a.relative_spread < 0.01
+
+    combined_error = float(np.hypot(family_a.standard_error, family_b.standard_error))
+    assert abs(family_a.mean - family_b.mean) < 3.0 * combined_error
+
+    by_centroid = seed_study(_speed_by_centroid, n_seeds=32, base_seed=3)
+    by_peak = seed_study(_speed_by_peak, n_seeds=32, base_seed=3)
+    assert by_peak.relative_spread > 2.0 * by_centroid.relative_spread

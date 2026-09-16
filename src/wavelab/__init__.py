@@ -13,11 +13,12 @@ Modules:
     fourier       harmonic analysis: series, transform, and the bridge to sampled data
     measurement   synthetic noise, cosine fitting, and uncertainty; simulation as experiment
     validation    the reusable accuracy checks (seeds, convergence, scaling)
+    waves         the wave equation on a string — leapfrog solver, d'Alembert, energy
 """
 
 from __future__ import annotations
 
-from . import coupled, fourier, measurement, oscillators, phasors, units, validation
+from . import coupled, fourier, measurement, oscillators, phasors, units, validation, waves
 from .constants import C_LIGHT, EPS_0, MU_0, SIGN_CONVENTION
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "phasors",
     "units",
     "validation",
+    "waves",
 ]

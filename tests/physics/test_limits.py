@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import coupled, fourier, oscillators, phasors
+from wavelab import coupled, fourier, oscillators, phasors, waves
 from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.analytic_limit
@@ -791,3 +791,173 @@ def test_the_forced_integrator_reproduces_the_cosine_drive_it_generalises():
     )
     assert np.max(np.abs(reference.positions - sampled.positions)) < 1e-12
     assert np.max(np.abs(reference.velocities - sampled.velocities)) < 1e-12
+
+
+# The string. Tension and density give v = 20 m/s; every exact solution below lives on an
+# unbounded line, so the grids that are compared with them keep their pulses far from the ends.
+STRING_TENSION = 4.0
+STRING_MU = 0.01
+STRING_SPEED = waves.wave_speed(STRING_TENSION, STRING_MU)
+
+
+def test_the_leapfrog_string_is_the_mass_chain_it_came_from():
+    """Discretising the wave equation rebuilds module 07's chain, to rounding.
+
+    Grid point i of `simulate_string` carries mass mu dx and is tied to its neighbours by
+    springs of stiffness T / dx; a fixed end is a wall. Handed to `coupled.simulate_coupled` as
+    exactly that chain, the same start produces the same motion step for step — positions to
+    1.0e-14 of the largest displacement and velocities to 4.1e-14, over 2000 steps.
+
+    The two codes share nothing but the scheme. One builds a stiffness matrix and knows nothing
+    about grids; the other applies a stencil and knows nothing about matrices. Agreement is the
+    module's closing loop made literal: the continuum limit, run backwards by the computer.
+    """
+    n = 201
+    dx = 1.0 / (n - 1)
+    x = np.arange(n) * dx
+    y0 = 0.01 * np.exp(-(((x - 0.4) / 0.05) ** 2))
+    v0 = 0.05 * np.exp(-(((x - 0.7) / 0.05) ** 2))
+    dt = 0.7 * dx / STRING_SPEED
+
+    string = waves.simulate_string(y0, v0, dx, dt, STRING_TENSION, STRING_MU, 2000)
+    matrices = coupled.chain_matrices(n - 2, STRING_MU * dx, STRING_TENSION / dx)
+    chain = coupled.simulate_coupled(*matrices, y0[1:-1], v0[1:-1], dt, 2000)
+
+    assert np.max(np.abs(string.y[:, 1:-1] - chain.positions)) < 1e-12 * np.max(np.abs(string.y))
+    assert np.max(np.abs(string.dydt[:, 1:-1] - chain.velocities)) < 1e-12 * np.max(
+        np.abs(string.dydt)
+    )
+    assert np.all(string.y[:, [0, -1]] == 0.0)
+
+
+def test_the_chain_and_the_string_meet_at_one_wave_speed():
+    """Both derivations of the wave equation land on the same v — the module's first lesson.
+
+    Route (a) reads the speed off the chain: at long wavelengths the dispersion relation is a
+    straight line of slope a sqrt(k_s/m). Route (b) is Newton on a string element, giving
+    sqrt(T/mu). The dictionary mu = m/a, T = k_s a turns one into the other, and it has to do so
+    for any chain at all, not for a lucky choice of numbers.
+    """
+    for mass, stiffness, spacing in ((0.02, 50.0, 0.01), (1.0, 3.0, 0.5), (1e-3, 800.0, 2e-3)):
+        k = 1e-6 / spacing  # k a = 1e-6: the (ka)^2/24 curvature is below rounding
+        chain_slope = float(coupled.chain_dispersion(k, spacing, mass, stiffness)) / k
+        string = waves.wave_speed(stiffness * spacing, mass / spacing)
+        assert np.isclose(chain_slope, string, rtol=1e-12)
+        assert np.isclose(string, spacing * np.sqrt(stiffness / mass), rtol=1e-12)
+
+
+def test_a_pluck_splits_into_two_copies_of_half_the_height():
+    """Released from rest, one hump becomes two, each half as tall, running apart at v.
+
+    It must split: a single copy moving one way would need a velocity from the start, and a
+    pluck has none. So each direction gets half, and once the halves separate their peaks are
+    exactly 1/2 of the original, centred at x0 - vt and x0 + vt.
+    """
+    x = np.linspace(-3.0, 3.0, 6001)
+    width = 0.2
+
+    def hump(s: np.ndarray) -> np.ndarray:
+        return np.exp(-((s / width) ** 2))
+
+    t = 0.1  # vt = 2 m, ten widths: the two halves no longer overlap
+    y = waves.dalembert_solution(hump, STRING_SPEED, x, t)
+    left, right = x < 0.0, x > 0.0
+    assert np.isclose(y[left].max(), 0.5, rtol=1e-10)
+    assert np.isclose(y[right].max(), 0.5, rtol=1e-10)
+    assert np.isclose(x[left][np.argmax(y[left])], -STRING_SPEED * t, atol=1e-9)
+    assert np.isclose(x[right][np.argmax(y[right])], STRING_SPEED * t, atol=1e-9)
+
+
+def test_a_strike_spreads_into_a_plateau_whose_edges_run_at_the_wave_speed():
+    """A flat string struck over [-a, a] with speed w rises to w a / v and stays there.
+
+    The plateau grows while the struck region still feeds it, at w per second, until t = a/v;
+    after that its height is frozen at w a / v and only its width changes, the half-height
+    edges running outward at exactly v. The string is left permanently displaced — nothing
+    pulls it back, because a uniform displacement costs a string no energy.
+
+    The strike is rectangular, so its velocity jumps, and `dalembert_solution` still gives the
+    exact answer because it takes the velocity's antiderivative rather than integrating it.
+    """
+    speed, half_width = 5.0, 0.3
+    x = np.linspace(-3.0, 3.0, 6001)
+
+    def struck_integral(s: np.ndarray) -> np.ndarray:
+        return 2.0 * np.clip(s + half_width, 0.0, 2.0 * half_width)
+
+    for t in (0.02, 0.1, 0.3):
+        y = waves.dalembert_solution(
+            lambda s: np.zeros_like(s), speed, x, t, v0_integral=struck_integral
+        )
+        assert np.isclose(y.max(), min(2.0 * t, 2.0 * half_width / speed), rtol=1e-12)
+        if t > half_width / speed:
+            above = x[y >= 0.5 * y.max()]
+            # The half-height points fall on grid points, so either may land just inside or
+            # just outside the set: three spacings is the resolution of the reading.
+            assert np.isclose(np.ptp(above), 2.0 * speed * t, atol=3.0 * (x[1] - x[0]))
+
+
+def test_dalembert_solves_the_wave_equation_and_meets_its_initial_data():
+    """y_tt = v^2 y_xx, y(x, 0) = y0 and y_t(x, 0) = v0 — checked, not assumed.
+
+    Finite differences stand in for the derivatives, so both residuals are small rather than
+    zero, and both are the O(h^2) of the differences themselves at h = 1e-3: 2.0e-4 of y_tt
+    for the wave equation, 2.1e-4 of the peak velocity for the starting velocity. The initial
+    shape is reproduced exactly. The velocity has an antiderivative in closed form,
+    sech^2 -> tanh, so nothing numerical hides inside the solution being tested.
+    """
+    speed, h = 5.0, 1e-3
+    x = np.linspace(-1.0, 1.0, 201)
+
+    def shape(s: np.ndarray) -> np.ndarray:
+        return np.exp(-((s / 0.3) ** 2))
+
+    def velocity(s: np.ndarray) -> np.ndarray:
+        return 0.7 / np.cosh(s / 0.2) ** 2
+
+    def velocity_integral(s: np.ndarray) -> np.ndarray:
+        return 0.7 * 0.2 * np.tanh(s / 0.2)
+
+    def y(t: float, positions: np.ndarray) -> np.ndarray:
+        return waves.dalembert_solution(
+            shape, speed, positions, t, v0_integral=velocity_integral
+        )
+
+    t0 = 0.05
+    y_tt = (y(t0 + h, x) - 2.0 * y(t0, x) + y(t0 - h, x)) / h**2
+    y_xx = (y(t0, x + h) - 2.0 * y(t0, x) + y(t0, x - h)) / h**2
+    assert np.max(np.abs(y_tt - speed**2 * y_xx)) < 1e-3 * np.max(np.abs(y_tt))
+
+    assert np.max(np.abs(y(0.0, x) - shape(x))) < 1e-15
+    y_t = (y(h, x) - y(-h, x)) / (2.0 * h)
+    assert np.max(np.abs(y_t - velocity(x))) < 1e-3 * np.max(velocity(x))
+
+
+def test_a_travelling_sinusoid_is_the_course_convention_with_omega_equal_to_vk():
+    """Re[A e^{i(kx - omega t)}] solves the wave equation exactly when omega = v k.
+
+    Started as A cos(kx) with the velocity a right-mover needs, d'Alembert returns the
+    convention's travelling wave to rounding, moving toward +x as the convention says positive
+    k must. Reverse the starting velocity and the same shape runs the other way, as
+    Re[A e^{i(-kx - omega t)}]: the direction of travel lives in the velocity, not the shape.
+    """
+    amplitude, k = 0.3, 4.0
+    omega = STRING_SPEED * k
+    x = np.linspace(-1.0, 1.0, 201)
+    t = np.linspace(0.0, 0.5, 11)
+
+    def start(s: np.ndarray) -> np.ndarray:
+        return amplitude * np.cos(k * s)
+
+    def rightward(s: np.ndarray) -> np.ndarray:
+        return -amplitude * STRING_SPEED * np.cos(k * s)
+
+    phase = k * x[np.newaxis, :] - omega * t[:, np.newaxis]
+    moving_right = waves.dalembert_solution(start, STRING_SPEED, x, t, v0_integral=rightward)
+    assert np.max(np.abs(moving_right - np.real(amplitude * np.exp(1j * phase)))) < 1e-12
+
+    mirrored = -k * x[np.newaxis, :] - omega * t[:, np.newaxis]
+    moving_left = waves.dalembert_solution(
+        start, STRING_SPEED, x, t, v0_integral=lambda s: -rightward(s)
+    )
+    assert np.max(np.abs(moving_left - np.real(amplitude * np.exp(1j * mirrored)))) < 1e-12

@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import coupled, fourier, oscillators
+from wavelab import coupled, fourier, oscillators, waves
 from wavelab.units import C_LIGHT_Q, EPS_0_Q, MU_0_Q, Quantity
 
 pytestmark = pytest.mark.dimensional
@@ -215,6 +215,14 @@ def test_library_returns_plain_floats():
     chain_modes = coupled.normal_mode_solve(*coupled.chain_matrices(5, 0.5, 8.0))
     assert coupled.evolve(chain_modes, np.ones(5), np.zeros(5), 0.3).shape == (5,)
     assert coupled.evolve(chain_modes, np.ones(5), np.zeros(5), np.zeros(7)).shape == (7, 5)
+    assert isinstance(waves.wave_speed(4.0, 0.01), float)
+    assert waves.wave_speed(4.0, np.full(3, 0.01)).dtype == np.float64
+    assert isinstance(waves.cfl_max_dt(0.01, 20.0), float)
+    string = waves.simulate_string(np.zeros(11), np.zeros(11), 0.1, 0.004, 4.0, 0.01, 10)
+    assert string.y.dtype == np.float64 and string.y.shape == (11, 11)
+    assert isinstance(waves.total_energy(string.y[0], string.dydt[0], 0.1, 4.0, 0.01), float)
+    assert waves.total_energy(string.y, string.dydt, 0.1, 4.0, 0.01).shape == (11,)
+    assert waves.dalembert_solution(np.sin, 20.0, np.linspace(0.0, 1.0, 5), 0.1).shape == (5,)
 
 
 def test_the_spectrum_axis_is_an_angular_frequency():
@@ -276,3 +284,70 @@ def test_relative_energy_spread_is_invariant_under_unit_change():
     )
     spread_mm = (total_mm.max() - total_mm.min()) / total_mm[0]
     assert np.isclose(spread_si, spread_mm, rtol=1e-9)
+
+
+def test_the_wave_speed_is_a_velocity_whichever_derivation_produced_it():
+    """sqrt(T/mu) from the string and a sqrt(k_s/m) from the chain are both metres per second.
+
+    The dictionary between the two routes has to respect units as well as numbers: mu = m/a
+    turns a mass into a mass per length, and T = k_s a turns a stiffness into a force, which is
+    what tension is. Substituted, the chain's speed becomes the string's with every unit intact.
+    """
+    tension = Quantity(4.0, "N")
+    density = Quantity(0.01, "kg/m")
+    assert ((tension / density) ** 0.5).check("[velocity]")
+
+    mass, spring, spacing = Quantity(0.02, "kg"), Quantity(50.0, "N/m"), Quantity(0.01, "m")
+    assert (mass / spacing).check("[mass] / [length]")
+    assert (spring * spacing).check("[force]")
+    chain_speed = spacing * (spring / mass) ** 0.5
+    string_speed = ((spring * spacing) / (mass / spacing)) ** 0.5
+    assert chain_speed.check("[velocity]")
+    assert np.isclose((chain_speed / string_speed).to("dimensionless").magnitude, 1.0)
+
+
+def test_the_courant_number_is_a_pure_number():
+    """S = v dt / dx compares a distance travelled in one step with one grid spacing.
+
+    A stability condition has to be a pure number to be a condition at all: "S <= 1" means the
+    same on a millimetre grid stepped in microseconds as on a metre grid stepped in seconds.
+    """
+    speed = Quantity(20.0, "m/s")
+    assert (speed * Quantity(1e-4, "s") / Quantity(2e-3, "m")).check("[]")
+    assert (Quantity(2e-3, "m") / speed).check("[time]")  # cfl_max_dt
+
+
+def test_both_energy_densities_integrate_to_energies():
+    """(1/2) mu y_t^2 and (1/2) T y_x^2 are energies per length — and so are equal kinds of thing.
+
+    The kinetic term carries a velocity squared, the potential term a slope squared, which is
+    dimensionless; tension supplies the missing joules per metre. That they have the same
+    units is the precondition for module 09's surprise, that on a travelling wave they are
+    equal at every point.
+    """
+    density = Quantity(0.01, "kg/m")
+    tension = Quantity(4.0, "N")
+    cell = Quantity(2.5e-3, "m")
+    transverse_velocity = Quantity(0.3, "m/s")
+    slope = Quantity(0.015, "m") / Quantity(1.0, "m")
+
+    assert (0.5 * density * transverse_velocity**2).check("[energy] / [length]")
+    assert (0.5 * tension * slope**2).check("[energy] / [length]")
+    assert (0.5 * density * transverse_velocity**2 * cell).check("[energy]")
+    assert (0.5 * tension * slope**2 * cell).check("[energy]")
+
+
+def test_a_strikes_plateau_is_a_displacement():
+    """[W(x + vt) - W(x - vt)] / 2v is a length, W being the antiderivative of a velocity.
+
+    Integrating a velocity over position gives square metres per second, and dividing by a
+    speed returns a length — the check that the 1/(2v) in d'Alembert's velocity term is not a
+    stray v away from correct. For the rectangular strike the plateau height is w a / v.
+    """
+    struck_speed = Quantity(2.0, "m/s")
+    half_width = Quantity(0.3, "m")
+    speed = Quantity(5.0, "m/s")
+    integral = struck_speed * 2.0 * half_width
+    assert integral.check("[length]**2 / [time]")
+    assert (integral / (2.0 * speed)).check("[length]")
+    assert (struck_speed * half_width / speed).check("[length]")
