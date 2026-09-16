@@ -218,7 +218,11 @@ their neighbours, in proportion to how far out of line they are. Write the speed
 
 $$
 \boxed{\;v = \sqrt{\frac{T}{\mu}}\;}
-\qquad\text{so that}\qquad
+$$
+
+and the equation takes the form every later part of the course will recognise:
+
+$$
 \frac{\partial^2 y}{\partial t^2} = v^2\,\frac{\partial^2 y}{\partial x^2}.
 $$
 
@@ -464,8 +468,8 @@ falls fourfold. What that energy *is*, and where on the string it lives, is modu
 :class: important
 The derivation above never needed the string to be a string. It needed a quantity that can be
 displaced, an inertia resisting the displacement, and a restoring effect proportional to the
-curvature. Wherever those three meet, $y_{tt} = v^2 y_{xx}$ follows, with
-$v^2 = \text{restoring stiffness}/\text{inertia}$:
+curvature. Wherever those three meet, $y_{tt} = v^2 y_{xx}$ follows, with $v^2$ the restoring
+stiffness divided by the inertia:
 
 - **Sound in a gas:** pressure disturbances, $v = \sqrt{\gamma p/\rho}$ — 343 m/s in air at
   room temperature.
