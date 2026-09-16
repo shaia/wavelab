@@ -1,6 +1,6 @@
 # Part III — Continuous Systems and the Wave Equation — Implementation Plan
 
-> **Master plan:** §10 (Part III). **Modules:** `08-wave-equation`, `09-wave-energy`, `10-impedance`. **Status:** planned.
+> **Master plan:** §10 (Part III). **Modules:** `08-wave-equation`, `09-wave-energy`, `10-impedance`. **Status:** in progress — `08-wave-equation` built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -62,7 +62,7 @@ passes through it.
 
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
-| `08-wave-equation` | `content/en/waves/08-wave-equation.md` | The wave equation: oscillations acquire space | 3.1 + 3.2 | Georgi, continuum limit & travelling waves; French, progressive waves | planned |
+| `08-wave-equation` | `content/en/waves/08-wave-equation.md` | The wave equation: oscillations acquire space | 3.1 + 3.2 | Georgi, continuum limit & travelling waves; French, progressive waves | **built** |
 | `09-wave-energy` | `content/en/waves/09-wave-energy.md` | Wave energy: what actually travels | 3.3 | French, energy in progressive waves; MIT 8.03 energy-transport lectures | planned |
 | `10-impedance` | `content/en/waves/10-impedance.md` | Impedance: reflection and transmission at boundaries | 3.4 | Georgi, impedance & reflections; French, boundary effects | planned |
 
@@ -138,7 +138,7 @@ deposits of wave (as opposed to oscillation) terminology.
 
 ## 5. Module specifications
 
-### 5.1 `08-wave-equation` — The wave equation: oscillations acquire space
+### 5.1 `08-wave-equation` — The wave equation: oscillations acquire space (as built)
 
 - **Identity and scope:** master-plan notebooks 3.1 + 3.2, merged (§8): derivation, travelling
   solutions, initial-value problem, numerical solver. Deferred: standing waves
@@ -250,6 +250,91 @@ deposits of wave (as opposed to oscillation) terminology.
 - **Open questions for the author:** which derivation leads (recommendation: chain first — Part
   II's payoff — string second); CFL experiment in `verify` or lab only (recommendation: still
   frame in `verify`, live in the lab).
+- **Open questions, as resolved when built.** Both recommendations were taken, one of them with
+  a twist. The chain leads, read as beads on a taut thread rather than as module 07's masses
+  sliding lengthways. That reading gives the dictionary a reason: the thread's transverse pull on
+  a bead is a spring of stiffness $T/a$, so $T = k_s a$ is derived rather than asserted, and the
+  small-slope assumption appears in both routes instead of only the second. The lengthways
+  reading survives as a transfer bullet, where it is exact without that assumption. The CFL
+  experiment is live in the laboratory. On the page it is not a still frame but a pair of
+  `numerical-observation` boxes in `verify`, with the animation in `explore` — the growth rate
+  against von Neumann's $|g|$ is a number worth quoting, and a frame cannot quote it.
+- **As-built deviations from this section.** Nine, each forced by the numbers or the repository
+  rather than by taste; the numerical ones are pinned by tests.
+
+  (1) **`dalembert_solution` takes the velocity's antiderivative, not the velocity.** §4 writes
+  `dalembert_solution(y0_func, v0_func, v, x, t)`. Integrating an arbitrary callable over
+  $[x - vt, x + vt]$ for every point and time would need a quadrature. That quadrature would be
+  inexact for the rectangular strike the problem set poses, where the velocity jumps, and the
+  function is named as the *exact* solution. As built: `dalembert_solution(y0_func, v, x, t,
+  v0_integral=None)`, with `v0_integral` any $W$ satisfying $W' = v_0$. A rectangular strike is
+  then `w * clip(s - a, 0, b - a)`, and the plateau comes out to $10^{-12}$.
+
+  (2) **`simulate_string` is kick-drift-kick, stores a velocity, and gained `save_every`.** The
+  stencil in §5.1's derivation (6) is exactly what runs: eliminating the velocity from velocity
+  Verlet returns it, from the start $y^1 = y^0 + \Delta t\,v^0 + \tfrac12\Delta t^2 a^0$. The
+  velocity form was chosen because `StringEvolution` promises $\partial y/\partial t$ at the
+  same instants as $y$. It also makes the closing claim testable directly: handed to
+  `coupled.simulate_coupled` as the chain $\mu\,\Delta x$ on $T/\Delta x$, the solver agrees
+  to $10^{-14}$ over 2000 steps. `StringEvolution` carries `times, x, y, dydt`, with `x` beyond
+  §4's list. `save_every` was added because a 2000-point, 4000-step run stored in full is 128 MB
+  in the browser kernel. `tension` is a scalar: purely transverse motion makes a string's
+  tension uniform by horizontal force balance, while `mu` may vary per point.
+
+  (3) **`total_energy` came forward from `09-wave-energy`.** §4 assigns the fixed-end
+  conservation test to this module, but lists the energy function under 09. As built,
+  `total_energy` computes the kinetic term with trapezoid weights at the grid points and the
+  potential term on the cells between them: the chain's energy, which velocity Verlet keeps
+  bounded. The trapezoid is not a nicety. A free end moves as half a cell of string, and booking
+  a whole cell there turns a $4.1\times10^{-4}$ wobble into $1.7\times10^{-2}$. `kinetic_density`,
+  `potential_density` and `energy_flux` remain 09's to define, and 09 may re-express
+  `total_energy` through them.
+
+  (4) **The magic step is exact for plucks only.** §4 asks for "at $S = 1$ exactly, machine
+  precision". A pluck gets it: $5.9\times10^{-15}$ after 400 steps, against $1.0\times10^{-5}$ at
+  $S = 0.99$. A start with velocity does not. Its second time level is off at third order, and
+  the exact transport spreads that into a settled second-order error, 7.5 times below
+  $S = 0.5$'s but not rounding. The docstring, the tests and the page all say so.
+
+  (5) **Photogates must be timed by centroid, and `measurement` gained `pulse_arrival_time`.**
+  §4's scaling entry — measured speed against tension, exponent 0.50 — hid a trap. Timing the
+  *peak* of a detector's record reads slow by $(1 - S^2)(\Delta x/\sigma)^2/4$: grid dispersion
+  drags a pulse's peak back, matched to 0.4%. The centroid of the displacement responds only to
+  the dispersion relation's slope at $k = 0$, where leapfrog is exact, and reads $v$ to
+  $3\times10^{-9}$ at every $S$. With centroid timing and a fixed $\Delta t$, both fitted
+  exponents are 0.5 to $10^{-9}$, so the scaling test is sharp rather than approximate. Under
+  5% detector noise the centroid also scatters about three times less than the peak. The
+  function lives in the shared `measurement` module, not in `waves.py`, because timing a pulse
+  is analysis rather than physics, and modules 10 and 12 will time pulses too.
+
+  (6) **Two convergence rates the plan did not anticipate.** The laboratory's continuum warm-up
+  approaches the string at roughly $1/N$, not module 07's $1/N^2$, because the pluck is a
+  triangle: 7.7%, 1.8% and 0.69% at $N = 5$, 20 and 100. A corner holds every wavelength, and
+  the short ones sit near the band edge. The rectangular strike likewise converges at first
+  order under refinement, the cost of a sampled discontinuity that module 04's rect pulse
+  showed first. Both are stated where they occur rather than smoothed away.
+
+  (7) **Glossary: `travelling-wave` is גל מתקדם, and two keys were added.** §5.1 proposed גל רץ.
+  The deposit uses גל מתקדם, the form Hebrew physics texts use and the partner of the existing
+  standing-wave entry גל עומד, with גל נודד rejected as proposed. Module 07's Hebrew page used
+  the rejected form twice, and both were corrected in the authoring commit. `tension` and
+  `courant-number` were added beyond §5.1's list: the page and laboratory rely on both, and the
+  glossary is the only permitted source of their Hebrew.
+
+  (8) **Media: longer shots, and one quantity §5.1 did not name.** The runtime budget says
+  animations of at most 120 frames. The three shots run 300–310 frames, matching every render
+  since the MP4 move — they render at authoring time and never in the browser, so the budget
+  does not bind. Shot (c) adds a logarithmic panel of the grid's shortest-wave amplitude,
+  because for a hundred steps the two strings look identical while the damage grows from
+  rounding error at 1.3264 per step (von Neumann: 1.3266). Shot (b) runs at $S = 1$ so the
+  triangle's corners stay sharp, with d'Alembert's halves as translucent fills. As lines, they
+  sat under the string once separated, and only their flat stretches showed — under the wrong
+  pulse.
+
+  (9) **The real-experiment counterpart became problem 5.** No built module has a page section
+  for experiments, and the slinky measurement works better as an exam-style problem. It adds a
+  result §5.1 did not have: a stretched slinky's crossing time $\sqrt{ML/(k(L - L_0))}$ barely
+  depends on the stretch when $L \gg L_0$, which makes a two-measurement test.
 
 ### 5.2 `09-wave-energy` — Wave energy: what actually travels
 

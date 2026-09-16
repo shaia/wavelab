@@ -118,5 +118,7 @@ The full curriculum runs from mathematical foundations through oscillations, cou
 oscillators and normal modes, the wave equation, Fourier methods and dispersion,
 electromagnetic waves, interfaces, polarization, interference, diffraction, geometrical
 optics, Fourier optics, and on to Gaussian beams, lasers and photonics — the complete plan
-lives in `waves_optics_interactive_course_master_plan.md`. Currently built: phasors (the
-language of waves) and the simple harmonic oscillator — plus the course conventions page.
+lives in `waves_optics_interactive_course_master_plan.md`. Currently built: nine modules, 00–08 —
+phasors, Fourier series and the Fourier transform, the oscillator from free through damped and
+driven to impulse response, coupled oscillators and normal modes, and the wave equation — plus
+the course conventions page. `plans/README.md` tracks module status.

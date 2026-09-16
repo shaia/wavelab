@@ -392,8 +392,8 @@ $$
 $$
 
 That is the wave equation, and this module stops here — at the point where the step is
-visible and has not yet been taken. `08-wave-equation` takes it, and starts by rediscovering
-$c = \sqrt{T/\mu} = a\sqrt{k_s/m}$, which you have already measured.
+visible and has not yet been taken. [Module 08](../waves/08-wave-equation.md) takes it, and
+starts by rediscovering $c = \sqrt{T/\mu} = a\sqrt{k_s/m}$, which you have already measured.
 
 (07-normal-modes-verify)=
 ## Verify computationally
@@ -490,9 +490,9 @@ The chain is the version you can watch. `44-resonators` does cavity modes, `46-w
 does guided modes, and neither introduces any idea that is not on this page.
 :::
 
-- **The wave equation.** `08-wave-equation` starts where the derivation above stops, with the
-  second difference becoming a second derivative. Everything from Part III onwards is a
-  continuous medium, and this is the last time you can count the pieces.
+- **The wave equation.** [Module 08](../waves/08-wave-equation.md) starts where the derivation
+  above stops, with the second difference becoming a second derivative. Everything from Part III
+  onwards is a continuous medium, and this is the last time you can count the pieces.
 - **Standing waves.** `11-standing-waves` finds the string's shapes as a boundary-value problem
   and gets $\sin(p\pi x/L)$ — the $N \to \infty$ limit of this page's $a_p(j)$, with the same
   integer $p$ counting the same nodes.
