@@ -394,3 +394,42 @@ terms:
   - key: band-edge
     en: band edge
     he: קצה הסרט
+  # Wave vocabulary, deposited by module 08 (plans/part-03-waves.md section 5.1) — the course's
+  # first terms for waves as opposed to oscillations. `wave`, `speed`, `medium` and
+  # `partial-derivative` already exist above and are cited, not re-deposited. `tension` and
+  # `courant-number` go beyond the plan's list: the page and laboratory lean on both, and the
+  # glossary is the only permitted source of their Hebrew.
+  - key: wave-equation
+    en: wave equation
+    he: משוואת הגלים
+  # The plan proposed גל רץ. גל מתקדם is the form Hebrew physics texts use, and the natural
+  # partner of the existing standing-wave entry גל עומד; גל רץ is not rejected, only not chosen.
+  - key: travelling-wave
+    en: travelling wave
+    he: גל מתקדם
+    he_reject: [גל נודד]
+  - key: pulse
+    en: pulse
+    he: פולס
+    he_reject: [דופק]
+  - key: wave-speed
+    en: wave speed
+    he: מהירות הגל
+  - key: linear-mass-density
+    en: linear mass density
+    he: צפיפות מסה אורכית
+  - key: dalembert-solution
+    en: d'Alembert's solution
+    he: פתרון ד'אלמבר
+  - key: cfl-condition
+    en: CFL condition
+    he: תנאי CFL
+  - key: field
+    en: field
+    he: שדה
+  - key: tension
+    en: tension
+    he: מתיחות
+  - key: courant-number
+    en: Courant number
+    he: מספר קורנט

@@ -2,7 +2,8 @@
 
 MODEL SPECIFICATION
     System:        a clean simulated signal plus additive Gaussian noise; the observables are
-                   fitted parameters (amplitude, frequency, phase, offset) with uncertainties
+                   fitted parameters (amplitude, frequency, phase, offset) with uncertainties,
+                   and the arrival times of pulses at fixed detectors
     Dynamics:      none of its own — this module corrupts and analyses signals produced by
                    the physics modules; nothing here evolves anything
     Boundary:      not applicable; arrays in, numbers out
@@ -14,9 +15,9 @@ MODEL SPECIFICATION
                    being fitted really generated the underlying signal
     Failure modes: noise large enough that the fit finds a wrong local minimum (a bad
                    frequency guess is the usual cause), zero-crossing counting on strongly
-                   noisy data (every wiggle near zero is a spurious crossing), non-Gaussian
-                   corruption, and reading the reported 1-sigma errors as truth rather than
-                   as model-conditional
+                   noisy data (every wiggle near zero is a spurious crossing), a timing window
+                   that cuts off part of the pulse, non-Gaussian corruption, and reading the
+                   reported 1-sigma errors as truth rather than as model-conditional
 
 The course rule this module exists to enforce: a simulated measurement is never quoted as
 lambda = 632.800000 nm; it is quoted as (633 +/- 4) nm, and the uncertainty comes from here.
@@ -132,6 +133,40 @@ def frequency_from_zero_crossings(times: np.ndarray, values: np.ndarray) -> floa
     crossing_times = t[sign_change] + fractions * (t[sign_change + 1] - t[sign_change])
     half_period = float(np.mean(np.diff(crossing_times)))
     return float(np.pi / half_period)
+
+
+def pulse_arrival_time(times: np.ndarray, values: np.ndarray, half_window: float) -> float:
+    """When a pulse passed a detector: the centroid of its record around the peak [s].
+
+        t_arrival = sum(t_i y_i) / sum(y_i),   over |t_i - t_peak| <= half_window,
+
+    with t_peak the time of the largest sample. The largest sample only chooses where to look;
+    the answer is a weighted average over every sample of the pulse, so noise enters through a
+    sum rather than through the one sample that happens to be highest. That is why this
+    beats reading off the peak — several times less scatter at a few percent noise — and it
+    has a second, less obvious advantage for pulses computed on a grid: the centroid travels at
+    the long-wavelength speed of the medium, where a finite-difference grid is exact, while the
+    peak drifts with whatever grid dispersion reshapes the pulse.
+
+    `half_window` must cover the whole pulse and nothing else. A window cut short — including
+    by a record that ends before the pulse has finished passing — drops part of the weight and
+    reads the pulse early or late; a window reaching another pulse averages the two. The pulse
+    must also have one sign, as a displacement pulse does: the centroid of a signal with
+    positive and negative lobes can lie anywhere.
+    """
+    t = np.asarray(times, dtype=float)
+    y = np.asarray(values, dtype=float)
+    if t.shape != y.shape or t.ndim != 1:
+        raise ValueError("times and values must be one-dimensional records of the same length")
+    if half_window <= 0:
+        raise ValueError("half_window must be positive")
+
+    peak = t[int(np.argmax(y))]
+    window = np.abs(t - peak) <= half_window
+    weight = float(np.sum(y[window]))
+    if weight <= 0.0:
+        raise ValueError("the record has no positive pulse inside the window")
+    return float(np.sum(t[window] * y[window]) / weight)
 
 
 def _spectral_peak_omega(t: np.ndarray, y: np.ndarray) -> float:

@@ -58,7 +58,11 @@ misconceptions:
   - id: wave-carries-medium
     statement: "A travelling wave transports the medium along with it."
     assigned_module: 08-wave-equation
-    status: pending
+    status: addressed
+  - id: speed-set-by-source
+    statement: "Shaking harder or faster makes the wave travel faster."
+    assigned_module: 08-wave-equation
+    status: addressed
   - id: packet-at-phase-velocity
     statement: "A pulse travels at the phase velocity, so a phase velocity above c would break relativity."
     assigned_module: 12-wave-packets

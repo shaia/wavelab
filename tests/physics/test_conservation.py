@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import coupled, fourier, oscillators
+from wavelab import coupled, fourier, oscillators, waves
 
 pytestmark = pytest.mark.conservation
 
@@ -410,3 +410,104 @@ def test_the_spectrum_round_trips_through_its_inverse():
 
     assert np.max(np.abs(restored - signal)) < 1e-12
     assert np.max(np.abs(restored.imag)) < 1e-12
+
+
+# The string between two walls. A metre of it at v = 20 m/s on 400 cells, plucked with a
+# Gaussian twenty cells wide, and run for ten transits and more so that the pulses hit the
+# ends — and each other — over and over. Energy is read at up to 4000 evenly spaced samples;
+# the wobble repeats every transit, so a longer run would measure the same numbers slower.
+STRING_TENSION = 4.0
+STRING_MU = 0.01
+STRING_CELLS = 400
+STRING_DX = 1.0 / STRING_CELLS
+
+
+def _string_energy(
+    courant: float,
+    transits: float,
+    boundary: tuple[str, str] = ("fixed", "fixed"),
+    mu: float | np.ndarray = STRING_MU,
+    centre: float = 0.5,
+) -> tuple[waves.StringEvolution, np.ndarray]:
+    x = np.arange(STRING_CELLS + 1) * STRING_DX
+    fastest = float(np.max(waves.wave_speed(STRING_TENSION, np.asarray(mu))))
+    dt = courant * STRING_DX / fastest
+    n_steps = int(round(transits / fastest / dt))
+    pluck = 0.01 * np.exp(-(((x - centre) / 0.05) ** 2))
+    run = waves.simulate_string(
+        pluck, np.zeros_like(x), STRING_DX, dt, STRING_TENSION, mu, n_steps,
+        boundary=boundary, save_every=max(1, n_steps // 4000),
+    )
+    return run, np.asarray(waves.total_energy(run.y, run.dydt, STRING_DX, STRING_TENSION, mu))
+
+
+def test_the_string_energy_error_is_second_order_in_the_step_and_does_not_drift():
+    """Ten transits between walls: the energy wobbles by (v dt)^2 and never walks.
+
+    The solver is velocity Verlet on the chain the grid is, so it inherits that scheme's
+    guarantee: the error in the energy oscillates with an amplitude set by the step and does
+    not accumulate. Measured, the peak-to-peak wobble is 1.2e-3, 3.0e-4 and 7.5e-5 of the total
+    at S = 0.8, 0.4 and 0.2 — fourfold for every halving of dt, exactly as second order
+    requires — while the energy averaged over the first and last tenths of the run agrees to a
+    few parts in 10^9.
+    """
+    spreads = []
+    for courant in (0.8, 0.4, 0.2):
+        _, energy = _string_energy(courant, 10.0)
+        spreads.append(float(np.ptp(energy) / energy[0]))
+        tenth = energy.size // 10
+        assert abs(energy[-tenth:].mean() - energy[:tenth].mean()) / energy[0] < 1e-6
+
+    ratios = np.array(spreads[:-1]) / np.array(spreads[1:])
+    assert np.all(np.abs(ratios - 4.0) < 0.2), f"energy error ratios {ratios} are not fourfold"
+    assert spreads[1] < 5e-4
+
+
+def test_the_string_energy_error_is_bounded_rather_than_growing():
+    """Four times the run, the same wobble to three figures — 4.68e-4 after 4 transits and 16.
+
+    The check that licenses long experiments on the string, the same one module 07's chain
+    passed: a slowly leaking scheme looks perfect for a few transits and only reveals itself
+    when the run is extended.
+    """
+    bounds = [float(np.ptp(energy) / energy[0]) for _, energy in (
+        _string_energy(0.5, transits) for transits in (4.0, 16.0)
+    )]
+    assert bounds[1] < 1.05 * bounds[0], f"energy error grows with run length: {bounds}"
+
+
+def test_a_free_end_carries_half_a_cell_of_string():
+    """With free ends the conserved energy weights the end points by half — and only then.
+
+    A free end has zero slope, which the solver imposes with a mirror ghost point. That makes
+    the end move as a mass of mu dx / 2 would, tied to its one neighbour, so the energy the
+    scheme keeps is the trapezoid rule's, half weight at each end. Read that way, a pluck
+    bouncing between two free ends holds its energy to 4.1e-4 over ten transits.
+
+    Give the end points a whole cell of kinetic energy instead and the same run appears to lose
+    and regain 1.7e-2 of it, forty times worse, in spikes at every reflection — the moment a
+    free end moves fastest. That is a bookkeeping error, not physics, and the negative control
+    is here so that nobody "simplifies" the weights.
+    """
+    run, energy = _string_energy(0.5, 10.0, boundary=("free", "free"), centre=0.3)
+    assert np.ptp(energy) / energy[0] < 1e-3
+
+    full_weights = np.full(STRING_CELLS + 1, STRING_DX)
+    kinetic = 0.5 * STRING_MU * np.sum(full_weights * run.dydt**2, axis=1)
+    potential = 0.5 * STRING_TENSION * np.sum(np.diff(run.y, axis=1) ** 2, axis=1) / STRING_DX
+    miscounted = kinetic + potential
+    assert np.ptp(miscounted) / miscounted[0] > 1e-2
+
+
+def test_a_jump_in_density_leaves_the_total_energy_conserved():
+    """A string four times heavier on its right half still keeps its energy to 4.1e-4.
+
+    The pulse now partly reflects and partly crosses at the junction every time it arrives, so
+    the energy is carried by several pulses of different sizes on two media at once. How it
+    divides between them is module 10's question; that the total survives the division is the
+    solver's promise, and it has to hold before the division can be measured at all.
+    """
+    x = np.arange(STRING_CELLS + 1) * STRING_DX
+    density = np.where(x < 0.5, STRING_MU, 4.0 * STRING_MU)
+    _, energy = _string_energy(0.5, 10.0, mu=density, centre=0.25)
+    assert np.ptp(energy) / energy[0] < 1e-3

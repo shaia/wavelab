@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wavelab import coupled, fourier, measurement, oscillators, phasors
+from wavelab import coupled, fourier, measurement, oscillators, phasors, waves
 from wavelab.validation import scaling_exponent
 
 pytestmark = pytest.mark.large_n
@@ -328,3 +328,70 @@ def test_the_gaussian_alone_reaches_the_bandwidth_minimum():
         product = np.prod(fourier.rms_widths(signal, FOURIER_DT))
         assert product > 0.5, f"the {name} pulse cannot beat the bound"
         assert product > plain_product
+
+
+# A photogate race on a 2 m string of 800 cells. A pluck at 0.8 m sends a pulse right past
+# gates at 1.2 m and 1.6 m, and each gate's record is timed by its centroid, which reads the
+# medium's speed without the grid-dispersion bias that timing the peak carries (see
+# test_convergence). The record runs until the pulse has fully cleared the second gate.
+GATE_CELLS = 800
+GATE_DX = 2.0 / GATE_CELLS
+GATE_A, GATE_B = 480, 640
+
+
+def _photogate_speed(
+    tension: float, mu: float, dt: float, amplitude: float = 0.01, width: float = 0.05
+) -> float:
+    x = np.arange(GATE_CELLS + 1) * GATE_DX
+    speed = waves.wave_speed(tension, mu)
+    pluck = amplitude * np.exp(-(((x - 0.8) / width) ** 2))
+    n_steps = int(np.ceil((0.8 + 2.0 * 4.0 * width) / speed / dt))
+    run = waves.simulate_string(pluck, np.zeros_like(x), GATE_DX, dt, tension, mu, n_steps)
+    half_window = 4.0 * width / speed
+    passed = [
+        measurement.pulse_arrival_time(run.times, run.y[:, gate], half_window)
+        for gate in (GATE_A, GATE_B)
+    ]
+    return (GATE_B - GATE_A) * GATE_DX / (passed[1] - passed[0])
+
+
+def test_pulse_speed_goes_as_the_square_root_of_tension_over_density():
+    """Measured speeds fit T^(1/2) and mu^(-1/2) — from photogates, not from the formula.
+
+    The time step is chosen once, for the fastest string in each sweep, and then left alone,
+    as an apparatus would be: the Courant number wanders from 0.32 to 1 across a decade of
+    tension, so every run sits on a different grid-dispersion curve. The centroid timing does
+    not see that curve, and both fitted exponents come out 0.5000000 and -0.5000000, every
+    individual speed within 3e-9 of sqrt(T/mu).
+    """
+    mu = 0.01
+    tensions = np.array([1.0, 2.0, 4.0, 7.0, 10.0])
+    dt = GATE_DX / waves.wave_speed(tensions.max(), mu)
+    speeds = np.array([_photogate_speed(tension, mu, dt) for tension in tensions])
+    assert abs(scaling_exponent(tensions, speeds) - 0.5) < 1e-6
+    assert np.allclose(speeds, np.sqrt(tensions / mu), rtol=1e-7)
+
+    tension = 4.0
+    densities = np.array([0.01, 0.02, 0.04, 0.1])
+    dt = GATE_DX / waves.wave_speed(tension, densities.min())
+    speeds = np.array([_photogate_speed(tension, density, dt) for density in densities])
+    assert abs(scaling_exponent(densities, speeds) - (-0.5)) < 1e-6
+    assert np.allclose(speeds, np.sqrt(tension / densities), rtol=1e-7)
+
+
+def test_neither_the_height_nor_the_width_of_a_pulse_changes_its_speed():
+    """The falsifier for `speed-set-by-source`: shake harder or sharper, arrive at the same time.
+
+    Nine pulses on one string — three heights spanning a factor of four, three widths spanning
+    nearly three — cross the gates at the same speed to 1e-7, and that speed is sqrt(T/mu).
+    Height cannot matter, because the equation is linear and a taller pulse is the same motion
+    scaled. Width could have, and on this grid peak timing would say it does: a narrow pulse's
+    peak lags by (dx/sigma)^2 through grid dispersion, which is a fact about the computer. The
+    string has no opinion.
+    """
+    tension, mu = 4.0, 0.01
+    dt = 0.5 * GATE_DX / waves.wave_speed(tension, mu)
+    for amplitude in (0.005, 0.01, 0.02):
+        for width in (0.03, 0.05, 0.08):
+            speed = _photogate_speed(tension, mu, dt, amplitude=amplitude, width=width)
+            assert np.isclose(speed, np.sqrt(tension / mu), rtol=1e-7)
