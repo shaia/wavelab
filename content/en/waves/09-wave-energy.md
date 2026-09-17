@@ -251,9 +251,12 @@ since $\mu v^2 = T$ by definition of $v$.
 
 :::{admonition} A travelling wave splits its energy evenly, everywhere and always
 :class: theorem
+At every point and at every instant, with nothing averaged over,
+
 $$
-u_K(x,t) = u_P(x,t) \qquad\text{at every point and every instant,}
+u_K(x,t) = u_P(x,t) ,
 $$
+
 and therefore
 
 $$
@@ -311,13 +314,11 @@ which is this formula with fields in place of displacements.
 
 ### Three velocities, told apart
 
-$$
-\underbrace{\frac{\partial y}{\partial t}}_{\text{the medium}}
-\qquad
-\underbrace{v = \sqrt{T/\mu}}_{\text{the pattern}}
-\qquad
-\underbrace{\frac{P}{u} = v}_{\text{the energy}}
-$$
+| What moves | How fast | Chosen by |
+|---|---|---|
+| a piece of the medium, sideways | $\partial y/\partial t = -v\,y_x$ | whoever made the wave |
+| the pattern | $v = \sqrt{T/\mu}$ | the medium |
+| the energy | $P/u = v$ | the medium |
 
 Two of the three are the same number and the third is unrelated. The medium's speed is
 $|y_t| = v|y_x|$: the wave speed times the slope, and since the slope is small, the string
