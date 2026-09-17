@@ -351,3 +351,54 @@ def test_a_strikes_plateau_is_a_displacement():
     assert integral.check("[length]**2 / [time]")
     assert (integral / (2.0 * speed)).check("[length]")
     assert (struck_speed * half_width / speed).check("[length]")
+
+
+def test_the_energy_flux_is_a_power_and_balances_the_densities_it_moves():
+    """-T y_x y_t is in watts, and du/dt and dP/dx are both watts per metre.
+
+    A continuity equation is only a statement if its two terms are the same kind of thing. The
+    density is joules per metre and its time derivative watts per metre; the flux is watts and
+    its space derivative watts per metre. Tension supplies the joules in both places, which is
+    why one string constant serves the potential density and the flux alike.
+    """
+    tension = Quantity(4.0, "N")
+    density = Quantity(0.01, "kg/m")
+    slope = Quantity(0.015, "m") / Quantity(1.0, "m")
+    transverse_velocity = Quantity(0.3, "m/s")
+
+    flux = -tension * slope * transverse_velocity
+    assert flux.check("[power]")
+
+    time, length = Quantity(1e-4, "s"), Quantity(2.5e-3, "m")
+    energy_density = 0.5 * density * transverse_velocity**2 + 0.5 * tension * slope**2
+    assert (energy_density / time).check("[power] / [length]")
+    assert (flux / length).check("[power] / [length]")
+
+
+def test_the_mean_power_of_a_sinusoidal_wave_is_a_power_in_three_spellings():
+    """(1/2) mu v omega^2 A^2, (1/2) Z (A omega)^2 and (1/2) T v k^2 A^2 are one quantity.
+
+    The three forms are the same watts routed through different pairs of medium constants, and
+    each is the one that reads naturally in a different part of the course: mu and v on a
+    string, the impedance Z = sqrt(T mu) at module 10's junctions, and T and k wherever the
+    wavelength rather than the frequency is what is fixed.
+    """
+    tension = Quantity(4.0, "N")
+    density = Quantity(0.01, "kg/m")
+    speed = (tension / density) ** 0.5
+    impedance = (tension * density) ** 0.5
+    amplitude = Quantity(2e-3, "m")
+    omega = Quantity(251.33, "1/s")
+    wavenumber = omega / speed
+
+    by_density = 0.5 * density * speed * omega**2 * amplitude**2
+    by_impedance = 0.5 * impedance * (amplitude * omega) ** 2
+    by_wavenumber = 0.5 * tension * speed * wavenumber**2 * amplitude**2
+    assert by_density.check("[power]")
+    assert impedance.check("[mass] / [time]")
+    for other in (by_impedance, by_wavenumber):
+        assert np.isclose((other / by_density).to("dimensionless").magnitude, 1.0)
+
+    value = waves.sinusoidal_mean_power(2e-3, 251.33, 4.0, 0.01)
+    assert isinstance(value, float)
+    assert np.isclose(value, by_density.to("W").magnitude)

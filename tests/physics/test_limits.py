@@ -961,3 +961,262 @@ def test_a_travelling_sinusoid_is_the_course_convention_with_omega_equal_to_vk()
         start, STRING_SPEED, x, t, v0_integral=lambda s: -rightward(s)
     )
     assert np.max(np.abs(moving_left - np.real(amplitude * np.exp(1j * mirrored)))) < 1e-12
+
+
+# Energy on the string (module 09). The helpers below build the three states the module
+# contrasts: a right-moving pulse, a wave train long enough to average over, and a standing mode.
+
+
+def _travelling_pulse(
+    cells: int = 1600, length: float = 4.0, courant: float = 0.5, direction: float = 1.0
+) -> tuple[waves.StringEvolution, float]:
+    """A Gaussian pulse launched one way, with y_t = -/+ v y_x making it purely travelling."""
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    centre, width = (1.0 if direction > 0 else length - 1.0), 0.15
+
+    def shape(s: np.ndarray) -> np.ndarray:
+        return 0.01 * np.exp(-(((s - centre) / width) ** 2))
+
+    slope = -2.0 * (x - centre) / width**2 * shape(x)
+    dt = courant * dx / STRING_SPEED
+    steps = int(round(1.0 / STRING_SPEED / dt))
+    run = waves.simulate_string(
+        shape(x), -direction * STRING_SPEED * slope, dx, dt, STRING_TENSION, STRING_MU, steps
+    )
+    return run, dx
+
+
+def _densities(
+    run: waves.StringEvolution, dx: float, step: int
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """u_K, u_P and P at one saved step, the way a laboratory reads them off a record."""
+    slope = np.gradient(run.y[step], dx)
+    return (
+        waves.kinetic_density(run.dydt[step], STRING_MU),
+        waves.potential_density(slope, STRING_TENSION),
+        waves.energy_flux(slope, run.dydt[step], STRING_TENSION),
+    )
+
+
+def test_a_travelling_wave_carries_equal_kinetic_and_potential_energy_at_every_point():
+    """u_K = u_P point by point, not merely on average — the module's surprise, measured.
+
+    For a right-mover y = f(x - vt) the chain rule gives y_t = -v y_x, so
+    u_K = (1/2) mu v^2 y_x^2 = (1/2) T y_x^2 = u_P at every point and every instant. Nothing is
+    averaged and nothing cancels: the two densities are the same function of position. On a
+    1600-cell grid the largest pointwise gap is 1.1e-4 of the peak density and the two
+    integrated totals agree to 1.6e-4, both falling fourfold for every halving of the spacing —
+    the disagreement is the grid's, not the physics'.
+
+    An oscillator does not do this. Module 01's mass holds all its energy as potential at the
+    turning points and all of it as kinetic at the middle, and equipartition there is a
+    statement about time averages. Every element of a travelling wave is a little behind its
+    neighbour, so what the single mass does in sequence the string does all at once.
+    """
+    run, dx = _travelling_pulse()
+    kinetic, potential, _ = _densities(run, dx, run.times.size // 2)
+    peak = float((kinetic + potential).max())
+
+    assert np.max(np.abs(kinetic - potential)) < 2e-4 * peak
+    total_kinetic = float(np.trapezoid(kinetic, dx=dx))
+    total_potential = float(np.trapezoid(potential, dx=dx))
+    assert abs(total_kinetic - total_potential) < 3e-4 * total_potential
+
+
+def test_the_energy_of_a_travelling_wave_moves_at_the_wave_speed_and_in_its_direction():
+    """P = v (u_K + u_P), with the sign of the flux following the direction of travel.
+
+    Substituting y_t = -v y_x into P = -T y_x y_t gives P = T v y_x^2, while u_K + u_P is
+    T y_x^2: the flux is the density times v, which is what "the energy travels at v" has to
+    mean for a quantity that is spread out rather than located. Measured on the grid, P/u is
+    within 1.1e-6 of v across the pulse.
+
+    Both signs occur and both are right. A right-mover has P >= 0 everywhere, a left-mover
+    P <= 0 everywhere, and in each case the energy goes the way the pattern goes — whether the
+    string at that point happens to be rising or falling.
+    """
+    for direction in (1.0, -1.0):
+        run, dx = _travelling_pulse(cells=800, direction=direction)
+        kinetic, potential, flux = _densities(run, dx, run.times.size // 2)
+        density = kinetic + potential
+        carrying = density > 1e-3 * density.max()
+
+        velocity = flux[carrying] / density[carrying]
+        assert np.all(np.abs(velocity / (direction * STRING_SPEED) - 1.0) < 1e-5)
+        # Away from the pulse the flux is arithmetic dust of either sign; what has to hold is
+        # that none of it amounts to anything — the backwards-signed part carries 2.5e-8 of the
+        # total, and its largest single value is 3.4e-8 of the peak.
+        assert np.all(direction * flux >= -1e-6 * np.abs(flux).max())
+        backwards = flux[direction * flux < 0.0]
+        assert np.abs(backwards).sum() < 1e-6 * np.abs(flux).sum()
+
+
+def test_a_pluck_holds_only_potential_energy_until_it_splits_in_two():
+    """Released from rest a pluck is pure u_P; a moment later each half is half and half.
+
+    This is d'Alembert's splitting read as an energy budget. At t = 0 the string is bent and
+    still, so u_K vanishes identically — exactly, since the solver was handed zeros — and all
+    the energy is in the stretch. As the two half-height copies separate, each becomes a
+    travelling wave and must obey the equality above, so the total divides evenly between the
+    two kinds: measured, K/U = 1.00016 on a 1600-cell grid, and closer as the grid refines.
+
+    Half the height means a quarter of the energy density; two copies make half the original
+    energy. The missing half is not missing — it is the kinetic energy the two copies now have,
+    and the books balance only because both densities are quadratic in what they measure.
+    """
+    cells, length = 1600, 4.0
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+
+    def bump(s: np.ndarray) -> np.ndarray:
+        return 0.01 * np.exp(-(((s - 2.0) / 0.15) ** 2))
+
+    dt = 0.5 * dx / STRING_SPEED
+    steps = int(round(1.2 / STRING_SPEED / dt))
+    run = waves.simulate_string(
+        bump(x), np.zeros_like(x), dx, dt, STRING_TENSION, STRING_MU, steps, save_every=steps
+    )
+    start_energy = waves.total_energy(run.y[0], run.dydt[0], dx, STRING_TENSION, STRING_MU)
+
+    kinetic, potential, _ = _densities(run, dx, 0)
+    assert np.all(kinetic == 0.0)
+    assert abs(float(np.trapezoid(potential, dx=dx)) - start_energy) < 1e-3 * start_energy
+
+    kinetic, potential, _ = _densities(run, dx, -1)
+    total_kinetic = float(np.trapezoid(kinetic, dx=dx))
+    total_potential = float(np.trapezoid(potential, dx=dx))
+    assert abs(total_kinetic / total_potential - 1.0) < 1e-3
+    assert abs(total_kinetic + total_potential - start_energy) < 1e-3 * start_energy
+
+
+def _wave_train(
+    amplitude: float, wavelength: float, cells: int = 3200, length: float = 8.0
+) -> tuple[float, float, np.ndarray]:
+    """A right-moving sinusoidal train with a flat top, and the gate record it produces.
+
+    A pure sine cannot travel on a string with fixed ends — it would have to move the ends — so
+    the train is windowed, with raised-cosine shoulders and a middle flat enough that a gate at
+    4 m sees whole cycles of an unmodulated wave between t = 0.06 s and t = 0.17 s. Launching it
+    with y_t = -v y_x makes it exactly a right-mover, so d'Alembert carries the window along
+    untouched and the flat part stays flat.
+    """
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    k = 2.0 * np.pi / wavelength
+    omega = STRING_SPEED * k
+    low, high, shoulder = 0.4, 3.0, 0.4
+
+    def window(s: np.ndarray) -> np.ndarray:
+        ramp = np.clip((s - (low - shoulder)) / shoulder, 0.0, 1.0) * np.clip(
+            ((high + shoulder) - s) / shoulder, 0.0, 1.0
+        )
+        return 0.5 * (1.0 - np.cos(np.pi * ramp))
+
+    y0 = amplitude * np.sin(k * x) * window(x)
+    dt = 0.5 * dx / STRING_SPEED
+    run = waves.simulate_string(
+        y0, -STRING_SPEED * np.gradient(y0, dx), dx, dt, STRING_TENSION, STRING_MU,
+        int(round(0.20 / dt)),
+    )
+    gate = int(round(4.0 / dx))
+    slope = np.gradient(run.y, dx, axis=1)[:, gate]
+    flux = waves.energy_flux(slope, run.dydt[:, gate], STRING_TENSION)
+
+    first = int(np.searchsorted(run.times, 0.06))
+    whole_cycles = int((0.17 - 0.06) / (2.0 * np.pi / omega)) * 2.0 * np.pi / omega
+    last = int(np.searchsorted(run.times, run.times[first] + whole_cycles))
+    return float(flux[first:last].mean()), omega, run.dydt[:, gate]
+
+
+def test_a_sinusoidal_train_delivers_half_mu_v_omega_squared_amplitude_squared():
+    """The mean power through a gate matches (1/2) mu v omega^2 A^2 to better than 0.2%.
+
+    The instantaneous flux is mu v omega^2 A^2 cos^2(kx - omega t), and the average of cos^2
+    over whole cycles is one half. Measured at a gate with the train's flat top passing:
+    0.99966 of the closed form at each of three amplitudes, and 0.99879 to 0.99992 across a
+    factor of four in frequency, the residual being the grid's.
+
+    This is the course's first intensity law. Power goes as the square of the amplitude and as
+    the square of the frequency, and both squares come from one place — the flux is quadratic
+    in the transverse velocity A omega, not in the displacement.
+    """
+    for amplitude in (1e-3, 2e-3, 4e-3):
+        measured, omega, _ = _wave_train(amplitude, 0.5)
+        expected = waves.sinusoidal_mean_power(amplitude, omega, STRING_TENSION, STRING_MU)
+        assert abs(measured / expected - 1.0) < 2e-3
+
+    for wavelength in (1.0, 0.5, 0.25):
+        measured, omega, _ = _wave_train(2e-3, wavelength)
+        expected = waves.sinusoidal_mean_power(2e-3, omega, STRING_TENSION, STRING_MU)
+        assert abs(measured / expected - 1.0) < 2e-3
+
+
+def test_the_transverse_speed_and_the_wave_speed_are_independent_knobs():
+    """A omega is set by the sender, v by the medium, and neither constrains the other.
+
+    The three velocities of this module are not ranked. The pattern moves at v = sqrt(T/mu);
+    the energy moves at v as well; but a piece of string moves at y_t = -v y_x, which whoever
+    made the wave chose through the slope. On the train above the ratio is 0.025, and a real
+    string never approaches 1 — but only because the small-slope model gives out first, not
+    because anything in the equation forbids it.
+
+    The test states that arithmetic rather than simulating a string outside its model: the
+    amplitude that would make A omega exceed v also makes the slope order one, which is the
+    boundary of everything this module derives.
+    """
+    _, omega, transverse = _wave_train(2e-3, 0.5)
+    assert np.isclose(np.abs(transverse).max(), 2e-3 * omega, rtol=2e-3)
+    assert np.abs(transverse).max() < 0.03 * STRING_SPEED
+
+    # A omega = v and the slope amplitude A k = A omega / v = 1 are the same statement, so a
+    # string whose pieces keep up with its wave is a string bent at 45 degrees.
+    outrunning = STRING_SPEED / omega
+    assert np.isclose(outrunning * omega, STRING_SPEED)
+    assert np.isclose(outrunning * (omega / STRING_SPEED), 1.0)
+    assert outrunning > 30.0 * 2e-3  # ... at forty times the train's amplitude, on a 0.5 m wave
+
+
+def test_a_standing_wave_stores_energy_without_transporting_any():
+    """Its flux is large at every instant and zero on average, everywhere along the string.
+
+    A mode y = A sin(kx) cos(omega t) has P = T A^2 k omega sin(kx) cos(kx) sin(omega t)
+    cos(omega t), which is odd in time about every half period, so its average over a cycle
+    vanishes at every x. Measured over four periods of the third mode, the largest
+    time-averaged flux anywhere is 5.7e-7 of the largest instantaneous flux: energy sloshes a
+    quarter wavelength each way and none of it goes anywhere.
+
+    The contrast with the travelling wave reaches the densities too. Here u_K and u_P are not
+    equal pointwise — at the moment of release the string is all potential, and a quarter period
+    later all kinetic, so their largest pointwise difference is the whole density. Only after
+    averaging over a cycle do the totals match, to 6e-4. Equipartition at every point and
+    instant belongs to a travelling wave, not to waves in general; module 11 builds the full
+    standing-wave budget on this seed.
+    """
+    cells, length, mode = 800, 1.0, 3
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    k = mode * np.pi / length
+    omega = STRING_SPEED * k
+    amplitude = 2e-3
+
+    dt = 0.5 * dx / STRING_SPEED
+    per_period = int(round((2.0 * np.pi / omega) / dt))
+    run = waves.simulate_string(
+        amplitude * np.sin(k * x), np.zeros_like(x), dx, dt,
+        STRING_TENSION, STRING_MU, 4 * per_period,
+    )
+    slope = np.gradient(run.y, dx, axis=1)
+    flux = waves.energy_flux(slope, run.dydt, STRING_TENSION)
+    averaged = flux[: 4 * per_period].mean(axis=0)
+
+    assert np.abs(averaged).max() < 1e-5 * np.abs(flux).max()
+    assert np.abs(flux).max() > 1e-3  # the instantaneous flux is not itself small
+
+    kinetic = waves.kinetic_density(run.dydt, STRING_MU)
+    potential = waves.potential_density(slope, STRING_TENSION)
+    assert np.max(np.abs(kinetic - potential)) > 0.9 * np.max(kinetic + potential)
+
+    mean_kinetic = float(np.trapezoid(kinetic, dx=dx, axis=1)[: 4 * per_period].mean())
+    mean_potential = float(np.trapezoid(potential, dx=dx, axis=1)[: 4 * per_period].mean())
+    assert abs(mean_kinetic / mean_potential - 1.0) < 2e-3

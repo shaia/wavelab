@@ -28,6 +28,12 @@ The string always has uniform tension. That is not a simplification but a conseq
 model: with purely transverse motion nothing pushes the string sideways, so the horizontal
 force balance on every element makes T the same everywhere. Density is free to vary from point
 to point, and a jump in it is how a junction between two media is built.
+
+The energy functions answer what the solver leaves open: if no piece of the medium travels with
+a pulse, what does? A density pair and a flux — u_K = (1/2) mu y_t^2, u_P = (1/2) T y_x^2 and
+P = -T y_x y_t — obey du/dt + dP/dx = 0, which is the first local conservation law in the
+course and the template for every later one. They are diagnostics: `simulate_string` never
+consults them, so agreement between them and it is evidence rather than construction.
 """
 
 from __future__ import annotations
@@ -294,6 +300,73 @@ def dalembert_solution(
     return displacement[0] if np.ndim(t) == 0 else displacement
 
 
+def kinetic_density(dydt: np.ndarray | float, mu: np.ndarray | float) -> np.ndarray | float:
+    """Kinetic energy per unit length of a moving string, u_K = (1/2) mu (dy/dt)^2 [J/m].
+
+    A length dx of string is a particle of mass mu dx moving sideways at dy/dt, and this is
+    its kinetic energy divided by dx. Nothing here is special to waves: it is module 01's
+    (1/2) m v^2, written per metre because there is now a string's worth of it everywhere.
+
+    `dydt` may be a single snapshot, a whole history of shape (n_times, n_points), or one
+    number; `mu` may be a scalar or one value per grid point.
+    """
+    velocity = np.asarray(dydt, dtype=float)
+    density = np.asarray(mu, dtype=float)
+    if np.any(density <= 0):
+        raise ValueError("mu must be positive")
+    return 0.5 * density * velocity**2
+
+
+def potential_density(dydx: np.ndarray | float, tension: float) -> np.ndarray | float:
+    """Potential energy per unit length of a stretched string, u_P = (1/2) T (dy/dx)^2 [J/m].
+
+    A string stores energy by being longer than it was. Tilting a length dx to a slope y_x
+    lengthens it to sqrt(1 + y_x^2) dx, and the work done against a constant tension T is
+    T times that extra length,
+
+        T (sqrt(1 + y_x^2) - 1) dx = (1/2) T y_x^2 dx + O(y_x^4) dx,
+
+    so the density is (1/2) T y_x^2. The expansion is the small-slope assumption again, one
+    order deeper than the wave equation needed it: where the equation of motion dropped terms
+    of order y_x^2, the energy keeps them and drops y_x^4.
+
+    Note what this says about where a wave's energy is. It is not the displacement that stores
+    energy but the *slope* — a stretch of string lifted bodily and held flat stores nothing,
+    however high it is held. On a travelling sine the steepest points are the zero crossings,
+    which is where both densities peak, and the crests are momentarily empty.
+    """
+    slope = np.asarray(dydx, dtype=float)
+    if tension <= 0:
+        raise ValueError("tension must be positive")
+    return 0.5 * float(tension) * slope**2
+
+
+def energy_flux(
+    dydx: np.ndarray | float, dydt: np.ndarray | float, tension: float
+) -> np.ndarray | float:
+    """Power crossing a point of the string, toward +x, P = -T (dy/dx)(dy/dt) [W].
+
+    Cut the string at x. The left piece holds the right one up, pulling it along the string's
+    own direction with tension T, whose transverse component is -T y_x for small slopes. That
+    force acts on a point moving at y_t, and force times velocity is the rate the left piece
+    does work on the right: the energy per second handed across the cut.
+
+    The sign is the direction, and both signs occur. A right-moving wave has y_t = -v y_x, so
+    P = T v y_x^2 >= 0 — energy always flows the way the wave goes, whether the string is
+    rising or falling there. A left-mover has y_t = +v y_x and P <= 0. On a standing wave the
+    flux reverses twice a cycle and averages to zero everywhere: the energy sloshes between
+    neighbouring quarter-wavelengths and none of it goes anywhere.
+
+    Together with `kinetic_density` and `potential_density` this satisfies the course's first
+    local conservation law, du/dt + dP/dx = 0, with u = u_K + u_P.
+    """
+    slope = np.asarray(dydx, dtype=float)
+    velocity = np.asarray(dydt, dtype=float)
+    if tension <= 0:
+        raise ValueError("tension must be positive")
+    return -float(tension) * slope * velocity
+
+
 def total_energy(
     y: np.ndarray,
     dydt: np.ndarray,
@@ -336,3 +409,23 @@ def total_energy(
     potential = 0.5 * tension * np.sum(np.diff(displacement, axis=-1) ** 2, axis=-1) / dx
     energy = kinetic + potential
     return float(energy[0]) if single else energy
+
+
+def sinusoidal_mean_power(amplitude: float, omega: float, tension: float, mu: float) -> float:
+    """Average power a travelling sine carries along the string, (1/2) mu v omega^2 A^2 [W].
+
+    For y = Re[A e^{i(kx - omega t)}] the flux is P = T v y_x^2 = mu v omega^2 A^2 cos^2(...),
+    and the mean of cos^2 over a cycle is 1/2. Every factor earns its place: doubling the
+    amplitude quadruples the power, and so does doubling the frequency, because the flux goes
+    as the square of the transverse velocity A omega. Sending a wave twice as fast for a given
+    shape — a tighter string — costs power in proportion to v.
+
+    Written with the impedance Z = sqrt(T mu) = mu v this is (1/2) Z (A omega)^2: an amplitude
+    times a property of the medium, the form module 10 generalises and every later part of the
+    course reuses, down to a laser beam's intensity being proportional to the square of its
+    field.
+    """
+    if omega < 0:
+        raise ValueError("omega must be non-negative")
+    speed = wave_speed(tension, mu)
+    return 0.5 * float(mu) * speed * float(omega) ** 2 * float(amplitude) ** 2

@@ -421,3 +421,96 @@ def test_a_noisy_photogate_pair_recovers_the_wave_speed_whatever_the_seed():
     by_centroid = seed_study(_speed_by_centroid, n_seeds=32, base_seed=3)
     by_peak = seed_study(_speed_by_peak, n_seeds=32, base_seed=3)
     assert by_peak.relative_spread > 2.0 * by_centroid.relative_spread
+
+
+# The wattmeter, watched through a camera. A right-moving sinusoidal train passes a gate, and
+# all that is recorded is the displacement of three neighbouring points over time — the patch a
+# camera would actually see. Everything else, the slope and the transverse velocity, has to be
+# differenced out of it, and the noise goes along for the ride.
+WATT_TENSION = 4.0
+WATT_MU = 0.01
+WATT_SPEED = waves.wave_speed(WATT_TENSION, WATT_MU)
+WATT_AMPLITUDE = 2e-3
+WATT_WAVELENGTH = 0.5
+WATT_OMEGA = WATT_SPEED * 2.0 * np.pi / WATT_WAVELENGTH
+WATT_EXACT = waves.sinusoidal_mean_power(WATT_AMPLITUDE, WATT_OMEGA, WATT_TENSION, WATT_MU)
+WATT_NOISE = 0.05 * WATT_AMPLITUDE
+
+
+def _watt_patch() -> tuple[np.ndarray, float, float, slice]:
+    cells, length = 3200, 8.0
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    k = 2.0 * np.pi / WATT_WAVELENGTH
+    low, high, shoulder = 0.4, 3.0, 0.4
+    ramp = np.clip((x - (low - shoulder)) / shoulder, 0.0, 1.0) * np.clip(
+        ((high + shoulder) - x) / shoulder, 0.0, 1.0
+    )
+    y0 = WATT_AMPLITUDE * np.sin(k * x) * 0.5 * (1.0 - np.cos(np.pi * ramp))
+
+    dt = 0.5 * dx / WATT_SPEED
+    run = waves.simulate_string(
+        y0, -WATT_SPEED * np.gradient(y0, dx), dx, dt, WATT_TENSION, WATT_MU,
+        int(round(0.20 / dt)),
+    )
+    gate = int(round(4.0 / dx))
+    first = int(np.searchsorted(run.times, 0.06))
+    cycles = int((0.17 - 0.06) / (2.0 * np.pi / WATT_OMEGA)) * 2.0 * np.pi / WATT_OMEGA
+    last = int(np.searchsorted(run.times, run.times[first] + cycles))
+    return run.y[:, gate - 1 : gate + 2], dx, dt, slice(first, last)
+
+
+WATT_PATCH, WATT_DX, WATT_DT, WATT_WINDOW = _watt_patch()
+
+
+def _power_by_cross_differencing(rng: np.random.Generator) -> float:
+    """The honest wattmeter: slope from the neighbours in space, velocity from those in time."""
+    noisy = measurement.add_noise(WATT_PATCH, WATT_NOISE, rng)
+    slope = (noisy[:, 2] - noisy[:, 0]) / (2.0 * WATT_DX)
+    velocity = (noisy[2:, 1] - noisy[:-2, 1]) / (2.0 * WATT_DT)
+    flux = waves.energy_flux(slope[1:-1], velocity, WATT_TENSION)
+    return float(flux[WATT_WINDOW].mean())
+
+
+def _power_by_slope_squared(rng: np.random.Generator) -> float:
+    """The tempting shortcut: for a right-mover P = T v y_x^2, so measure only the slope."""
+    noisy = measurement.add_noise(WATT_PATCH, WATT_NOISE, rng)
+    slope = (noisy[:, 2] - noisy[:, 0]) / (2.0 * WATT_DX)
+    return float((WATT_TENSION * WATT_SPEED * slope**2)[WATT_WINDOW].mean())
+
+
+def test_a_noisy_wattmeter_recovers_the_mean_power_only_if_it_differences_two_ways():
+    """Cross-differencing agrees with (1/2) mu v omega^2 A^2; squaring one record does not.
+
+    Both estimators are honest arithmetic on the same noisy pictures of the same string, and
+    they differ by a factor of three and a half. Over 32 seeds the cross-differenced wattmeter
+    reads (0.0248 +/- 0.0007) W against the closed form's 0.02527 W — agreement within its own
+    error bar. The slope-squared wattmeter reads 0.0886 W, and `agrees_with` rejects it.
+
+    The reason is the difference between a product and a square. P = -T y_x y_t takes its slope
+    from the two neighbours in space and its velocity from the two neighbours in time, so the
+    two noises are drawn from disjoint samples, independent, and their cross term averages
+    away. P = T v y_x^2 takes both from the same numbers, so the noise multiplies itself:
+    <(y_x + d)^2> = <y_x^2> + sigma_d^2, and the estimator is biased high by T v sigma_d^2 no
+    matter how long anyone averages. That predicted offset is 0.0640 W, which is 253% of the
+    signal; the measured excess is 251%.
+
+    A bias that survives averaging is the hardest kind to catch, and it is *generic* to
+    measuring anything quadratic — intensity, power, variance. Every later part of the course
+    measures something proportional to the square of an amplitude; this is where the course
+    says once that the square of a noisy number is not the noisy number's square.
+    """
+    honest = seed_study(_power_by_cross_differencing, n_seeds=32, base_seed=9)
+    assert honest.agrees_with(WATT_EXACT, n_sigma=3.0)
+    assert honest.relative_spread < 0.2
+
+    biased = seed_study(_power_by_slope_squared, n_seeds=32, base_seed=9)
+    assert not biased.agrees_with(WATT_EXACT, n_sigma=3.0)
+
+    sigma_slope = WATT_NOISE * np.sqrt(2.0) / (2.0 * WATT_DX)
+    predicted_offset = WATT_TENSION * WATT_SPEED * sigma_slope**2
+    assert abs((biased.mean - honest.mean) / predicted_offset - 1.0) < 0.05
+
+    other_family = seed_study(_power_by_cross_differencing, n_seeds=32, base_seed=77)
+    combined = float(np.hypot(honest.standard_error, other_family.standard_error))
+    assert abs(honest.mean - other_family.mean) < 3.0 * combined
