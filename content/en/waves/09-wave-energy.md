@@ -406,6 +406,16 @@ flux, while the instantaneous flux itself peaks at 12.6 mW. The cycle-averaged k
 potential totals agree to $1.6\times10^{-4}$, and the pointwise difference between the densities
 reaches the entire density — the contrast with the travelling wave, in one run.
 
+**7. And what a real string can be asked.** Two of this module's three velocities are within
+reach of a phone camera. Film a pulse on a stretched slinky, time its arrival at two tape marks
+as module 08's problem 5 does, and then track a single taped coil frame by frame: two velocities
+out of one video, differing by more than a factor of ten. The flux is another matter. Measuring
+$P$ at a point means knowing the slope and the transverse velocity there *at the same instant*
+and multiplying them — two small, separately noisy numbers, with the bias the laboratory's last
+part measures waiting underneath. No affordable apparatus reads it directly, so a home
+experiment measures the flux's *consequences* instead: energy arriving where it was not before.
+The problem set sets that up.
+
 (09-wave-energy-transfer)=
 ## Transfer the idea
 

@@ -196,3 +196,33 @@ which of them the paper shows to be convention rather than fact.
 
 (e) Write one sentence explaining the difference between "physics does not know the answer" and
 "this model cannot represent the question". Which one is the case here?
+
+## Problem 9 — two velocities from one video
+
+<!-- objectives: OBJ-09-1, OBJ-09-2 -->
+
+Use the slinky footage of module 08's problem 5: a slinky stretched to $L = 4.0$ m along a
+smooth floor, filmed at 240 frames per second, with tape marks every 0.50 m and a small flag
+taped to one coil near the middle.
+
+(a) The flag's sideways position is read off each frame. Over the eleven frames while the pulse
+passes, it rises from 0 to 42 mm and returns. Estimate the flag's greatest transverse speed, and
+compare it with the pulse speed you measured in module 08 (3.00 m in 69 frames). Which of the
+module's three velocities have you now measured, and which have you not?
+
+(b) Use $y_t = -v\,y_x$ to convert your answer to (a) into the pulse's steepest slope. Is the
+small-slope assumption safe on this slinky? Give the size of the largest term the model drops.
+
+(c) The slinky has mass $M = 0.22$ kg. Using $\mu = M/L$ and the speed from module 08, estimate
+the tension, then estimate $u_K$ at the flag at the instant it was moving fastest. Say which of
+your inputs your answer is most sensitive to.
+
+(d) You want to measure the flux $P$ directly. Explain what two quantities you would have to
+read off the same frame, at the same place, and why the product of two noisy small numbers is
+harder to measure well than either of them — referring to problem 7 for the direction the error
+goes.
+
+(e) Design an experiment that measures the energy the pulse delivered *without* measuring $P$ at
+all: something at the far end that the arriving pulse visibly moves, whose energy you can
+compute afterwards. State what you would have to calibrate, and what you would compare your
+answer with.
