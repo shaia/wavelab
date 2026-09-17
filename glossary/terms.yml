@@ -454,9 +454,11 @@ terms:
   - key: continuity-equation
     en: continuity equation
     he: משוואת רציפות
+  # The Hebrew is part-05's proposal for module 15, which reuses this key for the electric and
+  # magnetic energy densities of a light wave; the more explicit form travels better there.
   - key: equipartition
     en: equipartition
-    he: חלוקה שווה
+    he: חלוקה שווה של אנרגיה
   # Five keys below belong by subject to later modules, and by the ownership rule in
   # plans/README.md ("owner = earliest depositing module in teaching order") to this one, whose
   # page is the first to need each of them in prose. Those modules cite these entries rather

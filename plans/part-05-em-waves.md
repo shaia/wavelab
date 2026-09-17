@@ -393,10 +393,12 @@ in §5. **Glossary themes:** electromagnetic-wave vocabulary (14), radiometric e
   doubles its brightness." Falsifier: sweep $E_0$ over a decade, measure the time-averaged
   $|\mathbf{S}|$, log-log slope $2.00 \pm$ uncertainty via `validation.scaling_exponent` —
   brightness quadruples. Distractor: `Q-15-2`'s "twice as bright". (Registry gains this id.)
-- **Glossary terms:** `poynting-vector` (וקטור פוינטינג), `irradiance` (עוצמת קרינה — usage
-  note: the course says "intensity" informally, `irradiance` in definitions; `he_reject`
-  candidate: אינטנסיביות), `radiation-pressure` (לחץ קרינה), `equipartition` (חלוקה שווה של
-  אנרגיה — translator to weigh אקוויפרטיציה).
+- **Glossary terms:** `irradiance` (עוצמת קרינה — usage note: the course says "intensity"
+  informally, `irradiance` in definitions; `he_reject` candidate: אינטנסיביות),
+  `radiation-pressure` (לחץ קרינה). `poynting-vector` (וקטור פוינטינג) and `equipartition`
+  (חלוקה שווה של אנרגיה — this plan's wording, taken as proposed) were deposited by
+  `09-wave-energy`, the first module in teaching order whose prose needs them (part-03 §5.2,
+  as-built deviation 2); this module cites both.
 - **Interactive controls and simulations:** energy dashboard ($E_0$, $\lambda$,
   averaging-window sliders; four panels); calibration card (source presets, live
   $I \leftrightarrow E_0$); solar-sail toy (area, mass, reflectivity; velocity vs time against

@@ -1,6 +1,6 @@
 # Part III — Continuous Systems and the Wave Equation — Implementation Plan
 
-> **Master plan:** §10 (Part III). **Modules:** `08-wave-equation`, `09-wave-energy`, `10-impedance`. **Status:** in progress — `08-wave-equation` built.
+> **Master plan:** §10 (Part III). **Modules:** `08-wave-equation`, `09-wave-energy`, `10-impedance`. **Status:** in progress — `08-wave-equation` and `09-wave-energy` built.
 > Canonical numbering, invariants, and conflict log: [README.md](README.md).
 
 ## 1. Part overview and narrative arc
@@ -63,7 +63,7 @@ passes through it.
 | Module id | Content path | Title | Master-plan notebooks | Textbook companion | Status |
 |---|---|---|---|---|---|
 | `08-wave-equation` | `content/en/waves/08-wave-equation.md` | The wave equation: oscillations acquire space | 3.1 + 3.2 | Georgi, continuum limit & travelling waves; French, progressive waves | **built** |
-| `09-wave-energy` | `content/en/waves/09-wave-energy.md` | Wave energy: what actually travels | 3.3 | French, energy in progressive waves; MIT 8.03 energy-transport lectures | planned |
+| `09-wave-energy` | `content/en/waves/09-wave-energy.md` | Wave energy: what actually travels | 3.3 | French, energy in progressive waves; MIT 8.03 energy-transport lectures | **built** |
 | `10-impedance` | `content/en/waves/10-impedance.md` | Impedance: reflection and transmission at boundaries | 3.4 | Georgi, impedance & reflections; French, boundary effects | planned |
 
 ## 4. Shared infrastructure for this part
@@ -117,6 +117,11 @@ power_coefficients(Z1, Z2) -> (R, T)             # r**2 and (Z2/Z1)*t**2; sums t
 
 `StringEvolution` is a small dataclass (times, per-step $y$ and $\partial y/\partial t$) so energy
 diagnostics need no re-differencing by callers.
+
+As built, this part's share of `waves.py` gained a fifth energy function beyond the sketch:
+`sinusoidal_mean_power(amplitude, omega, tension, mu)`, the closed form
+$	frac12\mu v\omega^2 A^2$, because invariant 3 forbids the page and the laboratory from
+writing it out themselves (§5.2, deviation 1).
 
 **`tests/physics/` additions:**
 
@@ -336,7 +341,7 @@ deposits of wave (as opposed to oscillation) terminology.
   result §5.1 did not have: a stretched slinky's crossing time $\sqrt{ML/(k(L - L_0))}$ barely
   depends on the stretch when $L \gg L_0$, which makes a two-measurement test.
 
-### 5.2 `09-wave-energy` — Wave energy: what actually travels
+### 5.2 `09-wave-energy` — Wave energy: what actually travels (as built)
 
 - **Identity and scope:** master-plan notebook 3.3: energy densities, flux, transport, the
   three-velocities distinction. Deferred: standing-wave energy budget (`11-standing-waves`);
@@ -441,6 +446,104 @@ deposits of wave (as opposed to oscillation) terminology.
 - **Validation gates:** standard set with `--module 09-wave-energy`; §4 flux/density tests here.
 - **Open questions for the author:** cite the momentum literature explicitly? (recommendation: one
   citation); wattmeter in the page's `explore` or lab only (recommendation: lab only).
+- **Open questions, as resolved when built.** Both recommendations were taken. The momentum note
+  carries exactly one citation, and the choice of *which* is itself a decision: Rowland's 2011
+  Eur. J. Phys. paper, rather than a general treatment, because it shows that the potential
+  energy *density* — a quantity this module defines and uses — stops being unambiguous once
+  longitudinal motion is taken seriously. A reference that undermines something the module
+  actually asserts is worth more than one that merely reports a disagreement. The
+  Abraham–Minkowski parallel was added beside it, forwarding to `16-light-in-matter`. The
+  wattmeter is in the laboratory only; the page shows the flux through the third animation and
+  quotes the laboratory's numbers, which is as much `explore` as it needs.
+- **As-built deviations from this section.** Ten. The numerical ones are pinned by tests, and the
+  first two are the only changes to what §4 said the part would contain.
+
+  (1) **`sinusoidal_mean_power` is a fifth function, beyond §4's list.** §4 specifies
+  `kinetic_density`, `potential_density`, `energy_flux` and `total_energy` and stops there,
+  leaving $\langle P\rangle = \tfrac12\mu v\omega^2 A^2$ as something a caller would write out.
+  Invariant 3 forbids that: it is physics, and the page, the laboratory and three tests all need
+  it. Added as `sinusoidal_mean_power(amplitude, omega, tension, mu)`, whose docstring also
+  carries the impedance form $\tfrac12 Z (A\omega)^2$ that part-06 onwards reuses.
+
+  (2) **Four glossary keys belonging by subject to later modules were deposited here.**
+  §5.2's list is the six the module owns, plus `equipartition`, which the page needs and the
+  plan did not foresee. Beyond those, this page is the first in teaching order to use
+  `impedance`, `phase-velocity`, `group-velocity` and `poynting-vector` in prose, and
+  README.md's rule assigns a key to its earliest depositor. §5.3 and part-04 §5.2 now cite
+  rather than deposit; the conflict log records all four. The `impedance` gap was the oldest of
+  them: modules 00 and 02 have written עכבה in Hebrew since Part 0 with nothing in the glossary
+  to hold them to it.
+
+  (3) **The energy velocity converges at fourth order, and earned a box for it.** §5.2 asks for
+  $P = vu$ as a `theorem` with a `numerical-observation` companion, expecting the companion to
+  report second order like everything else. It does not: $1 - P/(vu)$ falls sixteenfold per
+  halving of $\Delta x$ — $1.7\times10^{-5}$, $1.1\times10^{-6}$, $6.9\times10^{-8}$,
+  $4.4\times10^{-9}$ — because the first-order departure from a pure right-mover cancels between
+  the flux and the density, leaving its square. The equipartition it is built on converges at
+  the ordinary second order, $1.8\times10^{-3}$ to $2.8\times10^{-5}$ over the same grids. The
+  box says so, and the claim that a wave's energy travels at exactly $v$ is the most robust
+  number in the module.
+
+  (4) **The scheme satisfies a discrete conservation law exactly in space, which is a second
+  box.** Not in the plan at all. Assign the kinetic energy to the grid points and the potential
+  energy and flux to the cells between them — the cell's slope times the mean velocity of its
+  two ends — and substituting the solver's own update makes every term cancel identically, for
+  any $\Delta x$. So the residual is purely the time step: $3.3\times10^{-3}$,
+  $8.3\times10^{-4}$, $2.1\times10^{-4}$ at $S = 0.5, 0.25, 0.125$ on one grid, while the same
+  law read pointwise sits at $1.0\times10^{-2}$ and does not move when the step does. It is
+  module 08's "the stencil is the chain" one level up, and the test carries both readings so the
+  contrast cannot be lost.
+
+  (5) **Every sinusoidal measurement runs on a windowed train launched with an analytic slope.**
+  §5.2's verify and lab bullets ask for a wattmeter against $\tfrac12\mu v\omega^2A^2$ without
+  saying what carries the sine, and a travelling sine cannot live on a string with fixed ends —
+  it would have to move them. The train is windowed, flat-topped, and kept clear of both walls,
+  and the gate averages over whole cycles of the flat part. Launching it with `np.gradient` of
+  its own shape instead of the written-down derivative sends $(k\Delta x)^2/6$ of the shortest
+  wave the other way, and the measured mean power then falls 1.4% below the closed form at
+  100 Hz instead of 0.8%.
+
+  (6) **The fitted frequency exponent is 1.995, not 2, and the shortfall is the measurement's.**
+  The slope at the gate is recovered by a centred difference, which reads the slope of a sine
+  low by $(k\Delta x)^2/6$ — 0.6% where a wavelength spans 32 grid points. The amplitude sweep
+  has no such term and fits $2.000000$. The laboratory quotes both and explains the difference
+  rather than rounding it away; it is module 08's centroid-against-peak lesson in a second
+  costume.
+
+  (7) **The noisy wattmeter grew a biased twin, and it became the measurement lesson.** §5.2's
+  lab step (6) asks only for $\langle P\rangle \pm \sigma$ across seeds. As built there are two
+  estimators on the same noisy record: one cross-differencing space and time, which is unbiased
+  because the two noises come from disjoint samples, and one squaring a single slope record —
+  legitimate algebra for a right-mover — which is biased high by $T v\sigma^2/(2\Delta x^2)$ and
+  does not improve with averaging. On the laboratory's grid that is 26% of the signal, measured
+  to within 1% of the prediction; on the finer test grid, 253%. `seed_study.agrees_with` accepts
+  the first and rejects the second. Every later part of the course measures something
+  proportional to an amplitude squared, so the course says once, here, that the square of a
+  noisy number is not the noisy number's square.
+
+  (8) **Three media shots, not two.** §5.2 lists the energy-painted sine and the pulse with
+  coinciding densities. A third, `wave-energy-transport`, puts a travelling train and a standing
+  mode side by side with a gate on each and plots what the gates see, because OBJ-09-5 otherwise
+  has no picture and the module's last verification is its sharpest contrast. Both fluxes
+  oscillate at twice the wave frequency and the standing peak is a quarter of the travelling
+  one, so they share an axis with no scaling. The frame spacing these shots want is far past the
+  Courant limit, so `_frame_step` divides it down to a stable step and saves every k-th one.
+
+  (9) **The standing-wave contrast is stated in the densities as well as the flux.** §5.2 asks
+  for zero time-averaged flux. The mirror-image result is at least as useful and costs one line:
+  a standing wave's $u_K$ and $u_P$ are *not* equal pointwise — at release all potential, a
+  quarter period later all kinetic, so their largest pointwise difference is the whole density —
+  and only the cycle averages match, to $1.6\times10^{-4}$. Pointwise equipartition is thereby a
+  signature of one-way travel rather than a fact about waves, which is what makes it worth a
+  theorem box.
+
+  (10) **A rejected spelling collided with an ordinary Hebrew word.** §5.3 proposes
+  `he_reject: [אימפדנס, התנגדות]` for `impedance`, and deposit (2) brought it forward to this
+  module. התנגדות is the right rejection — it is electrical *resistance* — and also the ordinary
+  Hebrew for "objection", which this page's advanced section had used in that sense. The lint
+  caught it on the first run over the new glossary. The rejection stands and the prose says
+  השגה; module 10 will need the protection more than any one page needs the word. Recorded here
+  because it will happen again.
 
 ### 5.3 `10-impedance` — Impedance: reflection and transmission at boundaries
 
@@ -529,7 +632,9 @@ deposits of wave (as opposed to oscillation) terminology.
   free-end and heavy-to-light runs return the pulse upright, and the live $r$ readout changes sign
   exactly at $Z_2 = Z_1$. Distractor: "inverted in both cases, since reflection always flips a
   pulse."
-- **Glossary terms:** `impedance` (עכבה; `he_reject`: אימפדנס, התנגדות), `reflection-coefficient`
+- **Glossary terms:** `impedance` — deposited by `09-wave-energy`, whose page is the first to
+  use the word (see §5.2's as-built deviation 2); this module cites it. New here:
+  `reflection-coefficient`
   (מקדם החזרה), `transmission-coefficient` (מקדם העברה), `junction` (צומת; translator to weigh
   חיבור), `impedance-matching` (תיאום עכבות), `fixed-end` (קצה קבוע), `free-end` (קצה חופשי).
 - **Interactive controls and simulations:** beyond the explore bullets — a "find the match" game
