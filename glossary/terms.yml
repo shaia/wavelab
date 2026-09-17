@@ -433,3 +433,45 @@ terms:
   - key: courant-number
     en: Courant number
     he: מספר קורנט
+  # Energy vocabulary, deposited by module 09 (plans/part-03-waves.md section 5.2) — the first
+  # terms for what a wave carries, as opposed to what it is. `intensity`, `kinetic-energy` and
+  # `potential-energy` already exist above and are cited, not re-deposited.
+  - key: energy-density
+    en: energy density
+    he: צפיפות אנרגיה
+  - key: energy-flux
+    en: energy flux
+    he: שטף אנרגיה
+  - key: instantaneous-power
+    en: instantaneous power
+    he: הספק רגעי
+  - key: transverse-velocity
+    en: transverse velocity
+    he: מהירות רוחבית
+  - key: conservation-law
+    en: conservation law
+    he: חוק שימור
+  - key: continuity-equation
+    en: continuity equation
+    he: משוואת רציפות
+  - key: equipartition
+    en: equipartition
+    he: חלוקה שווה
+  # Five keys below belong by subject to later modules, and by the ownership rule in
+  # plans/README.md ("owner = earliest depositing module in teaching order") to this one, whose
+  # page is the first to need each of them in prose. Those modules cite these entries rather
+  # than re-deposit them. `impedance` is the oldest gap of the five: Hebrew pages 00 and 02
+  # already wrote עכבה with nothing here to hold them to it.
+  - key: impedance
+    en: impedance
+    he: עכבה
+    he_reject: [אימפדנס, התנגדות]
+  - key: phase-velocity
+    en: phase velocity
+    he: מהירות פאזה
+  - key: group-velocity
+    en: group velocity
+    he: מהירות חבורה
+  - key: poynting-vector
+    en: Poynting vector
+    he: וקטור פוינטינג
