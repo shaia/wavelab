@@ -422,9 +422,12 @@ algebra below is the same algebra, and it is worth recognising it now rather tha
 four more times.
 
 - **Light at a surface (module 18).** For normal incidence the Fresnel coefficients are
-  $r = (n_1 - n_2)/(n_1 + n_2)$ and $t = 2n_1/(n_1 + n_2)$ — this module's formulas with the
-  optical impedance $Z \propto 1/n$ in place of $\sqrt{T\mu}$. Light reflecting off glass is
-  inverted for the same reason a pulse off a wall is: the far side is harder.
+  $r = (n_1 - n_2)/(n_1 + n_2)$ and $t = 2n_1/(n_1 + n_2)$ — this module's formulas letter for
+  letter, with the refractive index sitting in the slot where $Z$ sits here. Light reflecting
+  off glass comes back inverted for the same reason a pulse off a wall does: in the slot that
+  decides the sign, glass is the harder side. (The index is *not* light's impedance, which is
+  $Z = Z_0/n$ and falls as $n$ rises. The advanced section says why the formula still reads
+  this way.)
 - **Anti-reflection coatings (module 24).** A quarter-wave layer of index $\sqrt{n_1n_3}$ is the
   advanced section of this page with $Z \to n$.
 - **Cavities and interferometers (module 26).** Two junctions facing each other, with the wave
@@ -517,9 +520,13 @@ medium answers when asked for force per unit velocity, and only the names change
 | transmission line | charge | voltage $V$ | $Z = \sqrt{L'/C'}$ |
 | light (normal incidence) | electric field $E$ | magnetic field $H$ | $Z = \sqrt{\mu_0/\varepsilon} = Z_0/n$ |
 
-The last row is module 14's, and it is why $r = (n_1 - n_2)/(n_1 + n_2)$ has a minus sign where
-this module's has one: a higher index is a *lower* impedance, and a slower, harder medium
-either way.
+The last row is module 14's, and it carries a subtlety worth meeting once. Light's impedance
+*falls* as the index rises, $Z = Z_0/n$, and yet the Fresnel coefficient at normal incidence
+reads $r = (n_1 - n_2)/(n_1 + n_2)$ — the index in the slot where this module puts $Z$. Both
+statements are true. The amplitude quoted for light is the electric field, which is the
+force-like member of its pair, where a string's $y$ is the motion-like member of ours;
+swapping which member you track inverts the mismatch ratio, $Z 	o 1/Z$, and the two
+inversions cancel into one identical formula. Module 18 boxes the two side by side.
 
 **A junction with no echo, on a string.** Insert a section of impedance $Z_2 = \sqrt{Z_1Z_3}$
 and length $\lambda_2/4$ between media 1 and 3, where $\lambda_2$ is the wavelength *in the
