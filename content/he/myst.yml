@@ -58,6 +58,8 @@ project:
         - file: waves/08-wave-equation-problems.md
         - file: waves/09-wave-energy.md
         - file: waves/09-wave-energy-problems.md
+        - file: waves/10-impedance.md
+        - file: waves/10-impedance-problems.md
 site:
   template: book-theme
   options:

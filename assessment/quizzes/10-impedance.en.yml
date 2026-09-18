@@ -1,0 +1,235 @@
+module: 10-impedance
+questions:
+  - id: Q-10-1
+    type: multiple-choice
+    objectives: [OBJ-10-3]
+    misconception: reflection-always-inverts
+    prompt: >-
+      A pulse travels along a heavy rope and reaches a knot where the rope becomes a light
+      thread; the tension is the same throughout. A second, identical pulse travels along the
+      same heavy rope toward a wall. Which pair of reflections do you see?
+    choices:
+      - text: Upright off the light thread, inverted off the wall.
+        correct: true
+        feedback: >-
+          Right, and one formula covers both. The reflected amplitude is
+          r = (Z1 - Z2)/(Z1 + Z2) with Z = sqrt(T mu), so the sign of r is the sign of
+          Z1 - Z2: the echo inverts only when the far side is *harder* than the near one. A
+          light thread has a smaller Z, so r > 0 and the pulse returns upright; a wall is the
+          limit Z2 -> infinity, so r = -1 and the pulse returns upside down. Simulated, the
+          same junction gives +1/3 from the heavy side and -1/3 from the light side of a 4:1
+          density pair, with the change of sign exactly at equal densities.
+      - text: Inverted in both cases, since reflection always flips a pulse.
+        correct: false
+        feedback: >-
+          This is the module's misconception, and it comes from meeting reflection first at a
+          wall, which is one end of the range rather than the rule. Run the formula:
+          r = (Z1 - Z2)/(Z1 + Z2) is negative only for Z2 > Z1. Onto a lighter medium r is
+          positive and the echo is upright — measured at +0.6669 for a 25:1 density drop,
+          against +2/3 predicted. The wall is the special case, not the general one, and the
+          general case turns over at the match rather than at some threshold of hardness.
+      - text: Upright in both cases, since the string is continuous through the knot and cannot flip.
+        correct: false
+        feedback: >-
+          Continuity of the string is one of the two junction conditions, and it gives 1 + r = t
+          — it does not fix the sign of r on its own. The other condition, that the massless
+          joint carries no net force, is what produces r = (Z1 - Z2)/(Z1 + Z2). At a wall the
+          displacement must stay zero at all times, which forces the returning pulse to cancel
+          the incoming one point by point: that is exactly an inverted copy.
+      - text: Inverted off the light thread, upright off the wall.
+        correct: false
+        feedback: >-
+          This has the two cases exactly swapped. The useful mental image is what the far side
+          does back to the string. A wall cannot move, so it pulls back with whatever force is
+          needed, and that reaction is the inverted pulse leaving. A thread offers almost no
+          resistance, so the end flies up — nearly twice as far as the incident pulse alone
+          would take it — and the echo it launches is upright.
+
+  - id: Q-10-2
+    type: numeric
+    objectives: [OBJ-10-2]
+    prompt: >-
+      A string with mu1 = 4.0 g/m is joined to one with mu2 = 36 g/m under a common tension.
+      A wave arrives from the light side. What is the transmitted displacement amplitude
+      coefficient t?
+    answer: 0.5
+    tolerance: 0.02
+    feedback: >-
+      Impedances first: Z = sqrt(T mu), so Z2/Z1 = sqrt(36/4.0) = 3 whatever the tension is —
+      the tension cancels out of every coefficient at a junction, because it is one number for
+      both sides. Then t = 2 Z1/(Z1 + Z2) = 2/(1 + 3) = 0.5 and r = (1 - 3)/(1 + 3) = -0.5.
+      Check with 1 + r = t: 1 - 0.5 = 0.5. The transmitted wave is half the height of the
+      incident one and the echo is inverted at half its height, which does *not* mean half the
+      energy goes each way — see the power coefficients, where R = 0.25 and T = 0.75.
+
+  - id: Q-10-3
+    type: multiple-choice
+    objectives: [OBJ-10-4]
+    prompt: >-
+      A pulse crosses from a string onto one a hundred times lighter. The transmitted pulse is
+      1.82 times taller than the incident pulse. What happened to the energy?
+    choices:
+      - text: Most of it reflected. The light string is cheap to move, so a large motion of it carries little power — the transmitted fraction is 0.33 and the reflected 0.67.
+        correct: true
+        feedback: >-
+          Right. Power is (1/2) Z (omega A)^2, so the transmitted power carries the far side's
+          impedance, not the near side's: T = (Z2/Z1) t^2. Here Z2/Z1 = 1/10 and t = 1.818, so
+          T = 0.1 x 3.31 = 0.331, and R = r^2 = 0.818^2 = 0.669. They sum to 1, as they must.
+          A large amplitude on a medium that is cheap to move is not much energy — the same
+          reason a loudspeaker cone moves far in air and hardly at all in water.
+      - text: Energy was gained at the junction, because the far string adds its own motion to the wave.
+        correct: false
+        feedback: >-
+          Nothing at the junction can add energy: the joint is massless, lossless and carries no
+          store of its own. R + T = 1 follows from the two matching conditions by algebra —
+          substitute r and t and the numerators (Z1 - Z2)^2 + 4 Z1 Z2 collapse onto
+          (Z1 + Z2)^2 — so the bookkeeping was fixed before any energy question was asked. What
+          changed at the junction is the *price* of a given amplitude, not the total.
+      - text: The energy split evenly, since amplitude 1.82 and amplitude 0.82 are close to equal shares.
+        correct: false
+        feedback: >-
+          Amplitudes are not energies, and the two do not even go in the same order here: the
+          taller pulse is the weaker one. Squaring the amplitudes is not enough either, because
+          the two pulses live on different media. The transmitted fraction needs the flux factor
+          Z2/Z1 in front of t^2, and it is that factor — one tenth here — that turns a squared
+          amplitude ratio of 3.31 into a power fraction of 0.33.
+      - text: It is stored at the junction and released slowly afterwards.
+        correct: false
+        feedback: >-
+          A massless, lossless joint has nowhere to store anything and no time constant with
+          which to release it. Simulating the run and weighing both sides after the pulses
+          separate gives R + T = 1 to seven decimal places, with no residue sitting at the
+          junction. A junction that did store energy would be a different model — a bead of
+          finite mass at the joint, which is a good exam question and not this one.
+
+  - id: Q-10-4
+    type: numeric
+    objectives: [OBJ-10-4]
+    prompt: >-
+      Two strings under common tension have densities in the ratio mu2/mu1 = 9. What fraction of
+      an incident wave's energy is transmitted across the junction? Give T as a decimal.
+    answer: 0.75
+    tolerance: 0.02
+    feedback: >-
+      Z2/Z1 = sqrt(9) = 3, so r = (1 - 3)/(1 + 3) = -0.5 and t = 2/(1 + 3) = 0.5. Then
+      R = r^2 = 0.25 and T = (Z2/Z1) t^2 = 3 x 0.25 = 0.75, which sum to 1. Two traps to avoid.
+      T is not t^2 = 0.25: the transmitted wave travels on the other medium, and the flux factor
+      Z2/Z1 has to come with it. And T is not 1 - t = 0.5: a fraction of energy is never one
+      minus a fraction of amplitude. Note that the answer is the same if the wave arrives from
+      the heavy side instead, where r = +0.5 and t = 1.5 — different amplitudes, identical
+      energy split.
+
+  - id: Q-10-5
+    type: multiple-choice
+    objectives: [OBJ-10-5]
+    prompt: >-
+      Which junction between two media produces no reflection at all?
+    choices:
+      - text: One where the two impedances are equal, whatever the individual material constants are.
+        correct: true
+        feedback: >-
+          Right: r = 0 requires exactly Z1 = Z2 and nothing else. The individual constants may
+          differ — a fluid's density and sound speed, or a cable's inductance and capacitance
+          per metre, can both change as long as the product that makes Z comes out the same.
+          On a *string* this is a blunt instrument, because tension is one number from end to
+          end, so equal impedance means equal density and the matched junction is a string with
+          no junction in it. Matching two media that are both given takes an intermediate
+          layer — the quarter-wave section of the advanced section.
+      - text: One where the two wave speeds are equal.
+        correct: false
+        feedback: >-
+          Equal speeds are neither necessary nor sufficient. Z = sqrt(T mu) and v = sqrt(T/mu)
+          are independent combinations of the same two constants, so two media can share a
+          speed and differ in impedance — and then a wave crosses without changing wavelength
+          and still reflects. On a string with one tension the two happen to travel together,
+          which is why this answer feels right and stops being right the moment the tension is
+          allowed to differ, as it does for sound in two different fluids.
+      - text: One where the two densities are equal, since equal mass per metre means nothing changes.
+        correct: false
+        feedback: >-
+          True on a string under uniform tension, and only there — which makes it a fact about
+          this apparatus rather than the criterion. The criterion is on Z. Ultrasound gel is
+          matched to tissue while being a completely different material; a 50 ohm resistor
+          terminates a 50 ohm cable while being neither a cable nor a wave-carrying medium at
+          all.
+      - text: Any junction, provided the wave arrives slowly enough that the second medium has time to respond.
+        correct: false
+        feedback: >-
+          There is no such threshold: r and t contain no frequency at all, so a mismatched
+          junction reflects the same fraction at every frequency. What *can* depend on frequency
+          is a junction that is not a point — a density that changes gradually over a distance
+          comparable with the wavelength reflects less and less as the ramp widens, which is the
+          problem set's smeared junction and the reason a tsunami grows instead of bouncing.
+
+  - id: Q-10-6
+    type: short-answer
+    objectives: [OBJ-10-1]
+    prompt: >-
+      Explain what the impedance of a string is, in words, to someone who knows F = ma and has
+      never met the word. Say what it is a property of, what it is not, and why it — rather than
+      the density or the wave speed alone — is what decides reflection.
+    discussion: >-
+      Impedance is what the medium feels like to push sideways. Take the end of a very long
+      string and wave it: everything you launch travels away and never comes back, so at your
+      hand the string is a pure right-mover with y_t = -v y_x, and the transverse force you must
+      supply is F = -T y_x = (T/v) y_t = Z y_t with Z = sqrt(T mu) = mu v. Force proportional to
+      velocity, in phase with it — the string resists like a dashpot, not like a spring (force
+      proportional to displacement) and not like a mass (force proportional to acceleration).
+      Its unit is kg/s, which is N per m/s: force per unit transverse velocity.
+
+      It is a property of the medium alone, of the same standing as the wave speed, and it is a
+      *separate* property: T and mu are two knobs, so v = sqrt(T/mu) and Z = sqrt(T mu) can be
+      set independently. Two media can share a wave speed and differ in impedance. It is not a
+      property of the wave — no amplitude, width, shape or frequency appears in it — and it is
+      not a resistance in the dissipative sense, even though it behaves like one: the work you
+      do is not converted to heat, it leaves as a travelling wave and does not come back.
+
+      Reflection is decided by Z because the junction conditions are about force and
+      displacement, not about mass or speed. Continuity of displacement and continuity of the
+      transverse force -T y_x are the two statements available at a massless joint, and the
+      second one is where T/v = Z enters. Solving them gives r = (Z1 - Z2)/(Z1 + Z2), in which
+      the medium constants appear only through that one combination. Density alone cannot
+      decide it, because doubling both tension and density leaves the reflection unchanged while
+      doubling Z on both sides; speed alone cannot decide it either, for the same kind of
+      reason. This is also why the result travels: for sound Z = rho c, for a cable
+      Z = sqrt(L'/C'), for light Z = Z0/n, and the same formula for r applies with the local
+      name substituted.
+
+  - id: Q-10-7
+    type: multiple-choice
+    objectives: [OBJ-10-5]
+    prompt: >-
+      Ultrasound gel has an acoustic impedance close to that of soft tissue (about
+      1.6e6 against 1.5e6 kg m^-2 s^-1); air's is about 430. What does the gel accomplish?
+    choices:
+      - text: It replaces the air gap, whose enormous impedance mismatch with tissue would reflect essentially all of the sound.
+        correct: true
+        feedback: >-
+          Right, and the numbers are dramatic. For a tissue-air interface,
+          r = (1.5e6 - 430)/(1.5e6 + 430) = 0.9994, so R = 0.9989: about 99.9% of the sound
+          comes straight back and the image is black, not merely dim. With gel in the gap,
+          Z2/Z1 = 1.6/1.5 gives r = -0.032 and R = 0.001 — one part in a thousand reflected. The
+          gel is not a lubricant and conducts sound no better than tissue does; it is there to
+          be nearly the same impedance as what is on both sides of it.
+      - text: It lubricates the probe so that the transducer can be moved smoothly across the skin.
+        correct: false
+        feedback: >-
+          It does do that, and it is not why the image fails without it. A dry probe pressed
+          firmly still leaves a microscopic air layer, and the tissue-air mismatch reflects
+          about 99.9% of the sound at that layer. Reflectance depends on the impedance ratio and
+          not at all on friction: R = ((Z1 - Z2)/(Z1 + Z2))^2 = 0.9989 for tissue against air.
+      - text: It slows the sound down so that more of it can be transmitted into the body.
+        correct: false
+        feedback: >-
+          Nothing in r or t depends on the speed by itself. The coefficients contain the
+          impedances only, Z = rho c, and a medium can be made slower without changing Z at all
+          — raise rho and lower c in proportion. The gel works by matching the product, not by
+          changing either factor in a particular direction.
+      - text: It absorbs the reflected sound so that it does not re-enter the probe and confuse the image.
+        correct: false
+        feedback: >-
+          The gel is very nearly lossless at these frequencies over a fraction of a millimetre —
+          it absorbs almost nothing. It also does not need to: matching means the reflection is
+          never created, rather than created and then mopped up. That distinction matters, since
+          absorbing the echo would cost the same energy the image needs, while matching keeps it
+          and sends it into the patient.

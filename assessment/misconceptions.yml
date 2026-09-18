@@ -67,6 +67,10 @@ misconceptions:
     statement: "A wave's energy is concentrated at the crests, where displacement is biggest."
     assigned_module: 09-wave-energy
     status: addressed
+  - id: reflection-always-inverts
+    statement: "A reflected pulse always comes back upside down."
+    assigned_module: 10-impedance
+    status: addressed
   - id: packet-at-phase-velocity
     statement: "A pulse travels at the phase velocity, so a phase velocity above c would break relativity."
     assigned_module: 12-wave-packets
