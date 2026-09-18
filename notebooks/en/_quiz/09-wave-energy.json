@@ -1,0 +1,134 @@
+[
+  {
+    "question": "A sinusoidal wave travels along a string. A photograph freezes it. Where along the string, in that photograph, is the energy per unit length largest?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "At the zero crossings, where the string is steepest and moving fastest.",
+        "correct": true,
+        "feedback": "Right. A string stores energy two ways and neither of them is displacement: by being stretched, which needs slope, u_P = (1/2) T (dy/dx)^2, and by moving, which needs transverse velocity, u_K = (1/2) mu (dy/dt)^2. At a zero crossing of a travelling sine both are at their largest, and at a crest both vanish at once — the string there is momentarily flat and momentarily at rest. Measured on the simulated string, the crest holds 4e-5 of what the zero crossing holds. Notice the consequence: the energy humps come twice as often as the crests, because a square has half the period of the sine."
+      },
+      {
+        "answer": "At the crests and troughs, where the displacement is largest.",
+        "correct": false,
+        "feedback": "This is the module's misconception, and it comes from treating displacement as if it were stored energy. It is not. Lift a straight stretch of string bodily to one side and hold it there: you have displaced every point of it and stored nothing, because you stretched nothing and nothing is moving. Energy needs slope or speed, and a crest has neither at the instant the photograph was taken."
+      },
+      {
+        "answer": "Uniformly along the string — a travelling wave carries its energy evenly.",
+        "correct": false,
+        "feedback": "The energy density of a travelling sine goes as sin^2(kx - omega t), which is far from uniform: it falls to zero twice per wavelength. What *is* uniform is the average over a whole wavelength, and that is the quantity (1/2) mu v omega^2 A^2 measures when it is multiplied by v. Uniform on average is not uniform in the photograph."
+      },
+      {
+        "answer": "A quarter wavelength ahead of each crest, in the direction of travel.",
+        "correct": false,
+        "feedback": "The energy maxima do sit a quarter wavelength from the crests, but there are two of them per wavelength, not one, and neither has a preferred side: u goes as sin^2(kx - omega t), whose maxima lie a quarter wavelength either side of every crest and every trough alike. Nothing in the density distinguishes forwards from backwards — the direction of travel shows up in the sign of the flux, not in where the energy is."
+      }
+    ]
+  },
+  {
+    "question": "On a string with v = 20 m/s, a sinusoidal wave has amplitude 2.0 mm and frequency 50 Hz. Which statement about its three velocities is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The pattern and the energy both move at 20 m/s; the string's pieces move sideways at up to 0.63 m/s.",
+        "correct": true,
+        "feedback": "Right, and the two coincidences are not accidents. The pattern moves at v = sqrt(T/mu) because the medium says so. The energy moves at P/u, and for a travelling wave P = v(u_K + u_P) exactly, so that ratio is v too. The transverse speed is A omega = 0.002 x 2 pi x 50 = 0.63 m/s, set entirely by whoever made the wave, and it is sideways rather than along. Two numbers are forced and one is a free knob."
+      },
+      {
+        "answer": "All three are 20 m/s — it is one wave, so it has one speed.",
+        "correct": false,
+        "feedback": "Two of them are, and the third is 0.63 m/s. The transverse velocity dy/dt is what a single piece of string does, and it is related to the wave speed by y_t = -v y_x: the wave speed times the slope. Since the slope is small — 0.031 here — the string crawls compared with its own wave. Confusing the two is the same error as thinking a stadium wave requires anyone to run."
+      },
+      {
+        "answer": "The energy moves at half the pattern speed, since only half of it is kinetic.",
+        "correct": false,
+        "feedback": "The two densities are each half the total, which is true and is this module's surprise — but the flux carries the whole density, not half of it: P = T v y_x^2 = v(u_K + u_P). Both halves travel, and they travel together at v. The factor of one half that does appear in this module is in the *time average* of a sinusoidal wave's power, and it comes from averaging sin^2, not from splitting the energy in two."
+      },
+      {
+        "answer": "The transverse speed is 20 m/s and the energy is what moves at 0.63 m/s.",
+        "correct": false,
+        "feedback": "This has the two exactly backwards, which is worth noticing because it is what the misconception \"the wave carries the medium along\" would predict. Module 08's dust speck settles it: the string's own motion is small, sideways, and returns to zero. The energy's motion is the full wave speed and goes somewhere."
+      }
+    ]
+  },
+  {
+    "question": "A travelling wave and a standing wave have the same amplitude and frequency on identical strings. Over one full period, which delivers more energy past a point halfway along?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The travelling wave. The standing wave delivers exactly zero, though its instantaneous flux is not small.",
+        "correct": true,
+        "feedback": "Right, and the second clause is the interesting half. For y = A sin(kx) cos(omega t) the flux is proportional to sin(2kx) sin(2 omega t), which is as large as a quarter of the travelling wave's peak at the same amplitude — but it changes sign twice a cycle and averages to zero at every x. Simulated over four periods, the largest time-averaged flux anywhere is 2.6e-7 of the largest instantaneous one. A standing wave moves comparable energy about and puts all of it back."
+      },
+      {
+        "answer": "The standing wave, because its energy is concentrated at the antinodes rather than spread out.",
+        "correct": false,
+        "feedback": "Its energy is indeed unevenly distributed, but distribution is not transport. Ask what crosses the halfway point: on a standing wave the flux there swings positive and negative in equal measure, so the net over a cycle is zero no matter how the energy is arranged. Concentration and transport are separate questions, and this module's flux answers only the second."
+      },
+      {
+        "answer": "They deliver the same, since they have the same energy on the string.",
+        "correct": false,
+        "feedback": "They do have comparable energy on the string — that is what makes the contrast sharp. Energy *stored* and energy *transported* are different quantities, and a standing wave is a device for having the first without the second. Module 11 builds its entire budget on that distinction."
+      },
+      {
+        "answer": "Neither: a wave transports no energy, only a disturbance.",
+        "correct": false,
+        "feedback": "A travelling wave transports energy at exactly v, and that is this module's central result: P = v(u_K + u_P). The thing a wave does not transport is the *medium* — module 08's dust speck goes nowhere. Energy and medium are different things, and separating them is the point of both modules."
+      }
+    ]
+  },
+  {
+    "question": "A rope with mu = 0.080 kg/m is held at a tension of 120 N. A shaker drives one end at 8.0 Hz with an amplitude of 25 mm. What average power, in watts, does the shaker supply?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          5.8999999999999995,
+          6.3
+        ],
+        "correct": true,
+        "feedback": "The wave speed is v = sqrt(120 / 0.080) = sqrt(1500) = 38.7 m/s, and the angular frequency is omega = 2 pi x 8.0 = 50.3 rad/s. Then <P> = (1/2) mu v omega^2 A^2 = 0.5 x 0.080 x 38.7 x 50.3^2 x 0.025^2 = 6.1 W. Two checks worth doing as you go. The dimensions: (kg/m)(m/s)(1/s^2)(m^2) = kg m^2/s^3 = W. And the scalings: halve the amplitude and the answer falls to 1.5 W, quarter of what it was, because the flux is quadratic in the transverse velocity A omega and both symbols enter only through that product."
+      }
+    ]
+  },
+  {
+    "question": "At one point on a string with tension T = 20 N, a snapshot shows the slope dy/dx = +0.015 and the transverse velocity dy/dt = -0.40 m/s. What is the energy flux P at that point, in watts?",
+    "type": "numeric",
+    "answers": [
+      {
+        "range": [
+          0.11499999999999999,
+          0.125
+        ],
+        "correct": true,
+        "feedback": "P = -T (dy/dx)(dy/dt) = -20 x 0.015 x (-0.40) = +0.12 W. The sign is the direction: the energy is flowing toward +x. Read the geometry rather than trusting the arithmetic alone — the string here slopes up to the right and is moving down, so the piece on the left is pulling the piece on the right downward while the right piece moves down, and force through displacement is positive work done on the right. Note also what the snapshot alone cannot tell you: whether this is a right-moving wave. For a right-mover y_t = -v y_x would give v = 0.40/0.015 = 27 m/s, which is only consistent if the string's sqrt(T/mu) is 27 m/s. Otherwise both directions are present here."
+      }
+    ]
+  },
+  {
+    "question": "A right-moving pulse on a string is measured at one instant. Its kinetic energy density and its potential energy density are found to be equal at every point, to the accuracy of the measurement. What does this tell you?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Nothing beyond what a travelling wave must do — it follows from y_t = -v y_x and mu v^2 = T.",
+        "correct": true,
+        "feedback": "Right. For a right-mover the chain rule gives y_t = -v y_x, so u_K = (1/2) mu v^2 y_x^2 = (1/2) T y_x^2 = u_P, the last step because mu v^2 = T is what v means. It holds at every point and every instant, with nothing averaged. The statement is not empty, though: it fails for a standing wave, where the string is all potential at one moment and all kinetic a quarter period later, and it fails for any superposition of two directions. Equality at every point is a signature of one-way travel."
+      },
+      {
+        "answer": "The pulse happens to be at the moment in its cycle when the two densities cross.",
+        "correct": false,
+        "feedback": "That is the right picture for an oscillator, and the wrong one for a travelling wave. A mass on a spring trades kinetic for potential twice a cycle and they are equal only at instants. A travelling wave has every element a little behind its neighbour, so what the mass does in sequence the string does all at once, laid out along its length: the equality holds at every instant, not at special ones."
+      },
+      {
+        "answer": "The string must be non-dispersive, or the equality would fail.",
+        "correct": false,
+        "feedback": "Dispersion is not what is being tested here. The equality follows from a single travelling shape obeying y_t = -v y_x, which is true of f(x - vt) whatever the medium does to other wavelengths. What dispersion breaks is the *shape* — a pulse spreads, so it stops being a rigid f(x - vt) — and only then does the equality go with it. Module 13 takes that up."
+      },
+      {
+        "answer": "The measurement must be wrong, since the total energy would then be double-counted.",
+        "correct": false,
+        "feedback": "Nothing is double-counted: u_K and u_P are different energies in the same place, one of motion and one of stretch, and the total is their sum. If each is (1/2) T y_x^2 then the total is T y_x^2, and the flux P = T v y_x^2 is exactly v times that — which is the module's statement that the energy travels at the wave speed. The bookkeeping closes."
+      }
+    ]
+  }
+]

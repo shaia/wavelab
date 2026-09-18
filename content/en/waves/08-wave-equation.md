@@ -339,8 +339,8 @@ $f$ has returned to zero, and so has the point. That is prediction 2: **the spec
 where it started.**
 
 What travelled was the pattern — the fact of being displaced, handed from each piece of string
-to the next — and, as module 09 shows, the energy that goes with it. The pieces themselves move
-only sideways, and at a speed with nothing to do with $v$:
+to the next — and, as [module 09](09-wave-energy.md) shows, the energy that goes with it. The
+pieces themselves move only sideways, and at a speed with nothing to do with $v$:
 
 $$
 y_t = -v\,f'(x - vt) = -v\,y_x .
@@ -459,7 +459,8 @@ turns the same distinction into an error bar.
 
 **6. Energy.** Over sixteen transits between two fixed ends, the solver's total energy wobbles
 by $4.7\times 10^{-4}$ of itself at $S = 0.5$ and does not drift; halve the step and the wobble
-falls fourfold. What that energy *is*, and where on the string it lives, is module 09.
+falls fourfold. What that energy *is*, and where on the string it lives, is
+[module 09](09-wave-energy.md).
 
 (08-wave-equation-transfer)=
 ## Transfer the idea

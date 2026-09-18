@@ -395,3 +395,68 @@ def test_neither_the_height_nor_the_width_of_a_pulse_changes_its_speed():
         for width in (0.03, 0.05, 0.08):
             speed = _photogate_speed(tension, mu, dt, amplitude=amplitude, width=width)
             assert np.isclose(speed, np.sqrt(tension / mu), rtol=1e-7)
+
+
+# The wattmeter. A right-moving sinusoidal train with a flat top passes a gate at 4 m of an 8 m
+# string, and the flux there is averaged over whole cycles. The window keeps the sine away from
+# the fixed ends, which no travelling sine can satisfy.
+TRAIN_CELLS = 3200
+TRAIN_LENGTH = 8.0
+TRAIN_DX = TRAIN_LENGTH / TRAIN_CELLS
+TRAIN_TENSION = 4.0
+TRAIN_MU = 0.01
+TRAIN_SPEED = waves.wave_speed(TRAIN_TENSION, TRAIN_MU)
+
+
+def _mean_power(amplitude: float, wavelength: float) -> float:
+    x = np.arange(TRAIN_CELLS + 1) * TRAIN_DX
+    k = 2.0 * np.pi / wavelength
+    omega = TRAIN_SPEED * k
+    low, high, shoulder = 0.4, 3.0, 0.4
+    ramp = np.clip((x - (low - shoulder)) / shoulder, 0.0, 1.0) * np.clip(
+        ((high + shoulder) - x) / shoulder, 0.0, 1.0
+    )
+    y0 = amplitude * np.sin(k * x) * 0.5 * (1.0 - np.cos(np.pi * ramp))
+
+    dt = 0.5 * TRAIN_DX / TRAIN_SPEED
+    run = waves.simulate_string(
+        y0, -TRAIN_SPEED * np.gradient(y0, TRAIN_DX), TRAIN_DX, dt,
+        TRAIN_TENSION, TRAIN_MU, int(round(0.20 / dt)),
+    )
+    gate = int(round(4.0 / TRAIN_DX))
+    slope = np.gradient(run.y, TRAIN_DX, axis=1)[:, gate]
+    flux = waves.energy_flux(slope, run.dydt[:, gate], TRAIN_TENSION)
+
+    first = int(np.searchsorted(run.times, 0.06))
+    cycles = int((0.17 - 0.06) / (2.0 * np.pi / omega)) * 2.0 * np.pi / omega
+    last = int(np.searchsorted(run.times, run.times[first] + cycles))
+    return float(flux[first:last].mean())
+
+
+def test_wave_power_goes_as_the_square_of_both_the_amplitude_and_the_frequency():
+    """A measured wattmeter fits exponents 2.000000 in A and 1.999 in omega.
+
+    Both squares have the same origin, which is why they are tested together: the flux is
+    quadratic in the transverse velocity A omega, and the two symbols enter it only through that
+    product. Doubling either quadruples the power delivered, and a wave of half the amplitude
+    and twice the frequency carries exactly what it did before.
+
+    This is the course's first intensity law, and it is the one that survives to the end of it.
+    A doubled light amplitude is four times the irradiance for the same reason and by the same
+    algebra; module 23's interference bookkeeping and module 29's diffraction patterns are both
+    counting A^2 because of what this test measures on a string.
+    """
+    amplitudes = np.array([1e-3, 2e-3, 4e-3])
+    powers = np.array([_mean_power(amplitude, 0.5) for amplitude in amplitudes])
+    assert abs(scaling_exponent(amplitudes, powers) - 2.0) < 1e-3
+
+    wavelengths = np.array([1.0, 0.5, 0.25])
+    frequencies = TRAIN_SPEED * 2.0 * np.pi / wavelengths
+    powers = np.array([_mean_power(2e-3, wavelength) for wavelength in wavelengths])
+    assert abs(scaling_exponent(frequencies, powers) - 2.0) < 5e-3
+
+    for amplitude, frequency, measured in zip(
+        (2e-3, 2e-3), frequencies[:2], powers[:2], strict=True
+    ):
+        expected = waves.sinusoidal_mean_power(amplitude, frequency, TRAIN_TENSION, TRAIN_MU)
+        assert abs(measured / expected - 1.0) < 2e-3

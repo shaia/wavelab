@@ -325,8 +325,11 @@ kinematics (12), dispersion (13).
   centroid — the dots visibly separate, the crest at $2v_g$ overtaking and dying at the front while
   the centroid fit yields $v_g$; the plasma run shows $v_p > c$ with the measured centroid still at
   $v_g < c$. Distractor: "the pulse arrives when its first crest arrives, at $\omega/k$".
-- **Glossary terms:** `wave-packet` (חבילת גלים), `phase-velocity` (מהירות פאזה), `group-velocity`
-  (מהירות חבורה), `carrier` (גל נושא), `envelope` (מעטפת).
+- **Glossary terms:** `wave-packet` (חבילת גלים), `carrier` (גל נושא), `envelope` (מעטפת).
+  `phase-velocity` (מהירות פאזה) and `group-velocity` (מהירות חבורה) were deposited by
+  `09-wave-energy`, whose transfer and advanced sections are the first prose in teaching order to
+  need them (part-03 §5.2, as-built deviation 2); this module cites both and is still where they
+  are taught.
 - **Interactive controls and simulations:** as in *explore*, plus a "mark a crest" button riveting
   the tracker dot to the crest under the cursor.
 - **Virtual lab outline** (`notebooks/en/labs/12-wave-packets.ipynb`): (1) build `gaussian_packet`,

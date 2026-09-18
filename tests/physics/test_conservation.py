@@ -511,3 +511,143 @@ def test_a_jump_in_density_leaves_the_total_energy_conserved():
     density = np.where(x < 0.5, STRING_MU, 4.0 * STRING_MU)
     _, energy = _string_energy(0.5, 10.0, mu=density, centre=0.25)
     assert np.ptp(energy) / energy[0] < 1e-3
+
+
+# Module 09's share: the flux, and the local law that ties it to the densities. STRING_SPEED is
+# the 20 m/s the constants above imply; the runs here keep their pulses away from the walls,
+# because a conservation law is being tested and not a boundary condition.
+STRING_SPEED = waves.wave_speed(STRING_TENSION, STRING_MU)
+
+
+def _staggered_bookkeeping(
+    run: waves.StringEvolution, dx: float, step: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """The energy at each grid point and the flux across each cell, as the *scheme* holds them.
+
+    The solver is Newton's law for masses mu dx at the grid points joined by springs T/dx on the
+    cells between them, so its energy lives in two different places: kinetic at the points, with
+    the trapezoid weights `total_energy` uses, and potential on the cells. Splitting each cell's
+    potential energy evenly between its two ends gives one energy per point, and the flux that
+    balances it is the cell's own — its slope times the mean velocity of its two ends, which is
+    how -T y_x y_t reads on a cell rather than at a point.
+    """
+    y, dydt = run.y[step], run.dydt[step]
+    weights = np.full(y.size, dx)
+    weights[[0, -1]] = 0.5 * dx
+    cell_potential = 0.5 * STRING_TENSION * np.diff(y) ** 2 / dx
+
+    energy = 0.5 * STRING_MU * weights * dydt**2
+    energy[:-1] += 0.5 * cell_potential
+    energy[1:] += 0.5 * cell_potential
+
+    flux = -STRING_TENSION * (np.diff(y) / dx) * 0.5 * (dydt[:-1] + dydt[1:])
+    return energy, flux
+
+
+def test_the_scheme_obeys_a_discrete_continuity_law_exactly_in_space():
+    """du/dt + dP/dx = 0 holds on the grid with no spatial error at all — only the step's.
+
+    The continuous law is a theorem about the wave equation. Its discrete counterpart is a
+    theorem about the *scheme*, and a sharper one than convergence: differentiate the point
+    energy of `_staggered_bookkeeping` in time, substitute the solver's own update, and every
+    term cancels against the difference of two neighbouring cell fluxes — identically, for any
+    dx. Nothing is approximated in space, so refining dx alone cannot improve the residual and
+    refining dt alone must.
+
+    That is what the numbers say. On one fixed grid the residual is 3.3e-3, 8.3e-4 and 2.1e-4
+    of the largest du/dt at S = 0.5, 0.25 and 0.125 — fourfold per halving, the velocity Verlet
+    time error and nothing besides. The same law read pointwise, with centred differences at the
+    grid points the way a laboratory would, instead sits at 1.0e-2, 1.3e-2 and 1.3e-2 over those
+    three runs: its error belongs to the spacing, and shortening the step does not touch it.
+
+    The two together are the module's honest position. The conservation law is exact for the
+    string, exact for the scheme in the scheme's own variables, and second-order accurate for
+    whatever anyone reads off a grid with a finite difference.
+    """
+    x = np.arange(STRING_CELLS + 1) * STRING_DX
+    pulse = 0.01 * np.exp(-(((x - 0.3) / 0.04) ** 2))
+    slope = -2.0 * (x - 0.3) / 0.04**2 * pulse
+
+    staggered, pointwise = [], []
+    for courant in (0.5, 0.25, 0.125):
+        dt = courant * STRING_DX / STRING_SPEED
+        steps = int(round(0.4 / STRING_SPEED / dt))
+        run = waves.simulate_string(
+            pulse, -STRING_SPEED * slope, STRING_DX, dt, STRING_TENSION, STRING_MU, steps
+        )
+        middle = run.times.size // 2
+
+        before, _ = _staggered_bookkeeping(run, STRING_DX, middle - 1)
+        after, _ = _staggered_bookkeeping(run, STRING_DX, middle + 1)
+        _, flux = _staggered_bookkeeping(run, STRING_DX, middle)
+        rate = (after - before) / (2.0 * dt)
+        divergence = np.zeros_like(rate)
+        divergence[1:-1] = flux[1:] - flux[:-1]
+        staggered.append(
+            float(np.max(np.abs((rate + divergence)[1:-1])) / np.max(np.abs(rate)))
+        )
+
+        def density(step: int, run: waves.StringEvolution = run) -> np.ndarray:
+            gradient = np.gradient(run.y[step], STRING_DX)
+            return waves.kinetic_density(
+                run.dydt[step], STRING_MU
+            ) + waves.potential_density(gradient, STRING_TENSION)
+
+        point_flux = waves.energy_flux(
+            np.gradient(run.y[middle], STRING_DX), run.dydt[middle], STRING_TENSION
+        )
+        point_rate = (density(middle + 1) - density(middle - 1)) / (2.0 * dt)
+        point_divergence = np.gradient(point_flux, STRING_DX)
+        pointwise.append(
+            float(
+                np.max(np.abs(point_rate + point_divergence))
+                / np.max(np.abs(point_divergence))
+            )
+        )
+
+    ratios = np.array(staggered[:-1]) / np.array(staggered[1:])
+    assert np.all(np.abs(ratios - 4.0) < 0.3), f"staggered residuals {staggered} are not fourfold"
+    assert staggered[0] < 5e-3
+
+    assert min(pointwise) > 5e-3, f"pointwise residuals {pointwise} unexpectedly small"
+    assert max(pointwise) / min(pointwise) < 2.0, f"pointwise residuals {pointwise} chased dt"
+
+
+def test_the_energy_that_crosses_a_point_is_the_energy_that_ends_up_beyond_it():
+    """A wattmeter integrating P dt at one point accounts for the whole pulse, to 4e-5.
+
+    This is the practical content of a flux. If u and P really satisfy du/dt + dP/dx = 0, then
+    integrating P over time at a fixed x has to equal the energy that accumulated to the right
+    of it. A Gaussian pulse launched at 1 m and timed at a gate at 2 m delivers 4.177317e-3 J by
+    the wattmeter, against 4.177487e-3 J found by weighing the string beyond the gate at the end
+    of the run — a ratio of 0.999959, and the same 4.2 mJ the pulse set out with.
+
+    Nothing in the solver knows about either quantity. `simulate_string` propagates
+    displacements; the flux is assembled afterwards out of a slope and a velocity, and the
+    energy beyond the gate by a different formula again. Their agreement is the conservation law
+    being found in the output rather than imposed on it.
+    """
+    cells = 1600
+    dx = 4.0 / cells
+    x = np.arange(cells + 1) * dx
+    pulse = 0.01 * np.exp(-(((x - 1.0) / 0.12) ** 2))
+    slope = -2.0 * (x - 1.0) / 0.12**2 * pulse
+
+    dt = 0.5 * dx / STRING_SPEED
+    steps = int(round(1.6 / STRING_SPEED / dt))
+    run = waves.simulate_string(
+        pulse, -STRING_SPEED * slope, dx, dt, STRING_TENSION, STRING_MU, steps
+    )
+
+    gate = int(round(2.0 / dx))
+    gate_slope = np.gradient(run.y, dx, axis=1)[:, gate]
+    flux = waves.energy_flux(gate_slope, run.dydt[:, gate], STRING_TENSION)
+    delivered = float(np.trapezoid(flux, run.times))
+
+    started = waves.total_energy(run.y[0], run.dydt[0], dx, STRING_TENSION, STRING_MU)
+    beyond = waves.total_energy(
+        run.y[-1][gate:], run.dydt[-1][gate:], dx, STRING_TENSION, STRING_MU
+    )
+    assert abs(delivered / beyond - 1.0) < 1e-3
+    assert abs(delivered / started - 1.0) < 1e-3
+    assert np.all(flux >= -1e-6 * flux.max())  # a right-mover never pays energy backwards

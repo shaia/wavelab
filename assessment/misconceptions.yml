@@ -63,6 +63,10 @@ misconceptions:
     statement: "Shaking harder or faster makes the wave travel faster."
     assigned_module: 08-wave-equation
     status: addressed
+  - id: energy-peaks-at-crests
+    statement: "A wave's energy is concentrated at the crests, where displacement is biggest."
+    assigned_module: 09-wave-energy
+    status: addressed
   - id: packet-at-phase-velocity
     statement: "A pulse travels at the phase velocity, so a phase velocity above c would break relativity."
     assigned_module: 12-wave-packets

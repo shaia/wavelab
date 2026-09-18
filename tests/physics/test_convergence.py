@@ -557,3 +557,62 @@ def test_grid_dispersion_slows_the_peak_of_a_pulse_but_not_its_centroid():
             - measurement.pulse_arrival_time(times, first, half_window)
         )
         assert abs(by_centroid / STRING_SPEED - 1.0) < 1e-7
+
+
+def _equipartition_and_energy_velocity(cells: int) -> tuple[float, float]:
+    """Refine the grid under a right-moving Gaussian and read off two errors.
+
+    The first is how far the two energy densities fall apart at any point, relative to the peak
+    density; the second is how far the ratio P/u strays from the wave speed, over the part of
+    the string actually carrying the pulse.
+    """
+    length, centre, width = 4.0, 1.0, 0.15
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    pulse = STRING_AMPLITUDE * np.exp(-(((x - centre) / width) ** 2))
+    slope = -2.0 * (x - centre) / width**2 * pulse
+
+    dt = 0.5 * dx / STRING_SPEED
+    steps = int(round(1.0 / STRING_SPEED / dt))
+    run = waves.simulate_string(
+        pulse, -STRING_SPEED * slope, dx, dt, STRING_TENSION, STRING_MU, steps
+    )
+    middle = run.times.size // 2
+    gradient = np.gradient(run.y[middle], dx)
+    kinetic = waves.kinetic_density(run.dydt[middle], STRING_MU)
+    potential = waves.potential_density(gradient, STRING_TENSION)
+    flux = waves.energy_flux(gradient, run.dydt[middle], STRING_TENSION)
+
+    density = kinetic + potential
+    carrying = density > 1e-3 * density.max()
+    return (
+        float(np.max(np.abs(kinetic - potential)) / density.max()),
+        float(np.max(np.abs(flux[carrying] / (STRING_SPEED * density[carrying]) - 1.0))),
+    )
+
+
+def test_equipartition_is_second_order_and_the_energy_velocity_is_its_square():
+    """Refining the grid closes u_K = u_P fourfold and P/u = v sixteenfold.
+
+    Both statements are exact for a travelling wave and neither is exact on a grid, because the
+    grid is slightly dispersive and a pulse of many wavelengths therefore stops being purely
+    right-moving by a little. Measured at 400, 800, 1600 and 3200 cells, the largest pointwise
+    gap between the densities is 1.8e-3, 4.5e-4, 1.1e-4, 2.8e-5 — the second-order behaviour
+    that every centred difference in this file shows.
+
+    The energy velocity does better than that, and for a reason worth knowing. Write the
+    departure from a pure right-mover as eps = (y_t + v y_x)/(v y_x); the densities differ at
+    first order in eps, but P/(v u) differs at *second* order, the first-order terms cancelling
+    between numerator and denominator. So the same runs give 1.7e-5, 1.1e-6, 6.9e-8, 4.4e-9 —
+    sixteenfold per halving, fourth order in the spacing. The claim that a wave's energy travels
+    at exactly v is numerically the most robust thing in the module.
+    """
+    refinements = (400, 800, 1600, 3200)
+    measured = [_equipartition_and_energy_velocity(cells) for cells in refinements]
+    equipartition = np.array([row[0] for row in measured])
+    energy_velocity = np.array([row[1] for row in measured])
+
+    assert np.all(np.abs(equipartition[:-1] / equipartition[1:] - 4.0) < 0.3)
+    assert equipartition[-1] < 1e-4
+    assert np.all(np.abs(energy_velocity[:-1] / energy_velocity[1:] - 16.0) < 2.0)
+    assert energy_velocity[-1] < 1e-8
