@@ -1220,3 +1220,233 @@ def test_a_standing_wave_stores_energy_without_transporting_any():
     mean_kinetic = float(np.trapezoid(kinetic, dx=dx, axis=1)[: 4 * per_period].mean())
     mean_potential = float(np.trapezoid(potential, dx=dx, axis=1)[: 4 * per_period].mean())
     assert abs(mean_kinetic / mean_potential - 1.0) < 2e-3
+
+
+# The junction (module 10). A pulse is launched in the first medium, allowed to split at a jump
+# in density, and the two pieces are read off the record. Each run's geometry is scaled to its
+# own two wave speeds: the transmitted pulse is stretched by v_2/v_1, so the far side is made
+# that much longer to hold it, and the grid is fine enough to resolve whichever pulse is
+# narrower.
+
+JUNCTION_AMPLITUDE = 0.01
+JUNCTION_WIDTH = 0.2
+JUNCTION_APPROACH = 1.2  # metres of the first medium crossed before the junction is reached
+JUNCTION_CLEARANCE = 3.0  # pulse widths of separation insisted on before anything is measured
+
+
+def _junction_run(
+    ratio: float, points_per_width: int = 30, courant: float = 0.5
+) -> tuple[waves.StringEvolution, float, np.ndarray, float]:
+    """A Gaussian pulse in medium 1 meeting a jump to a density `ratio` times its own."""
+    speed_2 = waves.wave_speed(STRING_TENSION, STRING_MU * ratio)
+    width_2 = JUNCTION_WIDTH * speed_2 / STRING_SPEED
+    dx = min(JUNCTION_WIDTH, width_2) / points_per_width
+    clearance = JUNCTION_CLEARANCE * JUNCTION_WIDTH / STRING_SPEED
+
+    junction = JUNCTION_APPROACH + STRING_SPEED * clearance + 2.0 * JUNCTION_WIDTH
+    length = junction + speed_2 * clearance + 2.0 * width_2
+    cells = int(round(length / dx))
+    dx = length / cells
+
+    x = np.arange(cells + 1) * dx
+    mu = np.where(x < junction, STRING_MU, STRING_MU * ratio)
+    centre = junction - JUNCTION_APPROACH
+
+    def shape(s: np.ndarray) -> np.ndarray:
+        return JUNCTION_AMPLITUDE * np.exp(-(((s - centre) / JUNCTION_WIDTH) ** 2))
+
+    slope = -2.0 * (x - centre) / JUNCTION_WIDTH**2 * shape(x)
+    dt = courant * dx / max(STRING_SPEED, speed_2)
+    steps = int(round((JUNCTION_APPROACH / STRING_SPEED + clearance) / dt))
+    run = waves.simulate_string(shape(x), -STRING_SPEED * slope, dx, dt, STRING_TENSION, mu, steps)
+    return run, dx, mu, junction
+
+
+def _split_amplitudes(ratio: float, points_per_width: int = 30) -> tuple[float, float]:
+    """Reflected and transmitted amplitudes of a split pulse, as fractions of the incident one.
+
+    Signed, and taken as the extremum on each side well clear of the junction, which is what a
+    frame-by-frame reading of a filmed rope measures.
+    """
+    run, _, _, junction = _junction_run(ratio, points_per_width=points_per_width)
+    speed_2 = waves.wave_speed(STRING_TENSION, STRING_MU * ratio)
+    final = run.y[-1]
+
+    def extremum(mask: np.ndarray) -> float:
+        segment = final[mask]
+        return float(segment[np.argmax(np.abs(segment))] / JUNCTION_AMPLITUDE)
+
+    return (
+        extremum(run.x < junction - JUNCTION_WIDTH),
+        extremum(run.x > junction + JUNCTION_WIDTH * speed_2 / STRING_SPEED),
+    )
+
+
+def test_the_junction_coefficients_carry_their_own_limits_and_identities():
+    """r = 0 at a match, and (-1, 0) and (+1, 2) are approached as the far side hardens or softens.
+
+    Four statements, all of them algebra rather than simulation, and each one a physical claim
+    the module makes. At Z_2 = Z_1 the pair is exactly (0, 1): nothing comes back. Let the far
+    side grow heavy and r falls toward -1 while t falls toward 0 — at a hundredfold density the
+    coefficients are already -0.8182 and 0.1818, at a ten-thousandfold -0.9802 and 0.0198,
+    converging on the wall. Let it grow light and the same formula rises to +0.9802 and 1.9802,
+    converging on a free end whose displacement doubles.
+
+    Underneath both limits sits 1 + r = t, which is the continuity of the string itself and not
+    a separate result: it holds to rounding across twelve decades of impedance ratio, so any
+    numbers claiming to be r and t can be checked against it in one line.
+    """
+    assert waves.junction_coefficients(0.2, 0.2) == (0.0, 1.0)
+
+    z1 = waves.impedance(STRING_TENSION, STRING_MU)
+    for ratio, expected_r, expected_t in (
+        (1e2, -0.818182, 0.181818),
+        (1e4, -0.980198, 0.019802),
+        (1e-2, +0.818182, 1.818182),
+        (1e-4, +0.980198, 1.980198),
+    ):
+        z2 = waves.impedance(STRING_TENSION, STRING_MU * ratio)
+        assert waves.junction_coefficients(z1, z2) == pytest.approx(
+            (expected_r, expected_t), abs=1e-6
+        )
+
+    hard_r, hard_t = waves.junction_coefficients(1.0, np.array([1e6, 1e8, 1e10]))
+    soft_r, soft_t = waves.junction_coefficients(1.0, np.array([1e-6, 1e-8, 1e-10]))
+    assert np.all(np.diff(hard_r) < 0.0) and hard_r[-1] < -1.0 + 1e-9
+    assert np.all(np.diff(soft_r) > 0.0) and soft_r[-1] > 1.0 - 1e-9
+    assert hard_t[-1] < 1e-9 and abs(soft_t[-1] - 2.0) < 1e-9
+
+    reflection, transmission = waves.junction_coefficients(1.0, np.logspace(-6.0, 6.0, 61))
+    assert np.max(np.abs(1.0 + reflection - transmission)) < 1e-15
+
+
+def test_the_junction_divides_the_power_into_two_fractions_that_sum_to_one():
+    """R + T = 1 across twelve decades, and the division is the same from either side.
+
+    R = r^2 and T = (Z_2/Z_1) t^2 are not two independent quantities that happen to agree.
+    Substituting the coefficients puts (Z_1 - Z_2)^2 + 4 Z_1 Z_2 over (Z_1 + Z_2)^2, which is 1
+    identically — so conservation of energy at the junction was already contained in the two
+    matching conditions, and this sweep confirms it to 1e-15 rather than discovering it.
+
+    The second identity is less obvious and just as exact: R(Z_1, Z_2) = R(Z_2, Z_1). A junction
+    that sends back 44.4% of the power arriving from the heavy side sends back 44.4% of what
+    arrives from the light side too, though its r has the opposite sign there and its t is five
+    times larger. Energy cannot tell which way the wave was going; the displacement can.
+    """
+    ratios = np.logspace(-6.0, 6.0, 121)
+    reflected, transmitted = waves.power_coefficients(1.0, ratios)
+    assert np.max(np.abs(reflected + transmitted - 1.0)) < 1e-15
+    assert np.all(reflected >= 0.0) and np.all(transmitted > 0.0)
+
+    assert np.max(np.abs(reflected - waves.power_coefficients(ratios, 1.0)[0])) < 1e-15
+
+
+def test_a_wall_and_a_free_end_are_the_two_ends_of_one_formula():
+    """A fixed end returns -1.000003 A and a free end +1.000003 A, peaking at 2.000006 A.
+
+    The solver knows nothing of impedance: `boundary="fixed"` holds a point at zero and
+    `boundary="free"` gives it a ghost neighbour. Yet the pulses that come back are the ones
+    `junction_coefficients` predicts in its two limits, to three parts in a million — the wall
+    inverting the pulse, and the free end returning it upright while the end itself swings to
+    twice the incident amplitude, where incident and reflected pulses overlap on it.
+
+    Neither end takes any energy: both runs keep every joule to 1e-6, which is what makes them
+    limits of a lossless junction rather than new physics. A wall is a second medium too heavy
+    to move, and a free end one too light to resist.
+    """
+    length, cells = 2.0, 2000
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    centre, width = length - 0.8, 0.15
+
+    def shape(s: np.ndarray) -> np.ndarray:
+        return 0.01 * np.exp(-(((s - centre) / width) ** 2))
+
+    slope = -2.0 * (x - centre) / width**2 * shape(x)
+    dt = 0.5 * dx / STRING_SPEED
+    steps = int(round((1.6 / STRING_SPEED) / dt))
+
+    returned = {}
+    for far_end in ("fixed", "free"):
+        run = waves.simulate_string(
+            shape(x),
+            -STRING_SPEED * slope,
+            dx,
+            dt,
+            STRING_TENSION,
+            STRING_MU,
+            steps,
+            boundary=("free", far_end),
+        )
+        final = run.y[-1]
+        returned[far_end] = float(final[np.argmax(np.abs(final))] / 0.01)
+        energy = waves.total_energy(run.y, run.dydt, dx, STRING_TENSION, STRING_MU)
+        assert abs(energy[-1] / energy[0] - 1.0) < 1e-6
+        if far_end == "free":
+            assert abs(run.y[:, -1].max() / 0.01 - 2.0) < 1e-4
+
+    assert abs(returned["fixed"] + 1.0) < 1e-4
+    assert abs(returned["free"] - 1.0) < 1e-4
+
+
+def test_a_pulse_splits_as_the_impedances_say_and_inverts_only_off_the_harder_side():
+    """Measured amplitude ratios match r and t to 3e-4 over a 625-fold range of density.
+
+    The module in one table. A pulse is fired at a jump in density and the two pieces it becomes
+    are measured off the final frame; the formulas are never consulted by the solver, which
+    integrates displacements and has no notion of an amplitude ratio.
+
+        mu_2/mu_1     r (formula / measured)      t (formula / measured)
+          0.04        +0.6667 / +0.6668            1.6667 / 1.6664
+          0.25        +0.3333 / +0.3334            1.3333 / 1.3332
+          1.00         0.0000 / +0.0001            1.0000 / 1.0001
+          4.00        -0.3333 / -0.3334            0.6667 / 0.6667
+         25.00        -0.6667 / -0.6667            0.3333 / 0.3333
+
+    The sign column is the misconception `reflection-always-inverts` being falsified. The
+    reflected pulse comes back upside down for mu_2 > mu_1 and right side up for mu_2 < mu_1,
+    and it changes over at the match rather than at some threshold of "hard enough". A rope tied
+    to a wall and a rope tied to a thread are the two ends of that column, not two different
+    rules.
+    """
+    z1 = waves.impedance(STRING_TENSION, STRING_MU)
+    for ratio, expected_r, expected_t in (
+        (0.04, +2.0 / 3.0, 5.0 / 3.0),
+        (0.25, +1.0 / 3.0, 4.0 / 3.0),
+        (1.00, 0.0, 1.0),
+        (4.00, -1.0 / 3.0, 2.0 / 3.0),
+        (25.00, -2.0 / 3.0, 1.0 / 3.0),
+    ):
+        z2 = waves.impedance(STRING_TENSION, STRING_MU * ratio)
+        assert waves.junction_coefficients(z1, z2) == pytest.approx((expected_r, expected_t))
+
+        measured_r, measured_t = _split_amplitudes(ratio)
+        assert abs(measured_r - expected_r) < 3e-4, f"r at mu_2/mu_1 = {ratio}"
+        assert abs(measured_t - expected_t) < 3e-4, f"t at mu_2/mu_1 = {ratio}"
+        if expected_r != 0.0:
+            assert np.sign(measured_r) == np.sign(expected_r)
+
+
+def test_a_transmitted_pulse_can_stand_taller_than_the_wave_that_made_it():
+    """Onto a string a hundred times lighter, t = 1.82 — carrying a third of the power.
+
+    The paradox the module has to defuse, measured rather than argued. At mu_2/mu_1 = 0.01 the
+    far side swings 1.818 times as far as the incident pulse did, which looks like amplification
+    and is not: the light string is cheap to move, its impedance is a tenth of the first
+    string's, and the flux factor Z_2/Z_1 turns a squared amplitude ratio of 3.31 into a power
+    fraction of 0.331. The reflected pulse, upright and 0.818 as tall, keeps the other 0.669.
+
+    A displacement ratio answers "how far does it swing"; a power ratio answers "how much did it
+    cost". The junction conserves the second and has no reason to conserve the first.
+    """
+    reflected, transmitted = _split_amplitudes(0.01)
+    assert transmitted > 1.0
+    assert abs(transmitted - 1.818182) < 2e-3
+    assert abs(reflected - 0.818182) < 2e-3
+
+    z1 = waves.impedance(STRING_TENSION, STRING_MU)
+    z2 = waves.impedance(STRING_TENSION, 0.01 * STRING_MU)
+    power_reflected, power_transmitted = waves.power_coefficients(z1, z2)
+    assert power_transmitted < 0.34 < power_reflected
+    assert abs(power_transmitted - (z2 / z1) * transmitted**2) < 1e-2
+    assert power_reflected + power_transmitted == pytest.approx(1.0)
