@@ -443,7 +443,8 @@ be the simplest place to meet it.
   when the flux averages to zero. The answer — that it is stored, sloshing between kinetic and
   potential a quarter wavelength at a time, rather than transported — starts from this module's
   last verification.
-- **Impedance.** `10-impedance` sends a wave at a junction between two media and divides its
+- **Impedance.** [Module 10](10-impedance.md) sends a wave at a junction between two media
+  and divides its
   energy in two. The reflection and transmission coefficients are fixed by requiring exactly
   what this module built: that the flux arriving equals the flux leaving.
 - **Dispersion.** The energy velocity $P/u$ came out equal to $v = \omega/k$ here because the
@@ -452,7 +453,7 @@ be the simplest place to meet it.
   and the two can differ by a lot — the reason a phase velocity above $c$ breaks nothing.
 - **Cables and antennas.** Power sent along a transmission line is $\tfrac12 Z |I|^2$, the same
   algebra with current for transverse velocity. An unterminated cable reflects it, for the
-  reason module 10 gives.
+  reason [module 10](10-impedance.md) gives.
 
 (09-wave-energy-quiz)=
 ## Check your understanding

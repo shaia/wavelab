@@ -109,7 +109,7 @@ overwhelmed. Nothing physical happened.
 :class: model-spec
 - **System:** the transverse displacement field $y(x,t)$ of a uniform string of tension $T$ and linear mass density $\mu$, of length $L$. Observables: the displacement and transverse velocity of every point, and the arrival times of pulses at fixed detectors.
 - **Dynamics:** $\mu\,y_{tt} = T\,y_{xx}$, evaluated exactly by d'Alembert's solution and integrated numerically by the leapfrog scheme, whose stencil is Newton's law for a chain of masses $\mu\,\Delta x$ on springs $T/\Delta x$.
-- **Boundary:** fixed ends, kept out of reach of the pulses; what happens when a pulse gets there is module 10's subject.
+- **Boundary:** fixed ends, kept out of reach of the pulses; what happens when a pulse gets there is [module 10](10-impedance.md)'s subject.
 - **Ensemble:** deterministic; detector noise, where added, is Gaussian, independent and seeded.
 - **Ignored:** bending stiffness, damping, gravity sag, longitudinal motion, and nonlinearity — the string is perfectly flexible, lossless, weightless in its sag and small in its slopes.
 - **Valid when:** slopes are small, $|y_x| \ll 1$; numerically, the Courant number $S = v\,\Delta t/\Delta x \le 1$ and every feature of a pulse spans many grid points.
@@ -574,7 +574,8 @@ for ever — the boundary condition, satisfied by symmetry rather than imposed. 
 approaching the wall meets its own upside-down image coming the other way, and after they pass
 through each other the image is the one that emerges: **a fixed end returns a pulse inverted.**
 Extend evenly instead and the slope at $x = 0$ vanishes — a free end — which returns the pulse
-upright. Module 10 derives both results properly, as the two limits of one formula.
+upright. [Module 10](10-impedance.md) derives both results properly, as the two limits of
+one formula.
 
 **What makes a PDE "first".** The wave equation is the simplest *hyperbolic* equation, and its
 character is in d'Alembert's variables: $x - vt$ and $x + vt$ are constant along lines in the

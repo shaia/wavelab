@@ -545,7 +545,7 @@ deposits of wave (as opposed to oscillation) terminology.
   השגה; module 10 will need the protection more than any one page needs the word. Recorded here
   because it will happen again.
 
-### 5.3 `10-impedance` — Impedance: reflection and transmission at boundaries
+### 5.3 `10-impedance` — Impedance: reflection and transmission at boundaries (as built)
 
 - **Identity and scope:** master-plan notebook 3.4: impedance, junction conditions, reflection and
   transmission, energy bookkeeping, fixed/free limits, matching. Deferred: standing waves from
@@ -666,7 +666,87 @@ deposits of wave (as opposed to oscillation) terminology.
   junction-conservation tests land here.
 - **Open questions for the author:** pulse pictures or phasor algebra first in the junction
   derivation (recommendation: pulses first, phasors second); analogue table in core or advanced
-  (recommendation: advanced).
+  (recommendation: advanced). Both went the way the plan recommended.
+
+- **As-built deviations from this section.** Ten. The first is the one that moved the module:
+  the plan's central image of a matched junction turns out not to exist on a string.
+
+  (1) **A matched junction cannot exist inside one string.** Tension is a single number from end
+  to end — the model's own consequence, stated in `waves.py`'s docstring since 08 — so
+  $Z_1 = Z_2$ means $\mu_1 = \mu_2$, and "the matched junction" is a string with no junction in
+  it. The plan's shot (h) would therefore have animated a uniform string doing nothing. The page
+  says this in as many words and moves matching to where it is not trivial, which costs nothing:
+  the criterion $r = 0$ and its examples (gel, cable terminator) are unaffected, because in media
+  whose two constants are free of each other the match is a real achievement.
+
+  (2) **Shot (h) became the quarter-wave comparison.** A six-cycle packet meets a 3:1 impedance
+  step bare and then through a $\sqrt{Z_1Z_3}$ section 57.7 mm long: $R = 0.2504$ against the
+  formula's $0.2500$, falling to $0.0077$ — an echo thirty-two times weaker in energy. §5.3 had
+  the three-segment string as a laboratory extra and an advanced teaser only. It is now also the
+  page's third animation, because it is the only matching a string can *show*, and because it
+  puts a cancellation of two reflections on screen two parts before interference is taught.
+
+  (3) **The coefficient functions refuse infinite and zero arguments.** §4's sketch is silent;
+  the built `junction_coefficients` and `power_coefficients` raise on a non-finite impedance,
+  with the message that fixed and free ends are limits of these formulas rather than values of
+  them. A module whose argument is that a wall is not a special case should not ship a special
+  case for it. `impedance` itself took `wave_speed`'s overloads, so a varying density gives a
+  varying $Z$ and the laboratory's sweep is one call.
+
+  (4) **A convergence test beyond §4's list.** §4 assigns convergence to the FDTD-vs-d'Alembert
+  comparison and stops. But a junction is a step the grid can only place to within $\Delta x$,
+  so "does the simulation agree with $r$" is a question about resolution before it is a question
+  about physics: the measured reflected amplitude misses $-1/3$ by $8.9\times10^{-4}$,
+  $2.2\times10^{-4}$, $5.6\times10^{-5}$, $1.4\times10^{-5}$ at 10, 20, 40 and 80 points across
+  the pulse. Second order, like everything else this solver does, and now the page's
+  verification 4 and the gate the animations sit behind.
+
+  (5) **Reciprocity is exact, measurable, and absent from the plan.** $R(Z_1,Z_2) = R(Z_2,Z_1)$
+  holds to $10^{-15}$ as algebra and shows up in the weighed energies as two identical rows —
+  $\mu_2/\mu_1 = 1/4$ and $4$ both return $0.111320$ of the pulse — while their amplitudes are
+  entirely different ($+1/3$ against $-1/3$, $4/3$ against $2/3$). Energy cannot tell which way
+  the wave was going; the displacement can. It is in the limits test, the conservation test, the
+  page's second table and `Q-10-4`'s feedback.
+
+  (6) **The measurement part needed a second estimator, not noisier data.** §5.3 asks for "noisy
+  amplitudes via `add_noise`, $r \pm \sigma_r$ at three ratios vs the formula", which as written
+  teaches nothing module 09 had not already taught. Built with two estimators on the same frame
+  it does: a projection onto the expected pulse shape is linear in the data and returns the
+  noiseless answer, while picking the largest excursion — what an eye does — is biased away from
+  zero by 23% at $\mu_2/\mu_1 = 1/4$ and 29% at 4, and no number of frames repairs it. The
+  laboratory reuses `validation.seed_study` for both, so the bias is reported with a standard
+  error rather than asserted.
+
+  (7) **The falsifier is the pair shot and the sweep, not the sandbox readout.** §5.3 puts the
+  live $r$ readout in the explore sandbox at the centre of `reflection-always-inverts`. As built
+  the falsifier is animation (g) — one junction approached from both sides, in step — backed by
+  the laboratory's eleven-point measured sweep, where the sign turns over at $\mu_2 = \mu_1$ and
+  nowhere else. The sandbox survives as the matching game of part 8.
+
+  (8) **The real-experiment counterpart shipped with the module.** Module 09 needed a second
+  commit for its own. Here it is problem 8 from the start, and it is built around the one thing
+  a phone can measure with no calibration whatsoever: the *sign* of the reflection from each
+  side of a knot. Amplitudes follow, with the estimator bias of (6) as the reason the naive
+  reading comes out high.
+
+  (9) **The `junction` glossary key carries no rejected spelling.** §5.3 asks the translator to
+  weigh חיבור against צומת. צומת is right — the junction as a place — but recording חיבור as
+  `he_reject` is not the way to say so: it is an ordinary word that pages 05 and 07 and the
+  Hebrew index already use for coupling and for addition, and the lint rejected all three on the
+  first run. Weighed, not taken, and deliberately not rejected. The comment in `terms.yml` says
+  why, as §5.2's deviation (10) predicted this would need saying again.
+
+  (10) **The optical unification had to be corrected after it was written.** The transfer box
+  first claimed the Fresnel coefficients are this module's formulas "with the optical impedance
+  $Z \propto 1/n$ in place of $\sqrt{T\mu}$". Substituting $Z = Z_0/n$ into
+  $r = (Z_1 - Z_2)/(Z_1 + Z_2)$ returns the *negative* of the Fresnel result, and the analogue
+  table then explained a sign that was not there. Part-06's plan already had the right account
+  and the page now carries it: the index sits in the slot where $Z$ sits, letter for letter,
+  because the amplitude quoted for light is $E$ — the force-like member of its pair — where a
+  string's $y$ is the motion-like member of ours, and the two inversions cancel. Worth recording
+  because module 18's planned unification test compares `fresnel_rs(n1, n2, 0)` against
+  `junction_coefficients(n1, n2)`, indices in the impedance slot, and would have looked wrong
+  against a page that said otherwise.
 
 ## 6. Part-level assessment and capstone hooks
 
