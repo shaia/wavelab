@@ -599,6 +599,261 @@ def render_energy_transport(periods: float = 3.0, frames: int = 150) -> None:
     save(FuncAnimation(fig, update, frames=frames, blit=False), fig, "wave-energy-transport")
 
 
+# ---------------------------------------------------------------------------
+# Module 10: impedance, and what a junction does
+# ---------------------------------------------------------------------------
+
+# Every shot below fires the same kind of Gaussian pulse at a change of medium and lets the
+# reader watch what comes back. Densities are given as multiples of MU, so the impedance ratio
+# of any pair is the square root of their ratio: the 4:1 densities of the junction pair are a
+# 2:1 impedance step, and its coefficients are the thirds the page derives.
+
+JUNCTION_AMPLITUDE = 0.006  # m, before the display exaggeration MM applies
+JUNCTION_WIDTH = 0.15  # m, the Gaussian's half-width at 1/e
+
+
+def _gaussian(x: np.ndarray, centre: float, width: float = JUNCTION_WIDTH) -> np.ndarray:
+    """The incident pulse, in metres of displacement."""
+    return JUNCTION_AMPLITUDE * np.exp(-(((x - centre) / width) ** 2))
+
+
+def _launch_right(x: np.ndarray, centre: float, speed: float, width: float = JUNCTION_WIDTH):
+    """Initial shape and velocity of a purely right-moving Gaussian: y_t = -v y_x."""
+    shape = _gaussian(x, centre, width)
+    slope = -2.0 * (x - centre) / width**2 * shape
+    return shape, -speed * slope
+
+
+def _string_panel(axis, length: float, span_mm: float) -> None:
+    """Limits, rest line and labels for one string panel of a module 10 shot."""
+    axis.set_xlim(0.0, length)
+    axis.set_ylim(-span_mm, span_mm)
+    axis.set_ylabel("y (mm)")
+    axis.axhline(0.0, color="0.9", lw=0.8)
+
+
+def render_end_reflection(length: float = 2.0, cells: int = 1200, save_every: int = 16) -> None:
+    """The same pulse at a wall and at a free end: one comes back upside down, one right side up.
+
+    Two panels, one string each, one pulse each, differing in a single word passed to the
+    solver. Against the wall the returning pulse is inverted and the end never moves; at the
+    free end — a ring sliding on a frictionless rod — the returning pulse is upright and the
+    end itself swings to twice the incident amplitude while the incoming and outgoing pulses
+    are on top of each other. The dotted guides at +/-A and 2A are there to be hit.
+
+    This is the module's first claim made visible: the two ends are not two rules but the two
+    limits of one, Z_2 -> infinity and Z_2 -> 0. Measured off these very runs the returned
+    amplitudes are -1.000 A and +1.000 A, which is `junction_coefficients` evaluated at its
+    endpoints, and neither end takes any energy from the string.
+    """
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    start = 0.7
+    dt = 0.5 * dx / SPEED
+    steps = int(round((2.3 / SPEED) / dt))
+    shape, velocity = _launch_right(x, start, SPEED)
+
+    runs = {
+        end: waves.simulate_string(
+            shape, velocity, dx, dt, TENSION, MU, steps,
+            boundary=("free", end), save_every=save_every,
+        )
+        for end in ("fixed", "free")
+    }
+    frames = runs["fixed"].times.size
+
+    fig, axes = plt.subplots(2, 1, figsize=(9.0, 4.6), dpi=DPI, sharex=True)
+    lines, markers = {}, {}
+    for axis, end, colour in ((axes[0], "fixed", BLUE), (axes[1], "free", ORANGE)):
+        _string_panel(axis, length, 1.45 * JUNCTION_AMPLITUDE * MM)
+        axis.set_ylim(-1.45 * JUNCTION_AMPLITUDE * MM, 2.3 * JUNCTION_AMPLITUDE * MM)
+        for level in (1.0, -1.0, 2.0):
+            axis.axhline(level * JUNCTION_AMPLITUDE * MM, color="0.85", lw=0.8, ls=":")
+        axis.axvline(length, color="0.2", lw=3.0 if end == "fixed" else 1.0,
+                     ls="-" if end == "fixed" else "--")
+        (lines[end],) = axis.plot([], [], color=colour, lw=1.8, zorder=3)
+        (markers[end],) = axis.plot([], [], marker="o", ms=6, color="0.2", zorder=4)
+    axes[1].set_xlabel("x (m)")
+    fig.tight_layout()
+
+    def update(frame: int):
+        for end, run in runs.items():
+            lines[end].set_data(x, run.y[frame] * MM)
+            markers[end].set_data([length], [run.y[frame, -1] * MM])
+        return *lines.values(), *markers.values()
+
+    for end, run in runs.items():
+        final = run.y[-1]
+        returned = final[np.argmax(np.abs(final))] / JUNCTION_AMPLITUDE
+        energy = waves.total_energy(run.y, run.dydt, dx, TENSION, MU)
+        print(f"[render] {end} end returns {returned:+.4f} A, end reaches "
+              f"{run.y[:, -1].max() / JUNCTION_AMPLITUDE:+.4f} A, energy kept "
+              f"{energy[-1] / energy[0]:.7f}")
+    save(FuncAnimation(fig, update, frames=frames, blit=False), fig, "wave-end-reflection")
+
+
+def render_junction_pair(length: float = 4.0, cells: int = 1600, save_every: int = 6) -> None:
+    """Heavy to light and light to heavy: the reflection changes sign, the transmission never does.
+
+    One junction, two directions, side by side. The densities differ fourfold, so the
+    impedances differ twofold and the coefficients are exactly thirds: arriving from the heavy
+    side r = +1/3 and t = 4/3 — the echo upright, the transmitted pulse *taller* than the wave
+    that made it and twice as wide, because it travels twice as fast. Arriving from the light
+    side r = -1/3 and t = 2/3 — the echo inverted, the transmitted pulse shorter and narrower.
+
+    The shading marks the heavier medium. Both panels are in step: each pulse starts at the
+    distance its own medium's speed needs to reach the junction at the same instant, so the
+    split happens in both at the same frame and the two outcomes can be compared directly
+    rather than remembered.
+
+    The pair is the falsifier for `reflection-always-inverts`. Inversion is not what reflection
+    does; it is what reflection does off something harder, and here is the same junction doing
+    the other thing when approached from the other side.
+    """
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    junction = 2.0
+    heavy, light = 4.0 * MU, MU
+    speed_light = waves.wave_speed(TENSION, light)
+
+    approach = 0.06  # s of travel before the junction is reached, the same in both panels
+    dt = 0.5 * dx / speed_light
+    steps = int(round(2.0 * approach / dt))
+
+    panels = {}
+    directions = (("heavy-to-light", (heavy, light)), ("light-to-heavy", (light, heavy)))
+    for name, (near, far) in directions:
+        mu = np.where(x < junction, near, far)
+        speed_near = waves.wave_speed(TENSION, near)
+        shape, velocity = _launch_right(x, junction - speed_near * approach, speed_near)
+        panels[name] = waves.simulate_string(
+            shape, velocity, dx, dt, TENSION, mu, steps, save_every=save_every
+        )
+    frames = panels["heavy-to-light"].times.size
+
+    fig, axes = plt.subplots(2, 1, figsize=(9.0, 4.6), dpi=DPI, sharex=True)
+    lines = {}
+    for axis, name, colour, heavy_span in (
+        (axes[0], "heavy-to-light", BLUE, (0.0, junction)),
+        (axes[1], "light-to-heavy", ORANGE, (junction, length)),
+    ):
+        _string_panel(axis, length, 1.6 * JUNCTION_AMPLITUDE * MM)
+        axis.axvspan(*heavy_span, color="0.5", alpha=0.12, lw=0.0)
+        axis.axvline(junction, color="0.35", lw=1.2, ls="--")
+        (lines[name],) = axis.plot([], [], color=colour, lw=1.8, zorder=3)
+    axes[1].set_xlabel("x (m)")
+    fig.tight_layout()
+
+    def update(frame: int):
+        for name, run in panels.items():
+            lines[name].set_data(x, run.y[frame] * MM)
+        return tuple(lines.values())
+
+    for name, run in panels.items():
+        final = run.y[-1]
+        behind = final[x < junction - JUNCTION_WIDTH]
+        beyond = final[x > junction + JUNCTION_WIDTH * 2.0]
+        z_near = waves.impedance(TENSION, heavy if name.startswith("heavy") else light)
+        z_far = waves.impedance(TENSION, light if name.startswith("heavy") else heavy)
+        r, t = waves.junction_coefficients(z_near, z_far)
+        print(f"[render] {name}: r {r:+.4f} vs measured "
+              f"{behind[np.argmax(np.abs(behind))] / JUNCTION_AMPLITUDE:+.4f}, t {t:.4f} vs "
+              f"{beyond[np.argmax(np.abs(beyond))] / JUNCTION_AMPLITUDE:.4f}")
+    save(FuncAnimation(fig, update, frames=frames, blit=False), fig, "wave-junction-pair")
+
+
+# The matched pair for the advanced section: a 9:1 density step is a 3:1 impedance step, and
+# sqrt(Z1 Z3) is the impedance of a string three times the first one's density. A quarter of a
+# wavelength of it — measured in *its own* wavelength, which is neither neighbour's — is the
+# whole trick, and it is the one module 24 will spend on anti-reflection coatings.
+MATCH_WAVELENGTH = 0.4
+MATCH_DENSITY_STEP = 9.0
+
+
+def _wave_packet(x: np.ndarray, centre: float, cycles: float) -> np.ndarray:
+    """A sine of `cycles` periods under a cos^2 envelope — a train with a beginning and an end."""
+    span = cycles * MATCH_WAVELENGTH
+    envelope = np.where(
+        np.abs(x - centre) < 0.5 * span, np.cos(np.pi * (x - centre) / span) ** 2, 0.0
+    )
+    k = 2.0 * np.pi / MATCH_WAVELENGTH
+    return 0.004 * envelope * np.sin(k * (x - centre))
+
+
+def render_quarter_wave_match(
+    length: float = 10.0, cells: int = 5000, save_every: int = 40
+) -> None:
+    """The same step with and without a quarter-wave section: the echo simply does not happen.
+
+    On a string, tension is one number from end to end, so two media of equal impedance are the
+    same string and "matching" is empty. It stops being empty the moment a third medium is
+    allowed. The upper panel sends a six-cycle packet at a bare 3:1 impedance step and a quarter
+    of its energy comes back — R = 0.2504 against the formula's 0.2500. The lower panel inserts
+    a single sliver of string of impedance sqrt(Z_1 Z_3), a quarter of a wavelength long as
+    measured in that sliver, and the same packet crosses almost whole: R = 0.0077, an echo
+    thirty-two times weaker in energy and six and a half times shorter on the screen.
+
+    Nothing absorbed the missing echo. The sliver's two faces each send back a small wave, equal
+    in size and half a wavelength apart in round trip, and they cancel — the first interference
+    calculation in the course, arriving two parts before interference is taught, and the direct
+    ancestor of the coating on a camera lens (module 24). The cancellation is exact only at the
+    design frequency; the residual here is the packet's own bandwidth, not a numerical error.
+    """
+    dx = length / cells
+    x = np.arange(cells + 1) * dx
+    junction = 6.0
+    frequency = SPEED / MATCH_WAVELENGTH
+
+    far_density = MATCH_DENSITY_STEP * MU
+    section_density = np.sqrt(MATCH_DENSITY_STEP) * MU
+    section_length = 0.25 * waves.wave_speed(TENSION, section_density) / frequency
+
+    bare = np.where(x < junction, MU, far_density)
+    matched = np.where(x < junction, MU, far_density)
+    matched[(x >= junction) & (x < junction + section_length)] = section_density
+
+    start = junction - 3.0
+    y0 = _wave_packet(x, start, cycles=6.0)
+    velocity = -SPEED * np.gradient(y0, dx)
+    dt = 0.5 * dx / SPEED
+    steps = int(round((6.0 / SPEED) / dt))
+
+    runs = {
+        name: waves.simulate_string(y0, velocity, dx, dt, TENSION, mu, steps, save_every=save_every)
+        for name, mu in (("bare", bare), ("matched", matched))
+    }
+    frames = runs["bare"].times.size
+
+    fig, axes = plt.subplots(2, 1, figsize=(9.0, 4.6), dpi=DPI, sharex=True)
+    lines = {}
+    for axis, name, colour in ((axes[0], "bare", BLUE), (axes[1], "matched", ORANGE)):
+        _string_panel(axis, length, 7.0)
+        axis.axvspan(junction, length, color="0.5", alpha=0.12, lw=0.0)
+        if name == "matched":
+            axis.axvspan(junction, junction + section_length, color=GREEN, alpha=0.35, lw=0.0)
+        axis.axvline(junction, color="0.35", lw=1.0, ls="--")
+        (lines[name],) = axis.plot([], [], color=colour, lw=1.4, zorder=3)
+    axes[1].set_xlabel("x (m)")
+    fig.tight_layout()
+
+    def update(frame: int):
+        for name, run in runs.items():
+            lines[name].set_data(x, run.y[frame] * MM)
+        return tuple(lines.values())
+
+    cut = int(round(junction / dx))
+    for name, run in runs.items():
+        mu = bare if name == "bare" else matched
+        started = waves.total_energy(run.y[0], run.dydt[0], dx, TENSION, mu)
+        back = waves.total_energy(
+            run.y[-1][:cut], run.dydt[-1][:cut], dx, TENSION, mu[:cut]
+        )
+        echo = np.abs(run.y[-1][: cut - 200]).max() / 0.004
+        print(f"[render] {name} step: R = {back / started:.4f}, echo {echo:.3f} A "
+              f"(section {section_length * 1e3:.1f} mm)")
+    save(FuncAnimation(fig, update, frames=frames, blit=False), fig, "wave-quarter-wave-match")
+
+
 if __name__ == "__main__":
     render_pulse_speck()
     render_pluck_split()
@@ -606,3 +861,6 @@ if __name__ == "__main__":
     render_energy_paint()
     render_energy_densities()
     render_energy_transport()
+    render_end_reflection()
+    render_junction_pair()
+    render_quarter_wave_match()

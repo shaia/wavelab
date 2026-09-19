@@ -402,3 +402,36 @@ def test_the_mean_power_of_a_sinusoidal_wave_is_a_power_in_three_spellings():
     value = waves.sinusoidal_mean_power(2e-3, 251.33, 4.0, 0.01)
     assert isinstance(value, float)
     assert np.isclose(value, by_density.to("W").magnitude)
+
+
+def test_an_impedance_is_a_mass_per_unit_time_and_the_junction_ratios_are_pure_numbers():
+    """Z = sqrt(T mu) = mu v = T / v is kilograms per second; r, t, R and T carry no units.
+
+    The three spellings of Z are the three questions it answers — what the medium weighs and how
+    fast it passes a signal, what a moving element costs, what a held slope costs — and they
+    have to agree on units before they can agree on anything else. Kilograms per second is the
+    honest name for them: force per transverse velocity, N/(m/s), which reduces to kg/s.
+
+    The coefficients are then ratios of like quantities, which is why one junction formula can
+    later be read off a string, a coaxial cable and a pane of glass without carrying any of
+    their units along with it.
+    """
+    tension = Quantity(4.0, "N")
+    density = Quantity(0.01, "kg/m")
+    speed = (tension / density) ** 0.5
+    impedance = (tension * density) ** 0.5
+
+    assert impedance.check("[mass] / [time]")
+    assert np.isclose((density * speed).to("kg/s").magnitude, impedance.to("kg/s").magnitude)
+    assert np.isclose((tension / speed).to("kg/s").magnitude, impedance.to("kg/s").magnitude)
+    assert (impedance * Quantity(0.3, "m/s")).check("[force]")
+
+    z1 = Quantity(waves.impedance(4.0, 0.01), "kg/s")
+    z2 = Quantity(waves.impedance(4.0, 0.04), "kg/s")
+    assert np.isclose(z1.to("kg/s").magnitude, impedance.to("kg/s").magnitude)
+    assert ((z1 - z2) / (z1 + z2)).check("[]")
+    assert (2.0 * z1 / (z1 + z2)).check("[]")
+    assert ((z2 / z1) * (2.0 * z1 / (z1 + z2)) ** 2).check("[]")
+
+    for value in (*waves.junction_coefficients(0.2, 0.4), *waves.power_coefficients(0.2, 0.4)):
+        assert isinstance(value, float)

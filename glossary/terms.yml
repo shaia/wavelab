@@ -477,3 +477,28 @@ terms:
   - key: poynting-vector
     en: Poynting vector
     he: וקטור פוינטינג
+  # Boundary vocabulary, deposited by module 10 (plans/part-03-waves.md section 5.3) — the
+  # first terms for what happens where a medium ends. `impedance` itself was deposited by
+  # module 09, whose page is the first to use the word, and is cited here rather than repeated.
+  - key: reflection-coefficient
+    en: reflection coefficient
+    he: מקדם החזרה
+  - key: transmission-coefficient
+    en: transmission coefficient
+    he: מקדם העברה
+  # צומת is the junction as a place, which is what this module means. חיבור — the act of
+  # joining — was weighed and not taken, and deliberately not listed as a rejected spelling:
+  # it is an ordinary word that pages 05 and 07 already use for coupling and for addition,
+  # and a global rejection here would make those pages wrong about a different subject.
+  - key: junction
+    en: junction
+    he: צומת
+  - key: impedance-matching
+    en: impedance matching
+    he: תיאום עכבות
+  - key: fixed-end
+    en: fixed end
+    he: קצה קבוע
+  - key: free-end
+    en: free end
+    he: קצה חופשי

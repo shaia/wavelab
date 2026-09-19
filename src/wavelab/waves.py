@@ -96,6 +96,46 @@ def wave_speed(tension: float | np.ndarray, mu: float | np.ndarray) -> float | n
     return float(speed) if speed.ndim == 0 else speed
 
 
+@overload
+def impedance(tension: float, mu: float) -> float: ...
+@overload
+def impedance(tension: float | np.ndarray, mu: np.ndarray) -> np.ndarray: ...
+@overload
+def impedance(tension: np.ndarray, mu: float | np.ndarray) -> np.ndarray: ...
+def impedance(tension: float | np.ndarray, mu: float | np.ndarray) -> float | np.ndarray:
+    """What the medium feels like to push, Z = sqrt(T mu) = mu v = T / v [kg/s].
+
+    Take hold of the end of a semi-infinite string and wave it. Everything you launch travels
+    away from you, so the string at your hand obeys the right-mover's relation y_t = -v y_x,
+    and the transverse force you must supply is
+
+        F = -T y_x = (T / v) y_t = Z y_t.
+
+    Force proportional to velocity, in phase with it: the string resists like a dashpot, not
+    like a spring or a mass. That is the whole content of the word. Pushing costs work at every
+    instant and none of it comes back, because what you paid for is travelling away — an ideal
+    infinite string is a perfect absorber, and an oscillator with one attached is damped by it.
+
+    Z is a property of the medium alone, and an independent one from the speed: T and mu are
+    two knobs, so v = sqrt(T/mu) and Z = sqrt(T mu) can be set separately, and two media can
+    share a wave speed while differing in impedance. On a string they are not free of each
+    other in practice, because a junction between two densities carries one tension: there
+    Z_2/Z_1 = sqrt(mu_2/mu_1) = v_1/v_2, and the heavier side is both the slower and the
+    harder one.
+
+    Either argument may be an array — a density varying along the string gives an impedance
+    that does — and the result is a plain float when both are scalars.
+    """
+    tension_arr = np.asarray(tension, dtype=float)
+    mu_arr = np.asarray(mu, dtype=float)
+    if np.any(tension_arr <= 0):
+        raise ValueError("tension must be positive")
+    if np.any(mu_arr <= 0):
+        raise ValueError("mu must be positive")
+    result = np.sqrt(tension_arr * mu_arr)
+    return float(result) if result.ndim == 0 else result
+
+
 def cfl_max_dt(dx: float, v_max: float) -> float:
     """The largest stable time step for the leapfrog string, dt = dx / v_max [s].
 
@@ -429,3 +469,110 @@ def sinusoidal_mean_power(amplitude: float, omega: float, tension: float, mu: fl
         raise ValueError("omega must be non-negative")
     speed = wave_speed(tension, mu)
     return 0.5 * float(mu) * speed * float(omega) ** 2 * float(amplitude) ** 2
+
+
+@overload
+def junction_coefficients(z1: float, z2: float) -> tuple[float, float]: ...
+@overload
+def junction_coefficients(
+    z1: float | np.ndarray, z2: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]: ...
+@overload
+def junction_coefficients(
+    z1: np.ndarray, z2: float | np.ndarray
+) -> tuple[np.ndarray, np.ndarray]: ...
+def junction_coefficients(
+    z1: float | np.ndarray, z2: float | np.ndarray
+) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
+    """Displacement amplitude ratios at a junction, r = (Z1 - Z2)/(Z1 + Z2), t = 2 Z1/(Z1 + Z2).
+
+    A wave arrives from the medium of impedance `z1` at a junction with the medium of
+    impedance `z2`. Two facts decide everything that happens there. The string is unbroken, so
+    the displacement is continuous; and the junction has no mass, so no net transverse force
+    may act on it and -T y_x is continuous too. Writing the left side as the incident plus a
+    reflected wave and the right side as a transmitted one, those two statements read
+
+        1 + r = t        and        Z1 (1 - r) = Z2 t,
+
+    the second being the force condition with the frequency shared and k = omega / v on each
+    side. Solving gives the two formulas above, and 1 + r = t survives as the check to make on
+    any numbers they produce.
+
+    Both are ratios of *displacement* amplitudes and both are real: on a lossless junction a
+    wave can only come back in step or exactly out of step, never anywhere in between. Their
+    signs and sizes are the module's physics:
+
+    - Z2 > Z1 (a heavier, slower, harder far side) gives r < 0 — the reflected pulse returns
+      inverted. Z2 < Z1 gives r > 0 and it returns upright. The sign changes exactly at the
+      match, which is the fact `reflection-always-inverts` gets wrong.
+    - Z1 = Z2 gives r = 0, t = 1: no echo at all. On a string, whose tension is one number
+      from end to end, that means equal densities and so no junction to speak of; in media
+      whose two constants are free of each other — a pair of fluids, a cable and its
+      terminating resistor — different media can share an impedance, and matching them is
+      what ultrasound gel and a cable terminator are for.
+    - t ranges over (0, 2) and exceeds 1 whenever Z2 < Z1, reaching 2 in the free-end limit.
+      A transmitted displacement larger than the incident one is not a gain of energy; see
+      `power_coefficients` for the flux factor that settles the books.
+
+    The fixed and free ends of `simulate_string` are the two limits of this one formula rather
+    than separate physics: Z2 -> infinity gives (r, t) -> (-1, 0), a wall returning the pulse
+    upside down, and Z2 -> 0 gives (r, t) -> (+1, 2), a free end returning it upright with the
+    end itself moving twice as far as the incident wave alone would take it. Both are limits
+    here and not arguments: the impedances passed in must be positive and finite.
+
+    Either argument may be an array — a sweep over density ratios is the usual reason — and
+    the pair comes back as plain floats when both are scalars.
+    """
+    first = np.asarray(z1, dtype=float)
+    second = np.asarray(z2, dtype=float)
+    if np.any(first <= 0) or np.any(second <= 0):
+        raise ValueError("impedances must be positive")
+    if not (np.all(np.isfinite(first)) and np.all(np.isfinite(second))):
+        raise ValueError(
+            "impedances must be finite — fixed and free ends are limits of these formulas, "
+            "not values of them"
+        )
+    reflected = (first - second) / (first + second)
+    transmitted = 2.0 * first / (first + second)
+    if reflected.ndim == 0:
+        return float(reflected), float(transmitted)
+    return reflected, transmitted
+
+
+@overload
+def power_coefficients(z1: float, z2: float) -> tuple[float, float]: ...
+@overload
+def power_coefficients(z1: float | np.ndarray, z2: np.ndarray) -> tuple[np.ndarray, np.ndarray]: ...
+@overload
+def power_coefficients(z1: np.ndarray, z2: float | np.ndarray) -> tuple[np.ndarray, np.ndarray]: ...
+def power_coefficients(
+    z1: float | np.ndarray, z2: float | np.ndarray
+) -> tuple[float, float] | tuple[np.ndarray, np.ndarray]:
+    """Fractions of the incident power that come back and go on, R = r^2 and T = (Z2/Z1) t^2.
+
+    A sinusoidal wave of amplitude A and frequency omega carries mean power (1/2) Z omega^2 A^2
+    (`sinusoidal_mean_power`). The three waves at a junction share omega, so dividing each of
+    their powers by the incident one leaves the amplitudes squared and, for the transmitted
+    wave, the impedance it travels on:
+
+        R = r^2,        T = (Z2 / Z1) t^2,        R + T = 1,
+
+    the last by algebra rather than by assumption — substitute r and t and the numerators
+    (Z1 - Z2)^2 + 4 Z1 Z2 collapse onto (Z1 + Z2)^2. Energy conservation is not an extra law
+    imposed on the junction; it is already inside the two matching conditions that produced
+    r and t, which is the strongest argument that those conditions were the right ones.
+
+    The factor Z2/Z1 is the whole answer to the t > 1 puzzle. Going from a heavy string onto a
+    very light one, t approaches 2 and the far side swings twice as far as the wave that drove
+    it, while Z2/Z1 approaches 0 — a large motion of a medium that is cheap to move, carrying
+    almost no power, which is why R approaches 1 and nearly everything comes back. The
+    amplitude and the energy answer different questions, and reading a displacement ratio as
+    an energy ratio is this module's standing trap.
+    """
+    reflection, transmission = junction_coefficients(z1, z2)
+    ratio = np.asarray(z2, dtype=float) / np.asarray(z1, dtype=float)
+    power_reflected = np.asarray(reflection) ** 2
+    power_transmitted = ratio * np.asarray(transmission) ** 2
+    if power_reflected.ndim == 0:
+        return float(power_reflected), float(power_transmitted)
+    return power_reflected, power_transmitted

@@ -616,3 +616,55 @@ def test_equipartition_is_second_order_and_the_energy_velocity_is_its_square():
     assert equipartition[-1] < 1e-4
     assert np.all(np.abs(energy_velocity[:-1] / energy_velocity[1:] - 16.0) < 2.0)
     assert energy_velocity[-1] < 1e-8
+
+
+def _measured_reflection(ratio: float, points_per_width: int) -> float:
+    """The reflected amplitude a run reports, as a fraction of the incident one.
+
+    Same geometry as the junction runs elsewhere in the suite, with the resolution left free:
+    the pulse is fixed in metres and the grid is refined underneath it.
+    """
+    speed_2 = waves.wave_speed(STRING_TENSION, STRING_MU * ratio)
+    width, approach = 0.2, 1.2
+    dx = min(width, width * speed_2 / STRING_SPEED) / points_per_width
+    clearance = 3.0 * width / STRING_SPEED
+
+    junction = approach + STRING_SPEED * clearance + 2.0 * width
+    length = junction + speed_2 * clearance + 2.0 * width * speed_2 / STRING_SPEED
+    cells = int(round(length / dx))
+    dx = length / cells
+
+    x = np.arange(cells + 1) * dx
+    mu = np.where(x < junction, STRING_MU, STRING_MU * ratio)
+    centre = junction - approach
+    pulse = 0.01 * np.exp(-(((x - centre) / width) ** 2))
+    slope = -2.0 * (x - centre) / width**2 * pulse
+
+    dt = 0.5 * dx / max(STRING_SPEED, speed_2)
+    steps = int(round((approach / STRING_SPEED + clearance) / dt))
+    run = waves.simulate_string(pulse, -STRING_SPEED * slope, dx, dt, STRING_TENSION, mu, steps)
+
+    behind = run.y[-1][run.x < junction - width]
+    return float(behind[np.argmax(np.abs(behind))] / 0.01)
+
+
+def test_the_measured_reflection_coefficient_converges_on_the_formula_at_second_order():
+    """A junction is a step the grid can only place to within dx, and the error falls as dx^2.
+
+    Nothing in the scheme imposes r = (Z_1 - Z_2)/(Z_1 + Z_2). The density jumps between two
+    neighbouring grid points, each point is updated from its neighbours, and an amplitude ratio
+    emerges. How close it lands on the formula is a question about resolution, and the answer is
+    the same second order everything else about this solver obeys: at 10, 20, 40 and 80 points
+    across the incident pulse the reflected amplitude misses -1/3 by 8.9e-4, 2.2e-4, 5.6e-5 and
+    1.4e-5 — a factor of four per halving of the spacing.
+
+    This is the gate the module's animations and laboratory runs sit behind. A junction rendered
+    on too coarse a grid returns an amplitude that is wrong in the third decimal for a reason
+    that has nothing to do with impedance, and a student measuring r off that picture would be
+    measuring the mesh.
+    """
+    errors = [abs(_measured_reflection(4.0, points) + 1.0 / 3.0) for points in (10, 20, 40, 80)]
+    ratios = np.array(errors[:-1]) / np.array(errors[1:])
+
+    assert np.all(ratios > 3.0) and np.all(ratios < 5.0), f"errors {errors} are not fourfold"
+    assert errors[-1] < 5e-5

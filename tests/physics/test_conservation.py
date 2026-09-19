@@ -651,3 +651,78 @@ def test_the_energy_that_crosses_a_point_is_the_energy_that_ends_up_beyond_it():
     assert abs(delivered / beyond - 1.0) < 1e-3
     assert abs(delivered / started - 1.0) < 1e-3
     assert np.all(flux >= -1e-6 * flux.max())  # a right-mover never pays energy backwards
+
+
+# Module 10's share: what the junction does with the energy it is handed. The run below is the
+# one module 09's `test_a_jump_in_density_leaves_the_total_energy_conserved` promised to explain
+# — the total was never in doubt, the division is the result.
+
+
+def _junction_split(ratio: float) -> tuple[float, float, float]:
+    """Fractions of a pulse's energy left behind and carried on past a jump in density.
+
+    The geometry is scaled to the two wave speeds, so that both pieces are well clear of the
+    junction and well inside the string when the books are balanced; the cut is taken at the
+    junction itself, so that nothing is left out of the accounting.
+    """
+    speed_2 = waves.wave_speed(STRING_TENSION, STRING_MU * ratio)
+    width, approach = 0.2, 1.2
+    dx = min(width, width * speed_2 / STRING_SPEED) / 30.0
+    clearance = 3.0 * width / STRING_SPEED
+
+    junction = approach + STRING_SPEED * clearance + 2.0 * width
+    length = junction + speed_2 * clearance + 2.0 * width * speed_2 / STRING_SPEED
+    cells = int(round(length / dx))
+    dx = length / cells
+
+    x = np.arange(cells + 1) * dx
+    mu = np.where(x < junction, STRING_MU, STRING_MU * ratio)
+    centre = junction - approach
+    pulse = 0.01 * np.exp(-(((x - centre) / width) ** 2))
+    slope = -2.0 * (x - centre) / width**2 * pulse
+
+    dt = 0.5 * dx / max(STRING_SPEED, speed_2)
+    steps = int(round((approach / STRING_SPEED + clearance) / dt))
+    run = waves.simulate_string(pulse, -STRING_SPEED * slope, dx, dt, STRING_TENSION, mu, steps)
+
+    cut = int(round(junction / dx))
+    started = waves.total_energy(run.y[0], run.dydt[0], dx, STRING_TENSION, mu)
+    behind = waves.total_energy(
+        run.y[-1][: cut + 1], run.dydt[-1][: cut + 1], dx, STRING_TENSION, mu[: cut + 1]
+    )
+    beyond = waves.total_energy(run.y[-1][cut:], run.dydt[-1][cut:], dx, STRING_TENSION, mu[cut:])
+    return float(behind / started), float(beyond / started), float((behind + beyond) / started)
+
+
+def test_the_junction_divides_the_pulses_energy_into_the_fractions_r_squared_and_t_squared():
+    """Weighed on both sides, the split is R = r^2 and T = (Z_2/Z_1) t^2, to 1e-4.
+
+    A pulse worth one unit of energy arrives at a jump in density and leaves as two pulses. What
+    the solver does with the energy is not told to it: `simulate_string` moves displacements, and
+    the two fractions below are weighed afterwards by `total_energy` on the two sides of the cut.
+
+        mu_2/mu_1      R (formula / weighed)      T (formula / weighed)      sum
+          0.04         0.444444 / 0.444593        0.555556 / 0.555407     0.99999996
+          0.25         0.111111 / 0.111204        0.888889 / 0.888796     0.99999956
+          4.00         0.111111 / 0.111204        0.888889 / 0.888796     0.99999960
+         25.00         0.444444 / 0.444593        0.555556 / 0.555407     0.99999996
+
+    Two things are visible at once. The sums say nothing is lost at the junction — no mechanism
+    for loss was ever put there, since the joint is massless and the strings ideal, so a leak
+    would have been the scheme's and not the physics'. And the two pairs of rows are identical:
+    the same fraction comes back whether the pulse arrives from the heavy side or the light one,
+    measured, not just predicted. The amplitudes are entirely different in the two directions
+    (+0.667 against -0.667, 1.667 against 0.333); the energies cannot tell.
+    """
+    for ratio, expected_reflected in ((0.04, 4.0 / 9.0), (0.25, 1.0 / 9.0)):
+        for direction in (ratio, 1.0 / ratio):
+            reflected, transmitted, total = _junction_split(direction)
+            assert abs(total - 1.0) < 1e-5, f"energy lost at mu_2/mu_1 = {direction}"
+            assert abs(reflected - expected_reflected) < 3e-4
+            assert abs(transmitted - (1.0 - expected_reflected)) < 3e-4
+
+            z1 = waves.impedance(STRING_TENSION, STRING_MU)
+            z2 = waves.impedance(STRING_TENSION, STRING_MU * direction)
+            predicted_reflected, predicted_transmitted = waves.power_coefficients(z1, z2)
+            assert abs(reflected - predicted_reflected) < 3e-4
+            assert abs(transmitted - predicted_transmitted) < 3e-4

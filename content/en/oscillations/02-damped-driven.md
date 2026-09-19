@@ -438,7 +438,7 @@ That velocity resonance is exact is not an accident. Write the equation in terms
 and the oscillator becomes an impedance, $Z = b + \ii(m\omega - k/\omega)$, whose magnitude
 is least when the reactive part cancels — at $\wnat$, for any $b$. That is the same
 mechanical impedance that will decide how much of a wave reflects at a boundary in
-module `10-impedance`, and the same cancellation of two opposing reactances.
+[module 10](../waves/10-impedance.md), and the same cancellation of two opposing reactances.
 
 **The world below $Q = 1/\sqrt{2}$.** Everything above assumed a peak exists. Below
 $Q = 1/\sqrt{2}$ — damping heavier than $\sqrt{2}\,\wnat$ — the response curve simply slides
